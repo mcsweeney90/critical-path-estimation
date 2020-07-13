@@ -1,0 +1,123 @@
+% This is samplepaper.tex, a sample chapter demonstrating the
+% LLNCS macro package for Springer Computer Science proceedings;
+% Version 2.20 of 2017/10/04
+%
+\documentclass[runningheads]{llncs}
+%
+\usepackage{graphicx}
+\graphicspath{{images/}}
+% Used for displaying a sample figure. If possible, figure files should
+% be included in EPS format.
+\usepackage{amsmath,amssymb}
+\usepackage[hyphens, spaces]{url}
+% If you use the hyperref package, please uncomment the following line
+% to display URLs in blue roman font according to Springer's eBook style:
+\usepackage{hyperref}
+\renewcommand\UrlFont{\color{blue}\rmfamily}
+\usepackage[linesnumbered, ruled]{algorithm2e}
+\usepackage{mathtools} % for coloneqq
+\usepackage{subfig}
+\usepackage{booktabs}
+
+\def\R{\mathbb{R}}
+\def\C{\mathbb{C}}
+\def\P{\mathbb{P}}
+\def\E{\mathbb{E}}
+\def\nbyn{n \times n}
+\def\mbyn{m \times n}
+\def\l{\lambda}
+\def\norm#1{\|#1\|}      
+\def\normi#1{\|#1\|_1}
+\def\normo#1{\|#1\|_{\infty}}
+\def\Chat{\widehat{C}}
+\def\e{eigenvalue}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+
+\begin{document}
+%
+\title{Critical path estimation in heterogeneous scheduling heuristics\thanks{Supported by the Engineering and Physical Sciences Research Council (EPSRC).}}
+%
+%\titlerunning{Abbreviated paper title}
+% If the paper title is too long for the running head, you can set
+% an abbreviated paper title here
+%
+\author{Thomas McSweeney\inst{1}\orcidID{0000-0001-9866-2229} \and Neil Walton\inst{1}\orcidID{0000-0002-5241-9765} \and Mawussi Zounon\inst{1, 2}\orcidID{0000-0002-6955-1500} }
+%
+\authorrunning{T. McSweeney et al.}
+% First names are abbreviated in the running head.
+% If there are more than two authors, 'et al.' is used.
+%
+\institute{University of Manchester, Manchester, UK \\
+	\email{thomas.mcsweeney@postgrad.manchester.ac.uk} \and The Numerical Algorithms Group (NAG), Manchester, UK}
+
+%
+\maketitle              % typeset the header of the contribution
+%
+\begin{abstract}
+
+Critical path estimates are used...
+
+
+\keywords{High-performance computing \and Scheduling \and Precedence constraints \and Directed acyclic graphs.}
+\end{abstract}
+
+
+\section{Introduction}
+\label{sect.intro}
+
+The concept of the {\em critical path} has no real meaning at the task prioritization stage of HEFT (or any similar listing heuristic): no processor selections have been made so the DAG weights are not yet fixed and no {\em longest} path can exist. For example, consider the simple DAG in Figure X... What is the critical path of this DAG? It isn't clear: we could, for example, define an {\em optimistic} critical path length by taking the smallest possible costs for all weights, as in the PEFT heuristic, or a {\em pessimistic} critical path by using the largest possible weights. The former is a lower bound on the cost of any schedule, no matter the composition of the target platform, so can be useful but is unlikely to reflect the true critical path of the DAG at runtime since no platform-specific information is used.
+
+\section{HEFT}
+\label{sect.heft} 
+
+The HEFT approach is to instead compute what we {\em expect} the critical path to be, which it does by using mean values over all processors to set costs and then computing the critical path of this associated {\em fixed-cost} DAG using dynamic programming. By taking means in this manner, effectively the node and edge weights are viewed as discrete random variables (RVs) with associated probability mass functions (pmfs) given by assuming that the task is equally likely to be scheduled on all of the processors in the selection phase. More precisely, let $m_i$ be the pmf corresponding to the task weight variable $w_i$ and $m_{ik}$ that for the edge weight $w_{ik}$, then  
+\begin{align*}
+m_i(c_i) \coloneqq \P[w_i = c_i] = \frac{n_c}{n_p}, \qquad m_i(g_i) \coloneqq \P[w_i = g_i] = \frac{n_g}{n_p},
+\end{align*}
+and   
+\begin{align*}
+m_{ik}(0) = \frac{n_c + n_g}{n_p^2}, &\qquad m_{ik}(C_{ik}^c) = \frac{n_c(n_c - 1)}{n_p^2}, \\
+m_{ik} (G_{ik}^g) = \frac{n_g(n_g - 1)}{n_p^2}, &\qquad m_{ik}(C_{ik}^g) = m_{ik}(G_{ik}^c) = \frac{n_cn_g}{n_p^2}.
+\end{align*}
+The expected values of the node and edge weights are therefore given by
+\begin{align}
+\E[w_i] &= \sum_{\ell \in L_i} \ell m_i(\ell) = \frac{c_in_c + g_in_g}{n_p}, \label{eq.expected_node}\\
+\E[w_{ik}] &= \sum_{\ell \in L_{ik}} \ell m_{ik}(\ell) \nonumber\\
+&= \frac{n_c(n_c - 1)C_{ik}^c + n_cn_g(C_{ik}^g + G_{ik}^c) + n_g(n_g - 1) G_{ik}^g }{n_p^2} \label{eq.expected_edge}.
+\end{align}
+Finally, upward ranks $u_i$ for all tasks are computed by setting $u_i = \E[w_i]$ for all exit tasks, moving up the DAG and recursively computing
+\begin{align}
+u_i = \E[w_i] + \max_{k \in S_i} \big( u_k + \E[w_{ik}] \big) \label{eq.ur_expectation}
+\end{align}
+for all other tasks.
+
+For example, suppose we wish to schedule the DAG from Figure X on a platform with 4 CPUs and 2 GPUs. To determine the upward rank of all tasks, HEFT implicitly transforms the original DAG into the fixed-cost one in Figure Y by computing the expected value of all nodes and edges using equations \eqref{eq.expected_node} and \eqref{eq.expected_edge} respectively.
+
+The upward ranks of all tasks are then given by 
+\begin{align*}
+u_4 &= 3, \\
+u_3 &= 2 + \bigg(u_4 + \frac{8}{9}\bigg) = \frac{53}{9}, \\
+u_2 &= 3 + \max \bigg \{ u_3 + \frac{7}{9}, u_4 + \frac{10}{9} \bigg \} = 3 + \max \bigg \{ \frac{20}{3}, \frac{37}{9} \bigg \} = \frac{29}{3}, \\
+u_1 &= 3 + \max \bigg \{ u_2 + \frac{1}{2}, u_3 + \frac{19}{18} \bigg \} = 3 + \max \bigg \{ \frac{61}{6}, \frac{125}{18} \bigg \} = \frac{79}{6}. \\
+\end{align*} 
+The final value $u_1$ is effectively treated as an estimate of the critical path length of the original DAG. 
+
+To sum up, since all possible node and edge weights are known but their actual values at runtime aren't (at least without restricting the processor selection phase), HEFT estimates critical path lengths from all tasks in a task graph $G$ through a two-step process:
+\begin{enumerate}
+	\item An associated stochastic DAG $G_s$ is implicitly constructed with node and edge pmfs $m_i$ and $m_{ik}$ as defined above.   
+	\item The numbers $u_i$ are recursively computed for all tasks in $G_s$ using \eqref{eq.ur_expectation}, and taken as the critical path lengths from the corresponding tasks in $G$.      
+\end{enumerate}
+In the following two sections, we propose modifications of both steps, in turn, so as to obtain more useful critical path estimates in HEFT. The performance of the task ranking procedures defined by using these alternative estimates is then evaluated through extensive numerical simulations.
+
+
+%
+% ---- Bibliography ----
+%
+% BibTeX users should specify bibliography style 'splncs04'.
+% References will then be sorted and formatted in the correct style.
+%
+ \bibliographystyle{splncs04}
+ \bibliography{references}
+
+\end{document}
