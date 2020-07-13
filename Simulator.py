@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Static scheduling main simulator module. 
+Simulator module used to generate results. 
 """
 
 import numpy as np
@@ -39,30 +39,24 @@ class Task:
         exit - bool
         True if Task has no successors, False otherwise.
         
-        The following 4 attributes are usually set after initialization by functions which
-        take a Node object as a target platform.
+        The following 2 attributes are usually set after initialization by functions which
+        take a Node object as a target platform.      
         
-        CPU_time - int/float
-        The Task's execution time on CPU Workers. 
+        comp_costs - dict
+        Nested dict {string identifying source and target processor types : {child ID : cost}}
+        e.g., self.comm_costs["CG"][5] = 10 means that the communication cost between the Task
+        and the child task with ID 5 is 10 when Task is scheduled on a CPU Worker and the child 
+        is scheduled on a GPU Worker.         
         
-        GPU_time - int/float
-        The Task's execution time on GPU Workers. 
-        
-        acceleration_ratio - int/float
-        The ratio of the Task's execution time on CPU and GPU Workers. 
-        
-        comm_costs - defaultdict(dict)
+        comm_costs - dict
         Nested dict {string identifying source and target processor types : {child ID : cost}}
         e.g., self.comm_costs["CG"][5] = 10 means that the communication cost between the Task
         and the child task with ID 5 is 10 when Task is scheduled on a CPU Worker and the child 
         is scheduled on a GPU Worker.
         
-        The following 4 attributes are set once the task has actually been scheduled.
-        
-        AST - int/float
-        The actual start time of the Task.
-        
-        AFT- int/float
+        The following 3 attributes are set once the task has actually been scheduled.
+                
+        FT- int/float
         The actual finish time of the Task.
         
         scheduled - bool
@@ -83,11 +77,8 @@ class Task:
         self.entry = False 
         self.exit = False    
         
-        self.comp_costs = {"C" : 0.0, "G" : 0.0} 
-        self.acceleration_ratio = None  # Set when costs are set.
-        self.comm_costs = {}
-        for p, q in it.product(self.comp_costs, self.comp_costs):
-            self.comm_costs[p + q] = {}        
+        self.comp_costs = {} 
+        self.comm_costs = {}   # Nested dict.    
         
         self.FT = None  
         self.scheduled = False  
@@ -127,20 +118,7 @@ class DAG:
         by compute_topological_info when necessary.
                
         n_edges - None/int
-        The number of edges in the DAG. 
-        
-        edge_density - None/float
-        The ratio of the number of edges in the DAG to the maximum possible for a DAG with the same
-        number of tasks. 
-        
-        CCR - dict {string : float}
-        Summarizes the computation-to-communication ratio (CCR) values for different platforms in the
-        form {platform name : DAG CCR}.         
-        
-        Comments
-        ------------------------
-        1. It seems a little strange to make the CCR a dict but it avoided having to compute it over 
-           and over again for the same platforms in some scripts.
+        The number of edges in the DAG.              
         """  
         
         self.name = name 
@@ -154,6 +132,8 @@ class DAG:
                 t.entry = True
             elif not list(self.graph.successors(t)):
                 t.exit = True
+        self.costs_set = False
+        self.target_platform = None
         
     def reset(self):
         """Resets some Task attributes to defaults so scheduling of the DAG can be simulated again."""
@@ -220,50 +200,34 @@ class DAG:
         """         
         if partial:
             return max(t.FT for t in self.graph if t.FT is not None)  
-        return max(t.FT for t in self.graph if t.exit) 
+        return max(t.FT for t in self.graph if t.exit)   
     
-    def minimal_serial_time(self):
-        """
-        Computes the minimum makespan of the DAG on a single Worker of the platform.
-        
-        Parameters
-        ------------------------
-        platform - Node object (see Environment.py module)
-        The target platform.        
-
-        Returns
-        ------------------------                          
-        float
-        The minimal serial time.      
-        
-        Notes
-        ------------------------                          
-        1. Assumes all task CPU and GPU times are set.        
-        """        
-        return min(sum(task.comp_costs["C"] for task in self.graph), sum(task.comp_costs["G"] for task in self.graph))   
-    
-    def optimistic_cost_table(self, expected_comm=False, platform=None):
+    def optimistic_cost_table(self, original=False):
         """
         Incorporated into optimistic critical path method.
         """  
         
-        d = {"CC" : 0, "CG" : 1, "GC" : 1, "GG" : 0}          
-        OCT = defaultdict(lambda: defaultdict(float))  
-        
+        workers = list(k for k in self.top_sort[0].comp_costs)  
+        d = {}
+        for w1, w2 in zip(workers, workers):
+            d[(w1, w2)] = 1.0 if w1 == w2 else 0.0
+                         
+        OCT = {}        
         backward_traversal = list(reversed(self.top_sort))
         for task in backward_traversal:
-            for p in ["C", "G"]:
-                OCT[task.ID][p] = 0.0
+            OCT[task.ID] = {}
+            for w in workers:
+                OCT[task.ID][w] = 0.0
                 if task.exit:
                     continue
                 child_values = []
                 for child in self.graph.successors(task):
-                    if expected_comm:
-                        action_values = [OCT[child.ID][q] + d[p + q] * platform.average_comm_cost(task, child) + child.comp_costs[q] for q in ["C", "G"]]
+                    if original:
+                        action_values = [OCT[child.ID][v] + d[(w, v)] * average(task.comm_costs[child.ID]) + child.comp_costs[v] for v in workers]
                     else:
-                        action_values = [OCT[child.ID][q] + d[p + q] * task.comm_costs[p + q][child.ID] + child.comp_costs[q] for q in ["C", "G"]]
+                        action_values = [OCT[child.ID][v] + d[(w, v)] * task.comm_costs[child.ID][(w, v)] + child.comp_costs[v] for v in workers]
                     child_values.append(min(action_values))
-                OCT[task.ID][p] += max(child_values)      
+                OCT[task.ID][w] += max(child_values)      
         return OCT 
     
     def expected_cost_table(self, platform, weighted=False):
@@ -505,7 +469,44 @@ class DAG:
                 task.comm_costs["CC"][child.ID] = s0 * x
                 task.comm_costs["CG"][child.ID] = s1 * x
                 task.comm_costs["GG"][child.ID] = s2 * x
-                task.comm_costs["GC"][child.ID] = s3 * x                 
+                task.comm_costs["GC"][child.ID] = s3 * x    
+                
+    def minimal_serial_time(self):
+        """
+        Computes the minimum makespan of the DAG on a single Worker of the platform.
+        
+        Parameters
+        ------------------------
+        platform - Platform object.
+        The target platform.        
+
+        Returns
+        ------------------------                          
+        float
+        The minimal serial time.      
+        
+        Notes
+        ------------------------                          
+        1. Assumes all task computation costs are set.        
+        """ 
+        
+        workers = list(k for k in self.top_sort[0].comp_costs)    # Assumes all workers can execute all tasks etc...    
+        worker_serial_times = list(sum(t.comp_costs[w.ID] for t in self.graph) for w in workers)        
+        return min(worker_serial_times)
+    
+    def CCR(self, avg_type="HEFT"):
+        """
+        Compute and set the computation-to-communication ratio (CCR) for the DAG on the 
+        target platform.          
+        """
+        
+        exp_comm, exp_comp = 0.0, 0.0
+        for task in self.top_sort:
+            exp_comp += average(task.comp_costs, avg_type=avg_type)
+            children = self.graph.successors(task)
+            for child in children:
+                exp_comm += average(task.comm_costs[child.ID], avg_type=avg_type)
+        return exp_comp / exp_comm 
            
     def sort_by_upward_rank(self, platform, avg_type="HEFT", return_ranks=False):
         """
@@ -545,9 +546,9 @@ class DAG:
         # Compute the upward rank of all tasks recursively.
         task_ranks = {}
         for t in backward_traversal:
-            task_ranks[t] = platform.average_comp_cost(t, avg_type=avg_type) 
+            task_ranks[t] = average(t.comp_costs, avg_type=avg_type) 
             try:
-                task_ranks[t] += max(platform.average_comm_cost(parent=t, child=s, avg_type=avg_type) + task_ranks[s] for s in self.graph.successors(t))
+                task_ranks[t] += max(average(t.comm_costs[s.ID], avg_type=avg_type) + task_ranks[s] for s in self.graph.successors(t))
             except ValueError:
                 pass  
             # print(t.ID, task_ranks[t])
@@ -595,7 +596,7 @@ class DAG:
         for t in self.top_sort:
             task_ranks[t] = 0.0
             try:
-                task_ranks[t] += max(platform.average_comp_cost(p, avg_type) + platform.average_comm_cost(parent=p, child=t, avg_type=avg_type) +
+                task_ranks[t] += max(average(p.comp_costs, avg_type) + average(p.comm_costs[t.ID], avg_type=avg_type) +
                           task_ranks[p] for p in self.graph.predecessors(t))
             except ValueError:
                 pass          
@@ -770,96 +771,7 @@ class DAG:
                 
         if return_f:
             return priority_list, f
-        return priority_list   
-    
-    def sort_by_preference_rank(self, weight="C", comp_func="r", ranking="upward", platform=None, return_ranks=False, table=None):
-        """Preference-based rankings."""
-        
-        if table is not None:
-            if weight[:2] == "OC":
-                OCP = table
-            elif weight[:2] == "EC":
-                ECP = table
-        elif weight[:3] == "ECT":
-            if platform is None:
-                raise ValueError("Called sort_by_preference_rank with weight == ECT but no platform specified!")
-            d = platform.n_workers**2
-        elif weight == "OCD":
-            OCP = self.optimistic_critical_path(direction="downward")
-        elif weight == "OCU":
-            OCP = self.optimistic_critical_path(direction="upward")
-        elif weight == "ECD" or weight == "ECD-B":
-            w = True if weight[-1] == "B" else False
-            ECP = self.expected_critical_path(platform, direction="downward", weighted=w)
-        elif weight == "ECU" or weight == "ECU-B":
-            w = True if weight[-1] == "B" else False
-            ECP = self.expected_critical_path(platform, direction="upward", weighted=w)
-            
-        # Compute weights.
-        a = {}
-        for t in self.top_sort:
-            # Compute the CPU and GPU weights.
-            if weight == "OCD" or weight == "OCU":
-                C, G = OCP[t.ID]["C"], OCP[t.ID]["G"]
-            elif weight[:3] == "ECD" or weight[:3] == "ECU":
-                C, G = ECP[t.ID]["C"], ECP[t.ID]["G"]
-            else:
-                C, G = t.comp_costs["C"], t.comp_costs["G"]
-                children = list(self.graph.successors(t))
-                if weight[:3] == "ECT":
-                    ec, eg = 0.0, 0.0
-                    A = t.acceleration_ratio if weight[-1] == "B" else 1.0
-                    for child in children:
-                        B = child.acceleration_ratio if weight[-1] == "B" else 1.0
-                        ec += platform.n_CPUs * (platform.n_CPUs - 1) * t.comm_costs["CC"][child.ID]
-                        ec += platform.n_CPUs * B * platform.n_GPUs * t.comm_costs["CG"][child.ID]
-                        eg += A * platform.n_GPUs * platform.n_CPUs * t.comm_costs["GC"][child.ID]
-                        eg += A * platform.n_GPUs * B * (platform.n_GPUs - 1) * t.comm_costs["GG"][child.ID]
-                    ec /= d
-                    eg /= d
-                    C += ec 
-                    G += eg   
-                elif weight == "MCT":
-                    mc, mg = 0.0, 0.0
-                    for child in children:
-                        mc += max(t.comm_costs["CC"][child.ID], t.comm_costs["CG"][child.ID])
-                        mg += max(t.comm_costs["GC"][child.ID], t.comm_costs["GG"][child.ID])
-                    C += mc
-                    G += mg
-                    
-            # Now compute a_i.
-            fastest, slowest = min(C, G), max(C, G)
-            if comp_func == "r":
-                a[t.ID] = slowest / fastest
-            elif comp_func == "d":
-                a[t.ID] = slowest - fastest
-            elif comp_func == "nc":
-                a[t.ID] = (slowest - fastest) / (slowest / fastest) 
-        
-        task_ranks = {}
-        if ranking == "upward":  
-            # Traverse the DAG starting from the exit task.
-            backward_traversal = list(reversed(self.top_sort)) 
-            for t in backward_traversal:
-                task_ranks[t] = a[t.ID]
-                # Add the maximum child task rank to ensure precedence constraints are met.
-                try:
-                    task_ranks[t] += max(task_ranks[s] for s in self.graph.successors(t))
-                except ValueError:
-                    pass
-            priority_list = list(reversed(sorted(task_ranks, key=task_ranks.get)))
-        elif ranking == "downward":
-            for t in self.top_sort:
-                task_ranks[t] = a[t.ID]
-                try:
-                    task_ranks[t] += max(task_ranks[s] for s in self.graph.predecessors(t))
-                except ValueError:
-                    pass
-            priority_list = list(sorted(task_ranks, key=task_ranks.get))            
-                               
-        if return_ranks:
-            return priority_list, task_ranks
-        return priority_list      
+        return priority_list        
                  
     def draw_graph(self, filepath):
         """
@@ -904,7 +816,7 @@ class DAG:
         A.layout('dot')
         A.draw('{}/{}_{}tasks_DAG.png'.format(filepath, self.name.split(" ")[0], self.n_tasks)) 
     
-    def print_info(self, platforms=None, return_mst_and_cp=False, detailed=False, filepath=None):
+    def print_info(self, target_platform=None, return_mst_and_cp=False, detailed=False, filepath=None):
         """
         Print basic information about the DAG, either to screen or as txt file.
         
@@ -926,35 +838,21 @@ class DAG:
         print("--------------------------------------------------------", file=filepath)   
         print("Name: {}".format(self.name), file=filepath)
         
-        # Basic information.
+        # Basic topological information.
         print("Number of tasks: {}".format(self.n_tasks), file=filepath)
         print("Number of edges: {}".format(self.n_edges), file=filepath)
         max_edges = (self.n_tasks * (self.n_tasks - 1)) / 2 
         edge_density = self.n_edges / max_edges 
-        print("Edge density: {}".format(edge_density), file=filepath)
-                
-        # Cost information.
-        cpu_costs = list(task.comp_costs["C"] for task in self.graph)
-        gpu_costs = list(task.comp_costs["G"] for task in self.graph)
-        acc_ratios = list(task.acceleration_ratio for task in self.graph)
-        cpu_mu, cpu_sigma = np.mean(cpu_costs), np.std(cpu_costs)
-        print("Mean task CPU cost: {}, standard deviation: {}".format(cpu_mu, cpu_sigma), file=filepath)
-        gpu_mu, gpu_sigma = np.mean(gpu_costs), np.std(gpu_costs)
-        print("Mean task GPU cost: {}, standard deviation: {}".format(gpu_mu, gpu_sigma), file=filepath)            
-        acc_mu, acc_sigma = np.mean(acc_ratios), np.std(acc_ratios)
-        print("Mean task acceleration ratio: {}, standard deviation: {}".format(acc_mu, acc_sigma), file=filepath)   
-        mst = self.minimal_serial_time()
-        print("Minimal serial time: {}".format(mst), file=filepath)
-        OCP = self.optimistic_critical_path()
-        cp = max(min(OCP[task.ID][p] for p in OCP[task.ID]) for task in self.graph if task.exit) 
-        print("Optimal critical path length: {}".format(cp), file=filepath)
+        print("Edge density: {}".format(edge_density), file=filepath)                
             
-        if isinstance(platforms, list):
-            for p in platforms:
-                task_mu = (p.n_GPUs * gpu_mu + p.n_CPUs * cpu_mu) / p.n_workers
-                print("\nMean task cost on {} platform: {}".format(p.name, task_mu), file=filepath)
-                ccr = p.CCR(self)
-                print("Computation-to-communication ratio on {} platform: {}".format(p.name, ccr), file=filepath)        
+        if self.costs_set:  
+            mst = self.minimal_serial_time()
+            print("Minimal serial time: {}".format(mst), file=filepath)
+            OCP = self.optimistic_critical_path()
+            cp = max(min(OCP[task.ID][p] for p in OCP[task.ID]) for task in self.graph if task.exit) 
+            print("Optimal critical path length: {}".format(cp), file=filepath) 
+            ccr = self.CCR()
+            print("Computation-to-communication ratio: {}".format(ccr), file=filepath)        
                     
         if detailed:
             print("\n--------------------------------------------------------", file=filepath) 
@@ -967,10 +865,7 @@ class DAG:
                 if task.exit:
                     print("Exit task.", file=filepath)
                 if task.type is not None:
-                    print("Task type: {}".format(task.type), file=filepath) 
-                print("CPU cost: {}".format(task.comp_costs["C"]), file=filepath)
-                print("GPU cost: {}".format(task.comp_costs["G"]), file=filepath)
-                print("Acceleration ratio: {}".format(task.acceleration_ratio), file=filepath)               
+                    print("Task type: {}".format(task.type), file=filepath)              
         print("--------------------------------------------------------", file=filepath) 
         
         if return_mst_and_cp:
@@ -980,7 +875,7 @@ class Worker:
     """
     Represents any CPU or GPU processing resource. 
     """
-    def __init__(self, worker_type="C", ID=None):
+    def __init__(self, ID=None):
         """
         Create the Worker object.
         
@@ -993,7 +888,6 @@ class Worker:
         Assigns an integer ID to the task. Often very useful.        
         """        
         
-        self.type = worker_type  
         self.ID = ID   
         self.load = []  # Tasks scheduled on the processor.
         self.idle = True    # True if no tasks currently scheduled on the processor. 
@@ -1024,14 +918,14 @@ class Worker:
         The earliest finish time for task on Worker.        
         """    
         
-        task_cost = task.comp_costs[self.type] 
+        task_cost = task.comp_costs[self.ID] 
         
         # If no tasks scheduled on processor...
         if self.idle:   
             if task.entry: 
                 return (task_cost, 0)
             else:
-                return (task_cost + max(p.FT + platform.comm_cost(p, task, p.where_scheduled, self.ID) for p in dag.graph.predecessors(task)), 0)  
+                return (task_cost + max(p.FT + p.comm_cost[task.ID][(p.where_scheduled, self.ID)] for p in dag.graph.predecessors(task)), 0)  
                 # TODO: ideally want to remove the FT attribute for tasks. 
             
         # At least one task already scheduled on processor... 
@@ -1040,7 +934,7 @@ class Worker:
         drt = 0
         if not task.entry:                    
             parents = dag.graph.predecessors(task) 
-            drt += max(p.FT + platform.comm_cost(p, task, p.where_scheduled, self.ID) for p in parents)  # TODO: ideally want to remove this.
+            drt += max(p.FT + p.comm_cost[task.ID][(p.where_scheduled, self.ID)] for p in parents)  # TODO: ideally want to remove this.
         
         if not insertion:
             return (task_cost + max(self.load[-1][2], drt), -1)
@@ -1098,7 +992,7 @@ class Worker:
         if finish_time is None:
             finish_time, load_idx = self.earliest_finish_time(task, dag, platform, insertion=insertion) 
         
-        start_time = finish_time - task.comp_costs[self.type] 
+        start_time = finish_time - task.comp_costs[self.ID] 
         
         # Add to load.           
         if self.idle or not insertion or load_idx < 0:             
@@ -1119,7 +1013,7 @@ class Worker:
         
         Parameters
         ------------------------
-        task - Task object (see Graph.py module)
+        task - Task object
         Represents a (static) task.                 
         """
         
@@ -1143,227 +1037,37 @@ class Worker:
         filepath - string
         Destination for schedule txt file.                           
         """        
-        print("WORKER {}, TYPE: {}PU: ".format(self.ID, self.type), file=filepath)
+        print("WORKER {}: ".format(self.ID), file=filepath)
         for t in self.load:
             type_info = " Task type: {},".format(t[3]) if t[3] is not None else ""
             print("Task ID: {},{} Start time = {}, finish time = {}.".format(t[0], type_info, t[1], t[2]), file=filepath)  
 
 class Platform:
     """          
-    A Node is basically just a collection of CPU and GPU Worker objects.
+    A Platform is basically just a collection of Worker objects.
     """
-    def __init__(self, CPUs, GPUs, name=None):
+    def __init__(self, n_workers, name=None):
         """
         Initialize the Node by giving the number of CPUs and GPUs.
         
         Parameters
         ------------------------
-        CPUs - int
-        The number of CPUs.
-
-        GPUs - int
-        The number of GPUs.
+        n_workers - int
+        Number of workers.
         
         name - string
-        An identifying name for the Node. Often useful.
+        An identifying name for the platform. Often useful.
         """
         
         self.name = name     
-        self.n_CPUs, self.n_GPUs = CPUs, GPUs 
-        self.n_workers = self.n_CPUs + self.n_GPUs      # Often useful.
-        self.workers = []       # List of all Worker objects.
-        for i in range(self.n_CPUs):
-            self.workers.append(Worker(ID=i))          
-        for j in range(self.n_GPUs):
-            self.workers.append(Worker(worker_type="G", ID=self.n_CPUs + j))         
+        self.n_workers = n_workers      # Often useful.
+        self.workers = [Worker(ID=i) for i in range(self.n_workers)]       # List of all Worker objects.       
     
     def reset(self):
         """Resets some attributes to defaults so we can simulate the execution of another DAG."""
         for w in self.workers:
             w.load = []   
             w.idle = True                    
-    
-    def comm_cost(self, parent, child, source_id, target_id):   
-        """
-        Compute the communication time from a parent task to a child.
-        
-        Parameters
-        ------------------------
-        parent - Task object (see Graph.py module)
-        The parent task that is sending its data.
-        
-        child - Task object (see Graph.py module)
-        The child task that is receiving data.
-        
-        source_id - int
-        The ID of the Worker on which parent is scheduled.
-        
-        target_id - int
-        The ID of the Worker on which child may be scheduled.
-        
-        Returns
-        ------------------------
-        float 
-        The communication time between parent and child.        
-        """       
-        
-        if source_id == target_id:
-            return 0.0         
-        source_type = self.workers[source_id].type
-        target_type = self.workers[target_id].type     
-        return parent.comm_costs[source_type + target_type][child.ID]  
-    
-    def average_comp_cost(self, task, avg_type="HEFT", children=None):
-        """
-        Compute the "average" computation time of the Task. 
-        Usually used for setting priorities in HEFT and similar heuristics.
-        
-        Parameters
-        ------------------------
-        platform - Node object (see Environment.py module)
-        The target platform.
-                
-        avg_type - string
-        How the average should be computed. 
-        Options:
-            - "HEFT", use mean values over all processors as in HEFT.
-            - "median", use median values over all processors. 
-            - "worst", always use largest possible computation cost.
-            - "simple worst", always use largest possible computation cost.
-            - "best", always use smallest possible computation cost.
-            - "simple best", always use smallest possible computation cost.
-            - "HEFT-WM", compute mean over all processors, weighted by acceleration ratio.
-            - "PS", processor speedup. Cost = max(CPU cost, GPU cost) / min(CPU cost, GPU cost).
-            - "D", difference. Cost = max(CPU cost, GPU cost) - min(CPU cost, GPU cost).
-            - "SFB". Cost = ( max(CPU cost, GPU cost) - min(CPU cost, GPU cost) ) / ( max(CPU cost, GPU cost) / min(CPU cost, GPU cost) ). 
-                                         
-        Returns
-        ------------------------
-        float 
-        The average computation cost of the Task. 
-        
-        Notes
-        ------------------------
-        1. "median", "worst", "simple worst", "best", "simple best" were all considered by Zhao and Sakellariou (2003). 
-        2. "PS", "D" and "SFB" are from Shetti, Fahmy and Bretschneider (2013).
-        """
-        
-        C, G = task.comp_costs["C"], task.comp_costs["G"]            
-        
-        if avg_type == "HEFT" or avg_type == "mean" or avg_type == "MEAN" or avg_type == "M":
-            return (C * self.n_CPUs + G * self.n_GPUs) / self.n_workers
-        elif avg_type == "median" or avg_type == "MEDIAN":
-            costs = [C] * self.n_CPUs + [G] * self.n_GPUs
-            return median(costs)
-        elif avg_type == "worst" or avg_type == "W" or avg_type == "simple worst" or avg_type == "SW":
-            return max(C, G)
-        elif avg_type == "best" or avg_type == "B" or avg_type == "simple best" or avg_type == "sb":
-            return min(C, G)   
-        elif avg_type == "HEFT-WM" or avg_type == "WM":
-            r = task.acceleration_ratio
-            return (C * self.n_CPUs + r * G * self.n_GPUs) / (self.n_CPUs + r * self.n_GPUs)   
-            
-        raise ValueError('No avg_type, e.g., "mean" or "median", specified for average_execution_cost.')                 
-    
-    def average_comm_cost(self, parent, child, avg_type="HEFT"): 
-        """
-        Compute the "average" communication time from parent to child tasks. 
-        Usually used for setting priorities in HEFT and similar heuristics.
-        
-        Parameters
-        ------------------------
-        parent - Task object (see Graph.py module)
-        The parent task that is sending its data.
-        
-        child - Task object (see Graph.py module)
-        The child task that is receiving data.
-        
-        avg_type - string
-        How the average should be computed. 
-        Options:
-            - "HEFT", use mean values over all processors as in HEFT.
-            - "median", use median values over all processors. 
-            - "worst", assume each task is on its slowest processor type and compute corresponding communication cost.
-            - "simple worst", always use largest possible communication cost.
-            - "best", assume each task is on its fastest processor type and compute corresponding communication cost.
-            - "simple best", always use smallest possible communication cost.
-            - "HEFT-WM", compute mean over all processors, weighted by task acceleration ratios.
-            - "PS", "D", "SFB" - speedup-based avg_types from Shetti, Fahmy and Bretschneider (2013). 
-               Returns zero in all three cases so definitions can be found in average_execution_cost
-               method in the Task class in Graph.py.
-                                         
-        Returns
-        ------------------------
-        float 
-        The average communication cost between parent and child. 
-        
-        Notes
-        ------------------------
-        1. "median", "worst", "simple worst", "best", "simple best" were all considered by Zhao and Sakellariou (2003). 
-        """
-                
-        if avg_type == "HEFT" or avg_type == "mean" or avg_type == "MEAN" or avg_type == "M":            
-            c_bar = self.n_CPUs * (self.n_CPUs - 1) * parent.comm_costs["CC"][child.ID] 
-            c_bar += self.n_CPUs * self.n_GPUs * parent.comm_costs["CG"][child.ID]
-            c_bar += self.n_CPUs * self.n_GPUs * parent.comm_costs["GC"][child.ID]
-            c_bar += self.n_GPUs * (self.n_GPUs - 1) * parent.comm_costs["GG"][child.ID]
-            c_bar /= (self.n_workers**2)
-            return c_bar            
-            
-        elif avg_type == "median" or avg_type == "MEDIAN":
-            costs = self.n_CPUs * (self.n_CPUs - 1) * [parent.comm_costs["CC"][child.ID]] 
-            costs += self.n_CPUs * self.n_GPUs * [parent.comm_costs["CG"][child.ID]]
-            costs += self.n_CPUs * self.n_GPUs * [parent.comm_costs["GC"][child.ID]]
-            costs += self.n_GPUs * (self.n_GPUs - 1) * [parent.comm_costs["GG"][child.ID]]
-            costs += self.n_workers * [0]
-            return median(costs)
-        
-        elif avg_type == "worst" or avg_type == "WORST":
-            parent_worst_proc = "C" if parent.comp_costs["C"] > parent.comp_costs["G"] else "G"
-            child_worst_proc = "C" if child.comp_costs["C"] > child.comp_costs["G"] else "G"
-            if parent_worst_proc == "C" and child_worst_proc == "C" and self.n_CPUs == 1:
-                return 0.0
-            if parent_worst_proc == "G" and child_worst_proc == "G" and self.n_GPUs == 1:
-                return 0.0
-            return parent.comm_costs[parent_worst_proc + child_worst_proc][child.ID]
-        
-        elif avg_type == "simple worst" or avg_type == "SW":
-            return max(parent.comm_costs["CC"][child.ID], parent.comm_costs["CG"][child.ID], parent.comm_costs["GC"][child.ID], parent.comm_costs["GG"][child.ID])
-        
-        elif avg_type == "best" or avg_type == "BEST":
-            parent_best_proc = "G" if parent.comp_costs["C"] > parent.comp_costs["G"] else "C"
-            child_best_proc = "G" if child.comp_costs["C"] > child.comp_costs["G"] else "C"
-            if parent_best_proc == child_best_proc:
-                return 0.0
-            return parent.comm_costs[parent_best_proc + child_best_proc][child.ID]
-        
-        elif avg_type == "simple best" or avg_type == "sb":
-            return min(parent.comm_costs["CC"][child.ID], parent.comm_costs["CG"][child.ID], parent.comm_costs["GC"][child.ID], parent.comm_costs["GG"][child.ID])         
-                
-        elif avg_type == "HEFT-WM" or avg_type == "WM":
-            A, B = parent.acceleration_ratio, child.acceleration_ratio
-            c_bar = self.n_CPUs * (self.n_CPUs - 1) * parent.comm_costs["CC"][child.ID] 
-            c_bar += self.n_CPUs * B * self.n_GPUs * parent.comm_costs["CG"][child.ID]
-            c_bar += A * self.n_GPUs * self.n_CPUs * parent.comm_costs["GC"][child.ID]
-            c_bar += A * self.n_GPUs * B * (self.n_GPUs - 1) * parent.comm_costs["GG"][child.ID]
-            c_bar /= ((self.n_CPUs + A * self.n_GPUs) * (self.n_CPUs + B * self.n_GPUs))
-            return c_bar           
-        
-        raise ValueError('No avg_type (e.g., "mean" or "median") specified for average_comm_cost.')          
-        
-    def CCR(self, dag, avg_type="HEFT"):
-        """
-        Compute and set the computation-to-communication ratio (CCR) for the DAG on the 
-        target platform.          
-        """
-        
-        exp_comm, exp_comp = 0.0, 0.0
-        for task in dag.top_sort:
-            exp_comp += self.average_comp_cost(task, avg_type=avg_type)
-            children = dag.graph.successors(task)
-            for child in children:
-                exp_comm += self.average_comm_cost(task, child, avg_type=avg_type)
-        return exp_comp / exp_comm                
     
     def print_info(self, print_schedule=False, filepath=None):
         """
@@ -1378,7 +1082,7 @@ class Platform:
         print("PLATFORM INFO", file=filepath)
         print("----------------------------------------------------------------------------------------------------------------", file=filepath)
         print("Name: {}".format(self.name), file=filepath)
-        print("{} CPUs, {} GPUs".format(self.n_CPUs, self.n_GPUs), file=filepath)
+        print("{} workers".format(self.n_workers), file=filepath)
         print("----------------------------------------------------------------------------------------------------------------\n", file=filepath)  
         
         if print_schedule:
@@ -1391,9 +1095,10 @@ class Platform:
             print("\nMAKESPAN: {}".format(mkspan), file=filepath)            
             print("----------------------------------------------------------------------------------------------------------------\n", file=filepath)
     
-    def summarize_schedule(self, dag, schedule):
+    def follow_schedule(self, dag, schedule):
         """
         Follow the input schedule.
+        TODO.
         """        
         
         info = {}     
@@ -1432,6 +1137,54 @@ class Platform:
         info["SCHEDULE LENGTH RATIO"] = slr
         
         return info
+    
+# =============================================================================
+# Helper functions.
+# =============================================================================
+        
+def average(D, avg_type="HEFT", weights=None):
+    """
+    Compute an "average" value for a dict. 
+    Usually used for setting priorities in HEFT and similar heuristics.
+    
+    Parameters
+    ------------------------
+    
+    D - dict
+    Any dictionary with int/float entries.
+            
+    avg_type - string
+    How the average should be computed. 
+    Options:
+        - "HEFT", use mean values over all processors as in HEFT.
+        - "median", use median values over all processors. 
+        - "worst", always use largest possible computation cost.
+        - "simple worst", always use largest possible computation cost.
+        - "best", always use smallest possible computation cost.
+        - "simple best", always use smallest possible computation cost.
+        - "HEFT-WM", compute mean over all processors, weighted by acceleration ratio.
+                                     
+    Returns
+    ------------------------
+    float 
+    The average computation cost of the Task. 
+    
+    Notes
+    ------------------------
+    1. "median", "worst", "simple worst", "best", "simple best" were all considered by Zhao and Sakellariou (2003). 
+    """            
+    
+    if avg_type == "HEFT" or avg_type == "mean" or avg_type == "MEAN" or avg_type == "M":
+        return sum(v for v in D.values()) / len(D)
+    elif avg_type == "median" or avg_type == "MEDIAN":
+        return median(D.values())
+    elif avg_type == "worst" or avg_type == "W" or avg_type == "simple worst" or avg_type == "SW":
+        return max(D.values())
+    elif avg_type == "best" or avg_type == "B" or avg_type == "simple best" or avg_type == "sb":
+        return min(D.values())   
+    elif avg_type == "HEFT-WM" or avg_type == "WM":
+        return sum(weights[k]*v for k, v in D.items()) / sum(weights)         
+    raise ValueError('No avg_type, e.g., "mean" or "median", specified for average.') 
         
             
 # =============================================================================
@@ -1679,79 +1432,6 @@ def CPOP(dag, platform, return_schedule=False, schedule_dest=None):
         return mkspan, pi    
     return mkspan 
 
-def HEFT_NC(dag, platform, threshold=0.3, return_schedule=False, schedule_dest=None):
-    """
-    HEFT No Cross (HEFT-NC).
-    'Optimization of the HEFT algorithm for a CPU-GPU environment,'
-    Shetti, Fahmy and Bretschneider (2013).
-    """
-    
-    if return_schedule or schedule_dest is not None:
-        pi = {}
-    
-    # Compute all tasks weights.
-    _, task_ranks = dag.sort_by_preference_rank(comp_func="nc", return_ranks=True)           
-        
-    ready_tasks = list(t for t in dag.graph if t.entry)    
-    while len(ready_tasks):          
-        t = max(ready_tasks, key=task_ranks.get)          
-        worker_finish_times = list(w.earliest_finish_time(t, dag, platform) for w in platform.workers)
-        min_val = min(worker_finish_times, key=lambda w:w[0]) 
-        min_worker = worker_finish_times.index(min_val)        
-        
-        w = t.comp_costs["C"] if min_worker < platform.n_CPUs else t.comp_costs["G"]
-        if abs(w - min(t.comp_costs["C"], t.comp_costs["G"])) < 1e-6:
-            ft, idx = min_val
-            platform.workers[min_worker].schedule_task(t, finish_time=ft, load_idx=idx)        
-            if return_schedule or schedule_dest is not None:
-                pi[t] = min_worker
-        else:
-            ft_min, idx_min = min_val
-            if min_worker < platform.n_CPUs:
-                fast_val = min(worker_finish_times[platform.n_CPUs:], key=lambda w:w[0])
-                fast_worker = worker_finish_times[platform.n_CPUs:].index(fast_val) + platform.n_CPUs
-            else:
-                fast_val = min(worker_finish_times[:platform.n_CPUs], key=lambda w:w[0]) 
-                fast_worker = worker_finish_times.index(fast_val)
-            ft_fast, idx_fast = fast_val
-            max_i = max(t.comp_costs["C"], t.comp_costs["G"])
-            min_i = min(t.comp_costs["C"], t.comp_costs["G"])
-            w_i = abs(max_i - min_i) / (max_i / min_i)
-            w_abs = abs(ft_min - ft_fast) / (ft_min / ft_fast)
-            if w_i / w_abs <= threshold:
-                platform.workers[min_worker].schedule_task(t, finish_time=ft_min, load_idx=idx_min) 
-                if return_schedule or schedule_dest is not None:
-                    pi[t] = min_worker
-            else:
-                platform.workers[fast_worker].schedule_task(t, finish_time=ft_fast, load_idx=idx_fast)
-                if return_schedule or schedule_dest is not None:
-                    pi[t] = fast_worker
-                              
-        # Update ready tasks.                          
-        ready_tasks.remove(t)
-        for c in dag.graph.successors(t):
-            if dag.ready_to_schedule(c):
-                ready_tasks.append(c)
-            
-    # If schedule_dest, save the priority list and schedule.
-    if schedule_dest is not None: 
-        print("The tasks were scheduled in the following order:", file=schedule_dest)
-        for t in pi:
-            print(t.ID, file=schedule_dest)
-        print("\n", file=schedule_dest)
-        platform.print_info(print_schedule=True, filepath=schedule_dest)       
-    
-    # Compute makespan.
-    mkspan = dag.makespan()        
-    
-    # Reset DAG and platform.
-    dag.reset()
-    platform.reset()  
-      
-    if return_schedule:
-        return mkspan, pi    
-    return mkspan 
-
 def EEFT(dag, platform, weighted=False, return_schedule=False, schedule_dest=None):
     """
     Modification of PEFT that uses HEFT-like critical path estimates in the lookahead.
@@ -1812,81 +1492,3 @@ def EEFT(dag, platform, weighted=False, return_schedule=False, schedule_dest=Non
     if return_schedule:
         return mkspan, pi    
     return mkspan 
-
-def HOFT(dag, platform, table=None, priority_list=None, return_schedule=False, schedule_dest=None):
-    """
-    Heterogeneous Optimistic Finish Time (HOFT).    
-    """ 
-    
-    pi = {}
-    
-    # Compute OFT table if necessary.
-    # OCP = table if table is not None else dag.optimistic_critical_path(direction="downward") 
-    
-    # Compute the priority list if not input.
-    if priority_list is None:
-        priority_list = dag.sort_by_preference_rank(weight="OCD", table=table)      
-              
-    for t in priority_list:                
-        # Find fastest CPU and GPU workers for t.
-        worker_finish_times = list(w.earliest_finish_time(t, dag, platform) for w in platform.workers)
-        min_cpu_val = min(worker_finish_times[:platform.n_CPUs], key=lambda w:w[0]) 
-        min_cpu = worker_finish_times.index(min_cpu_val)
-        min_gpu_val = min(worker_finish_times[platform.n_CPUs:], key=lambda w:w[0]) 
-        min_gpu = worker_finish_times[platform.n_CPUs:].index(min_gpu_val) + platform.n_CPUs          
-          
-        
-        if (min_cpu_val[0] < min_gpu_val[0]) and (t.comp_costs["C"] < t.comp_costs["G"]):
-            min_worker = min_cpu
-            ft, idx = min_cpu_val
-        elif (min_gpu_val[0] < min_cpu_val[0]) and (t.comp_costs["G"] < t.comp_costs["C"]):
-            min_worker = min_gpu
-            ft, idx = min_gpu_val
-        else:  
-            sc, sg = 0, 0
-            for k in dag.graph.successors(t):
-                c = (platform.n_CPUs - 1) * t.comm_costs["CC"][k.ID]
-                c += k.acceleration_ratio * platform.n_GPUs * t.comm_costs["CG"][k.ID]
-                c /= (platform.n_CPUs + k.acceleration_ratio * platform.n_GPUs)
-                sc += c            
-                g = platform.n_CPUs * t.comm_costs["GC"][k.ID]
-                g += k.acceleration_ratio * (platform.n_GPUs - 1) * t.comm_costs["GG"][k.ID]
-                g /= (platform.n_CPUs + k.acceleration_ratio * platform.n_GPUs)
-                sg += g  
-            # for k in dag.graph.successors(t):
-            #     kp = "C" if OCP[k.ID]["C"] < OCP[k.ID]["G"] else "G"
-            #     dc = t.comm_costs["C" + kp][k.ID] 
-            #     dg = t.comm_costs["G" + kp][k.ID] 
-            #     sc = max(sc, k.comp_costs[kp] + dc)
-            #     sg = max(sg, k.comp_costs[kp] + dg) 
-            # Check condition.
-            if min_cpu_val[0] + sc < min_gpu_val[0] + sg:
-                min_worker = min_cpu
-                ft, idx = min_cpu_val
-            else:
-                min_worker = min_gpu
-                ft, idx = min_gpu_val
-            
-        # Schedule the task.
-        platform.workers[min_worker].schedule_task(t, finish_time=ft, load_idx=idx)          
-        if return_schedule:
-            pi[t] = min_worker 
-                       
-    # If schedule_dest, print the schedule to file.
-    if schedule_dest is not None: 
-        print("The tasks were scheduled in the following order:", file=schedule_dest)
-        for t in priority_list:
-            print(t.ID, file=schedule_dest)
-        print("\n", file=schedule_dest)
-        platform.print_info(print_schedule=True, filepath=schedule_dest)
-        
-    # Compute makespan.
-    mkspan = dag.makespan() 
-    
-    # Reset DAG and platform.
-    dag.reset()
-    platform.reset() 
-    
-    if return_schedule:
-        return mkspan, pi    
-    return mkspan  
