@@ -88,7 +88,108 @@ class Task:
         """Resets some attributes to defaults so execution of the task can be simulated again."""
         self.FT = None   
         self.scheduled = False
-        self.where_scheduled = None      
+        self.where_scheduled = None   
+        
+    def average_cost(self, avg_type="HEFT", weights=None):
+        """
+        Compute an "average" computational cost for the task. 
+        Usually used for setting priorities in HEFT and similar heuristics.
+        
+        Parameters
+        ------------------------
+                        
+        avg_type - string
+        How the average should be computed. 
+        Options:
+            - "HEFT", use mean values over all processors as in HEFT.
+            - "median", use median values over all processors. 
+            - "worst", always use largest possible computation cost.
+            - "simple worst", always use largest possible computation cost.
+            - "best", always use smallest possible computation cost.
+            - "simple best", always use smallest possible computation cost.
+            - "HEFT-WM", compute mean over all processors, weighted by acceleration ratio.
+                                         
+        Returns
+        ------------------------
+        float 
+        The average computation cost of the Task. 
+        
+        Notes
+        ------------------------
+        1. "median", "worst", "simple worst", "best", "simple best" were all considered by Zhao and Sakellariou (2003). 
+        """            
+        
+        if avg_type == "HEFT" or avg_type == "mean" or avg_type == "MEAN" or avg_type == "M":
+            return sum(v for v in self.comp_costs.values()) / len(self.comp_costs)
+        elif avg_type == "median" or avg_type == "MEDIAN":
+            return median(self.comp_costs.values())
+        elif avg_type == "worst" or avg_type == "W" or avg_type == "simple worst" or avg_type == "SW":
+            return max(self.comp_costs.values())
+        elif avg_type == "best" or avg_type == "B" or avg_type == "simple best" or avg_type == "sb":
+            return min(self.comp_costs.values())   
+        elif avg_type == "HEFT-WM" or avg_type == "WM":
+            if weights is not None:
+                return sum(weights[k]*v for k, v in self.comp_costs.items()) / sum(weights)
+            s = sum(self.comp_costs.values())
+            return sum(v**2 for v in self.comp_costs.values()) / s # TODO: check this.         
+        raise ValueError('No avg_type, e.g., "mean" or "median", specified for average.') 
+        
+    def average_comm_cost(self, child, avg_type="HEFT", weights=None):
+        """
+        Compute an "average" communication cost between Task and one of its children. 
+        Usually used for setting priorities in HEFT and similar heuristics.
+        
+        Parameters
+        ------------------------
+                        
+        avg_type - string
+        How the average should be computed. 
+        Options:
+            - "HEFT", use mean values over all processors as in HEFT.
+            - "median", use median values over all processors. 
+            - "worst", always use largest possible computation cost.
+            - "simple worst", always use largest possible computation cost.
+            - "best", always use smallest possible computation cost.
+            - "simple best", always use smallest possible computation cost.
+            - "HEFT-WM", compute mean over all processors, weighted by acceleration ratio.
+                                         
+        Returns
+        ------------------------
+        float 
+        The average computation cost of the Task. 
+        
+        Notes
+        ------------------------
+        1. "median", "worst", "simple worst", "best", "simple best" were all considered by Zhao and Sakellariou (2003). 
+        """         
+                
+        if avg_type == "HEFT" or avg_type == "mean" or avg_type == "MEAN" or avg_type == "M":
+            return sum(v for v in self.comm_costs[child.ID].values()) / len(self.comm_costs[child.ID])            
+        elif avg_type == "median" or avg_type == "MEDIAN":
+            return median(self.comm_costs[child.ID].values())
+        elif avg_type == "worst" or avg_type == "W":
+            task_worst = max(self.comp_costs, key=self.comp_costs.get)
+            child_worst = max(child.comp_costs, key=child.comp_costs.get)            
+            return self.comm_costs[child.ID][(task_worst, child_worst)]
+        elif avg_type == "simple worst" or avg_type == "SW":
+            return max(self.comm_costs[child.ID].values())
+        elif avg_type == "best" or avg_type == "B":
+            task_best = min(self.comp_costs, key=self.comp_costs.get)
+            child_best = min(child.comp_costs, key=child.comp_costs.get)            
+            return self.comm_costs[child.ID][(task_best, child_best)]
+        elif avg_type == "simple best" or avg_type == "sb":
+            return 0.0 # min(v for k, v in self.comm_costs[child.ID].items() if k[0] != k[1])   
+        elif avg_type == "HEFT-WM" or avg_type == "WM":
+            s1 = sum(self.comp_costs.values())
+            s2 = sum(child.comp_costs.values())
+            cbar = 0.0
+            for k, v in self.comm_costs[child.ID].items():
+                t_cost = self.comp_costs[k[0]]
+                c_cost = child.comp_costs[k[1]]                
+                cbar += t_cost * c_cost * v
+            cbar /= (s1 * s2)
+            return cbar                    
+        raise ValueError('No avg_type, e.g., "mean" or "median", specified for average_comm_cost.')        
 
 class DAG:
     """
@@ -200,7 +301,115 @@ class DAG:
         """         
         if partial:
             return max(t.FT for t in self.graph if t.FT is not None)  
-        return max(t.FT for t in self.graph if t.exit)   
+        return max(t.FT for t in self.graph if t.exit) 
+    
+    def set_costs(self, acc_ratios, target_ccr, platform, shares=[0, 1/3, 1/3, 1/3]):
+        """
+        Sets computation and communication costs for randomly generated DAGs (e.g., from the STG).
+        
+        Parameters
+        ------------------------
+        platform - Node object (see Environment.py module)
+        The target platform.           
+        
+        target_ccr - float/int
+        The CCR we want the DAG to have on the target platform. Due to stochasticity in how we choose 
+        communication costs this is not precise so we might need to double check afterwards.              
+                      
+        Notes
+        ------------------------
+        1. I not already set, we assume that GPU times are uniformly distributed integers between 1 and 100.
+        2. We assume that CPU-CPU communication costs are zero and all others are of similar magnitude to
+           one another (as we typically have throughout).
+        3. Communication costs are sampled from a Gamma distribution with a computed mean and standard deviation
+           to try and achieve the desired CCR value for the DAG.
+        """   
+        
+        if isinstance(acc_ratios, tuple) or isinstance(acc_ratios, list):
+            dist, mu, sigma = acc_ratios
+        
+        # Set the computation costs.
+        for task in self.graph:
+            if task.comp_costs["G"] == 0.0:
+                task.comp_costs["G"] = np.random.randint(1, 100)         
+            if isinstance(acc_ratios, dict) or isinstance(acc_ratios, defaultdict):
+                task.acceleration_ratio = acc_ratios[task.type] 
+            elif isinstance(acc_ratios, tuple) or isinstance(acc_ratios, list):
+                if dist == "GAMMA" or dist == "gamma":
+                    task.acceleration_ratio = np.random.gamma(shape=(mu/sigma)**2, scale=sigma**2/mu) 
+                elif dist == "NORMAL" or dist == "normal":
+                    task.acceleration_ratio = abs(np.random.normal(mu, sigma)) 
+                else:
+                    raise ValueError('Unrecognized acceleration ratio distribution specified in set_costs!')                    
+            task.comp_costs["C"] = task.comp_costs["G"] * task.acceleration_ratio
+        
+        # Set the communication costs.        
+        # Compute the expected total compute of the entire DAG.
+        cpu_compute = list(task.comp_costs["C"] for task in self.graph)
+        gpu_compute = list(task.comp_costs["G"] for task in self.graph)
+        expected_total_compute = sum(cpu_compute) * platform.n_CPUs + sum(gpu_compute) * platform.n_GPUs
+        expected_total_compute /= platform.n_workers
+        
+        # Calculate the expected communication cost of the entire DAG - i.e., for all edges.        
+        expected_total_comm = expected_total_compute / target_ccr
+        expected_comm_per_edge = expected_total_comm / self.n_edges
+        for task in self.top_sort:
+            for child in self.graph.successors(task):
+                if isinstance(acc_ratios, tuple) or isinstance(acc_ratios, list):
+                    if dist == "GAMMA" or dist == "gamma":
+                        w_bar = np.random.gamma(shape=1.0, scale=expected_comm_per_edge)
+                    elif dist == "NORMAL" or dist == "normal":
+                        w_bar = abs(np.random.normal(expected_comm_per_edge, expected_comm_per_edge))
+                else:
+                    w_bar = np.random.uniform(0, 2) * expected_comm_per_edge
+                # Now sets the costs according to the relative shares.
+                x = w_bar * platform.n_workers**2   
+                s0, s1, s2, s3 = shares
+                d = s0 * platform.n_CPUs * (platform.n_CPUs - 1)
+                d += (s1 + s3) * platform.n_CPUs * platform.n_GPUs
+                d += s2 * platform.n_GPUs * (platform.n_GPUs - 1)
+                x /= d
+                task.comm_costs["CC"][child.ID] = s0 * x
+                task.comm_costs["CG"][child.ID] = s1 * x
+                task.comm_costs["GG"][child.ID] = s2 * x
+                task.comm_costs["GC"][child.ID] = s3 * x    
+                
+    def minimal_serial_time(self):
+        """
+        Computes the minimum makespan of the DAG on a single Worker of the platform.
+        
+        Parameters
+        ------------------------
+        platform - Platform object.
+        The target platform.        
+
+        Returns
+        ------------------------                          
+        float
+        The minimal serial time.      
+        
+        Notes
+        ------------------------                          
+        1. Assumes all task computation costs are set.        
+        """ 
+        
+        workers = list(k for k in self.top_sort[0].comp_costs)    # Assumes all workers can execute all tasks etc...    
+        worker_serial_times = list(sum(t.comp_costs[w.ID] for t in self.graph) for w in workers)        
+        return min(worker_serial_times)
+    
+    def CCR(self, avg_type="HEFT"):
+        """
+        Compute and set the computation-to-communication ratio (CCR) for the DAG on the 
+        target platform.          
+        """
+        
+        exp_comm, exp_comp = 0.0, 0.0
+        for task in self.top_sort:
+            exp_comp += task.average_cost(avg_type=avg_type)
+            children = self.graph.successors(task)
+            for child in children:
+                exp_comm += task.average_comm_cost(child, avg_type=avg_type)
+        return exp_comp / exp_comm
     
     def optimistic_cost_table(self, original=False):
         """
@@ -223,7 +432,7 @@ class DAG:
                 child_values = []
                 for child in self.graph.successors(task):
                     if original:
-                        action_values = [OCT[child.ID][v] + d[(w, v)] * average(task.comm_costs[child.ID]) + child.comp_costs[v] for v in workers]
+                        action_values = [OCT[child.ID][v] + d[(w, v)] * task.average_comm_cost(child) + child.comp_costs[v] for v in workers]
                     else:
                         action_values = [OCT[child.ID][v] + d[(w, v)] * task.comm_costs[child.ID][(w, v)] + child.comp_costs[v] for v in workers]
                     child_values.append(min(action_values))
@@ -400,113 +609,7 @@ class DAG:
                 d[task.ID]["G"] += max(g_parent_values)
             return d
             
-    def set_costs(self, acc_ratios, target_ccr, platform, shares=[0, 1/3, 1/3, 1/3]):
-        """
-        Sets computation and communication costs for randomly generated DAGs (e.g., from the STG).
-        
-        Parameters
-        ------------------------
-        platform - Node object (see Environment.py module)
-        The target platform.           
-        
-        target_ccr - float/int
-        The CCR we want the DAG to have on the target platform. Due to stochasticity in how we choose 
-        communication costs this is not precise so we might need to double check afterwards.              
-                      
-        Notes
-        ------------------------
-        1. I not already set, we assume that GPU times are uniformly distributed integers between 1 and 100.
-        2. We assume that CPU-CPU communication costs are zero and all others are of similar magnitude to
-           one another (as we typically have throughout).
-        3. Communication costs are sampled from a Gamma distribution with a computed mean and standard deviation
-           to try and achieve the desired CCR value for the DAG.
-        """   
-        
-        if isinstance(acc_ratios, tuple) or isinstance(acc_ratios, list):
-            dist, mu, sigma = acc_ratios
-        
-        # Set the computation costs.
-        for task in self.graph:
-            if task.comp_costs["G"] == 0.0:
-                task.comp_costs["G"] = np.random.randint(1, 100)         
-            if isinstance(acc_ratios, dict) or isinstance(acc_ratios, defaultdict):
-                task.acceleration_ratio = acc_ratios[task.type] 
-            elif isinstance(acc_ratios, tuple) or isinstance(acc_ratios, list):
-                if dist == "GAMMA" or dist == "gamma":
-                    task.acceleration_ratio = np.random.gamma(shape=(mu/sigma)**2, scale=sigma**2/mu) 
-                elif dist == "NORMAL" or dist == "normal":
-                    task.acceleration_ratio = abs(np.random.normal(mu, sigma)) 
-                else:
-                    raise ValueError('Unrecognized acceleration ratio distribution specified in set_costs!')                    
-            task.comp_costs["C"] = task.comp_costs["G"] * task.acceleration_ratio
-        
-        # Set the communication costs.        
-        # Compute the expected total compute of the entire DAG.
-        cpu_compute = list(task.comp_costs["C"] for task in self.graph)
-        gpu_compute = list(task.comp_costs["G"] for task in self.graph)
-        expected_total_compute = sum(cpu_compute) * platform.n_CPUs + sum(gpu_compute) * platform.n_GPUs
-        expected_total_compute /= platform.n_workers
-        
-        # Calculate the expected communication cost of the entire DAG - i.e., for all edges.        
-        expected_total_comm = expected_total_compute / target_ccr
-        expected_comm_per_edge = expected_total_comm / self.n_edges
-        for task in self.top_sort:
-            for child in self.graph.successors(task):
-                if isinstance(acc_ratios, tuple) or isinstance(acc_ratios, list):
-                    if dist == "GAMMA" or dist == "gamma":
-                        w_bar = np.random.gamma(shape=1.0, scale=expected_comm_per_edge)
-                    elif dist == "NORMAL" or dist == "normal":
-                        w_bar = abs(np.random.normal(expected_comm_per_edge, expected_comm_per_edge))
-                else:
-                    w_bar = np.random.uniform(0, 2) * expected_comm_per_edge
-                # Now sets the costs according to the relative shares.
-                x = w_bar * platform.n_workers**2   
-                s0, s1, s2, s3 = shares
-                d = s0 * platform.n_CPUs * (platform.n_CPUs - 1)
-                d += (s1 + s3) * platform.n_CPUs * platform.n_GPUs
-                d += s2 * platform.n_GPUs * (platform.n_GPUs - 1)
-                x /= d
-                task.comm_costs["CC"][child.ID] = s0 * x
-                task.comm_costs["CG"][child.ID] = s1 * x
-                task.comm_costs["GG"][child.ID] = s2 * x
-                task.comm_costs["GC"][child.ID] = s3 * x    
-                
-    def minimal_serial_time(self):
-        """
-        Computes the minimum makespan of the DAG on a single Worker of the platform.
-        
-        Parameters
-        ------------------------
-        platform - Platform object.
-        The target platform.        
-
-        Returns
-        ------------------------                          
-        float
-        The minimal serial time.      
-        
-        Notes
-        ------------------------                          
-        1. Assumes all task computation costs are set.        
-        """ 
-        
-        workers = list(k for k in self.top_sort[0].comp_costs)    # Assumes all workers can execute all tasks etc...    
-        worker_serial_times = list(sum(t.comp_costs[w.ID] for t in self.graph) for w in workers)        
-        return min(worker_serial_times)
     
-    def CCR(self, avg_type="HEFT"):
-        """
-        Compute and set the computation-to-communication ratio (CCR) for the DAG on the 
-        target platform.          
-        """
-        
-        exp_comm, exp_comp = 0.0, 0.0
-        for task in self.top_sort:
-            exp_comp += average(task.comp_costs, avg_type=avg_type)
-            children = self.graph.successors(task)
-            for child in children:
-                exp_comm += average(task.comm_costs[child.ID], avg_type=avg_type)
-        return exp_comp / exp_comm 
            
     def sort_by_upward_rank(self, platform, avg_type="HEFT", return_ranks=False):
         """
@@ -546,9 +649,9 @@ class DAG:
         # Compute the upward rank of all tasks recursively.
         task_ranks = {}
         for t in backward_traversal:
-            task_ranks[t] = average(t.comp_costs, avg_type=avg_type) 
+            task_ranks[t] = t.average_cost(avg_type=avg_type) 
             try:
-                task_ranks[t] += max(average(t.comm_costs[s.ID], avg_type=avg_type) + task_ranks[s] for s in self.graph.successors(t))
+                task_ranks[t] += max(t.average_comm_cost(s, avg_type=avg_type) + task_ranks[s] for s in self.graph.successors(t))
             except ValueError:
                 pass  
             # print(t.ID, task_ranks[t])
@@ -596,7 +699,7 @@ class DAG:
         for t in self.top_sort:
             task_ranks[t] = 0.0
             try:
-                task_ranks[t] += max(average(p.comp_costs, avg_type) + average(p.comm_costs[t.ID], avg_type=avg_type) +
+                task_ranks[t] += max(p.average_cost(avg_type=avg_type) + p.average_comm_cost(t, avg_type=avg_type) +
                           task_ranks[p] for p in self.graph.predecessors(t))
             except ValueError:
                 pass          
@@ -925,7 +1028,7 @@ class Worker:
             if task.entry: 
                 return (task_cost, 0)
             else:
-                return (task_cost + max(p.FT + p.comm_cost[task.ID][(p.where_scheduled, self.ID)] for p in dag.graph.predecessors(task)), 0)  
+                return (task_cost + max(p.FT + p.comm_costs[task.ID][(p.where_scheduled, self.ID)] for p in dag.graph.predecessors(task)), 0)  
                 # TODO: ideally want to remove the FT attribute for tasks. 
             
         # At least one task already scheduled on processor... 
@@ -934,7 +1037,7 @@ class Worker:
         drt = 0
         if not task.entry:                    
             parents = dag.graph.predecessors(task) 
-            drt += max(p.FT + p.comm_cost[task.ID][(p.where_scheduled, self.ID)] for p in parents)  # TODO: ideally want to remove this.
+            drt += max(p.FT + p.comm_costs[task.ID][(p.where_scheduled, self.ID)] for p in parents)  # TODO: ideally want to remove this.
         
         if not insertion:
             return (task_cost + max(self.load[-1][2], drt), -1)
@@ -1115,16 +1218,16 @@ class Platform:
         # Compute CCR and critical path of the fixed-cost DAG.
         backward_traversal = list(reversed(dag.top_sort))  
         cp_lengths, total_comp, total_comm = {}, 0.0, 0.0
-        for task in backward_traversal:
-            w_t = task.comp_costs["C"] if schedule[task] < self.n_CPUs else task.comp_costs["G"] 
+        for task in backward_traversal:            
+            w_t = task.comp_costs[schedule[task]] 
             total_comp += w_t
             cp_lengths[task.ID] = w_t 
             children = list(dag.graph.successors(task))
-            source = "C" if schedule[task] < self.n_CPUs else "G"
             maximand = 0.0
+            source = schedule[task]
             for c in children:
-                target = "C" if schedule[c] < self.n_CPUs else "G"
-                edge_cost = task.comm_costs[source + target][c.ID] if schedule[task] != schedule[c] else 0.0
+                target = schedule[c]
+                edge_cost = task.comm_costs[c.ID][(source, target)] 
                 total_comm += edge_cost
                 maximand = max(maximand, edge_cost + cp_lengths[c.ID])
             cp_lengths[task.ID] += maximand
@@ -1136,56 +1239,7 @@ class Platform:
         slr = mkspan / cp
         info["SCHEDULE LENGTH RATIO"] = slr
         
-        return info
-    
-# =============================================================================
-# Helper functions.
-# =============================================================================
-        
-def average(D, avg_type="HEFT", weights=None):
-    """
-    Compute an "average" value for a dict. 
-    Usually used for setting priorities in HEFT and similar heuristics.
-    
-    Parameters
-    ------------------------
-    
-    D - dict
-    Any dictionary with int/float entries.
-            
-    avg_type - string
-    How the average should be computed. 
-    Options:
-        - "HEFT", use mean values over all processors as in HEFT.
-        - "median", use median values over all processors. 
-        - "worst", always use largest possible computation cost.
-        - "simple worst", always use largest possible computation cost.
-        - "best", always use smallest possible computation cost.
-        - "simple best", always use smallest possible computation cost.
-        - "HEFT-WM", compute mean over all processors, weighted by acceleration ratio.
-                                     
-    Returns
-    ------------------------
-    float 
-    The average computation cost of the Task. 
-    
-    Notes
-    ------------------------
-    1. "median", "worst", "simple worst", "best", "simple best" were all considered by Zhao and Sakellariou (2003). 
-    """            
-    
-    if avg_type == "HEFT" or avg_type == "mean" or avg_type == "MEAN" or avg_type == "M":
-        return sum(v for v in D.values()) / len(D)
-    elif avg_type == "median" or avg_type == "MEDIAN":
-        return median(D.values())
-    elif avg_type == "worst" or avg_type == "W" or avg_type == "simple worst" or avg_type == "SW":
-        return max(D.values())
-    elif avg_type == "best" or avg_type == "B" or avg_type == "simple best" or avg_type == "sb":
-        return min(D.values())   
-    elif avg_type == "HEFT-WM" or avg_type == "WM":
-        return sum(weights[k]*v for k, v in D.items()) / sum(weights)         
-    raise ValueError('No avg_type, e.g., "mean" or "median", specified for average.') 
-        
+        return info          
             
 # =============================================================================
 # Heuristics.   
