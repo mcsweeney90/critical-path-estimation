@@ -132,7 +132,7 @@ class Task:
                 return sum(weights[k]*v for k, v in self.comp_costs.items()) / sum(weights)
             s = sum(self.comp_costs.values())
             return sum(v**2 for v in self.comp_costs.values()) / s # TODO: check this.         
-        raise ValueError('No avg_type, e.g., "mean" or "median", specified for average.') 
+        raise ValueError('Unrecognized avg_type specified for average_cost.') 
         
     def average_comm_cost(self, child, avg_type="HEFT", weights=None):
         """
@@ -189,7 +189,7 @@ class Task:
                 cbar += t_cost * c_cost * v
             cbar /= (s1 * s2)
             return cbar                    
-        raise ValueError('No avg_type, e.g., "mean" or "median", specified for average_comm_cost.')        
+        raise ValueError('Unrecognized avg_type specified for average_comm_cost.')        
 
 class DAG:
     """
@@ -417,9 +417,10 @@ class DAG:
         """  
         
         workers = list(k for k in self.top_sort[0].comp_costs)  
-        d = {}
-        for w1, w2 in zip(workers, workers):
-            d[(w1, w2)] = 1.0 if w1 == w2 else 0.0
+        if original:
+            d = {}
+            for w1, w2 in zip(workers, workers):
+                d[(w1, w2)] = 1.0 if w1 == w2 else 0.0
                          
         OCT = {}        
         backward_traversal = list(reversed(self.top_sort))
@@ -434,180 +435,180 @@ class DAG:
                     if original:
                         action_values = [OCT[child.ID][v] + d[(w, v)] * task.average_comm_cost(child) + child.comp_costs[v] for v in workers]
                     else:
-                        action_values = [OCT[child.ID][v] + d[(w, v)] * task.comm_costs[child.ID][(w, v)] + child.comp_costs[v] for v in workers]
+                        action_values = [OCT[child.ID][v] + task.comm_costs[child.ID][(w, v)] + child.comp_costs[v] for v in workers]
                     child_values.append(min(action_values))
                 OCT[task.ID][w] += max(child_values)      
         return OCT 
     
-    def expected_cost_table(self, platform, weighted=False):
-        """
-        Incorporated into optimistic critical path method.
-        """  
+    # def expected_cost_table(self, platform, weighted=False):
+    #     """
+    #     Incorporated into optimistic critical path method.
+    #     """  
                 
-        u = defaultdict(lambda: defaultdict(float))  
+    #     u = defaultdict(lambda: defaultdict(float))  
         
-        backward_traversal = list(reversed(self.top_sort))
-        for task in backward_traversal:
-            u[task.ID]["C"] = 0.0
-            u[task.ID]["G"] = 0.0
-            if task.exit:
-                continue
+    #     backward_traversal = list(reversed(self.top_sort))
+    #     for task in backward_traversal:
+    #         u[task.ID]["C"] = 0.0
+    #         u[task.ID]["G"] = 0.0
+    #         if task.exit:
+    #             continue
             
-            A = task.acceleration_ratio if weighted else 1
-            d1 = platform.n_CPUs + A * platform.n_GPUs
+    #         A = task.acceleration_ratio if weighted else 1
+    #         d1 = platform.n_CPUs + A * platform.n_GPUs
             
-            c_child_values, g_child_values = [], []
-            for child in self.graph.successors(task):
-                B = child.acceleration_ratio if weighted else 1
-                d2 = platform.n_CPUs + B * platform.n_GPUs
-                common = platform.n_CPUs * (u[child.ID]["C"] + child.comp_costs["C"]) 
-                common += B * platform.n_GPUs * (u[child.ID]["G"] + child.comp_costs["G"])
+    #         c_child_values, g_child_values = [], []
+    #         for child in self.graph.successors(task):
+    #             B = child.acceleration_ratio if weighted else 1
+    #             d2 = platform.n_CPUs + B * platform.n_GPUs
+    #             common = platform.n_CPUs * (u[child.ID]["C"] + child.comp_costs["C"]) 
+    #             common += B * platform.n_GPUs * (u[child.ID]["G"] + child.comp_costs["G"])
                 
-                c_maximand = platform.n_CPUs * (platform.n_CPUs - 1) * task.comm_costs["CC"][child.ID]
-                c_maximand += platform.n_CPUs * B * platform.n_GPUs * task.comm_costs["CG"][child.ID]
-                c_maximand /= d1 
-                c_maximand += common
-                c_maximand /= d2
-                c_child_values.append(c_maximand)
+    #             c_maximand = platform.n_CPUs * (platform.n_CPUs - 1) * task.comm_costs["CC"][child.ID]
+    #             c_maximand += platform.n_CPUs * B * platform.n_GPUs * task.comm_costs["CG"][child.ID]
+    #             c_maximand /= d1 
+    #             c_maximand += common
+    #             c_maximand /= d2
+    #             c_child_values.append(c_maximand)
                 
-                g_maximand = A * platform.n_GPUs * platform.n_CPUs * task.comm_costs["GC"][child.ID]
-                g_maximand += A * platform.n_GPUs * B * (platform.n_GPUs - 1) * task.comm_costs["GG"][child.ID]
-                g_maximand /= d1
-                g_maximand += common
-                g_maximand /= d2
-                g_child_values.append(g_maximand)     
-            u[task.ID]["C"] += max(c_child_values) 
-            u[task.ID]["G"] += max(g_child_values)
-        return u
+    #             g_maximand = A * platform.n_GPUs * platform.n_CPUs * task.comm_costs["GC"][child.ID]
+    #             g_maximand += A * platform.n_GPUs * B * (platform.n_GPUs - 1) * task.comm_costs["GG"][child.ID]
+    #             g_maximand /= d1
+    #             g_maximand += common
+    #             g_maximand /= d2
+    #             g_child_values.append(g_maximand)     
+    #         u[task.ID]["C"] += max(c_child_values) 
+    #         u[task.ID]["G"] += max(g_child_values)
+    #     return u
     
-    def optimistic_critical_path(self, direction="downward", lookahead=False):
-        """
-        Computes the optimistic finish time, as defined in the Heterogeneous Optimistic Finish Time (HOFT) algorithm,
-        of all tasks assuming they are scheduled on either CPU or GPU. 
-        Used in the HOFT heuristic - see Heuristics.py.                  
+    # def optimistic_critical_path(self, direction="downward", lookahead=False):
+    #     """
+    #     Computes the optimistic finish time, as defined in the Heterogeneous Optimistic Finish Time (HOFT) algorithm,
+    #     of all tasks assuming they are scheduled on either CPU or GPU. 
+    #     Used in the HOFT heuristic - see Heuristics.py.                  
 
-        Returns
-        ------------------------                          
-        OCP - Nested defaultdict
-        The optimistic finish time table in the form {Task 1: {Worker 1 : c1, Worker 2 : c2, ...}, ...}.         
+    #     Returns
+    #     ------------------------                          
+    #     OCP - Nested defaultdict
+    #     The optimistic finish time table in the form {Task 1: {Worker 1 : c1, Worker 2 : c2, ...}, ...}.         
         
-        Notes
-        ------------------------ 
-        1. No target platform is necessary.
-        2. If "remaining == True" is almost identical to the Optimistic Cost Table (OCT) from the PEFT heuristic.
-        """  
+    #     Notes
+    #     ------------------------ 
+    #     1. No target platform is necessary.
+    #     2. If "remaining == True" is almost identical to the Optimistic Cost Table (OCT) from the PEFT heuristic.
+    #     """  
              
-        OCP = defaultdict(lambda: defaultdict(float))  
-        d = {"CC" : 0, "CG" : 1, "GC" : 1, "GG" : 0} 
+    #     OCP = defaultdict(lambda: defaultdict(float))  
+    #     d = {"CC" : 0, "CG" : 1, "GC" : 1, "GG" : 0} 
         
-        if direction == "upward":
-            backward_traversal = list(reversed(self.top_sort))
-            for task in backward_traversal:
-                for p in ["C", "G"]:
-                    OCP[task.ID][p] = task.comp_costs[p] if not lookahead else 0.0
-                    if task.exit:
-                        continue
-                    child_values = []
-                    for child in self.graph.successors(task):
-                        if lookahead:
-                            action_values = [OCP[child.ID][q] + d[p + q] * task.comm_costs[p + q][child.ID] + child.comp_costs[q] for q in ["C", "G"]]
-                        else:
-                            action_values = [OCP[child.ID][q] + d[p + q] * task.comm_costs[p + q][child.ID] for q in ["C", "G"]]
-                        child_values.append(min(action_values))
-                    OCP[task.ID][p] += max(child_values)             
-        else:
-            for task in self.top_sort:
-                for p in ["C", "G"]:
-                    OCP[task.ID][p] = task.comp_costs[p]
-                    if task.entry:
-                        continue
-                    parent_values = []
-                    for parent in self.graph.predecessors(task):
-                        action_values = [OCP[parent.ID][q] + d[q + p] * parent.comm_costs[q + p][task.ID] for q in ["C", "G"]]
-                        parent_values.append(min(action_values))
-                    OCP[task.ID][p] += max(parent_values)   
-        return OCP    
+    #     if direction == "upward":
+    #         backward_traversal = list(reversed(self.top_sort))
+    #         for task in backward_traversal:
+    #             for p in ["C", "G"]:
+    #                 OCP[task.ID][p] = task.comp_costs[p] if not lookahead else 0.0
+    #                 if task.exit:
+    #                     continue
+    #                 child_values = []
+    #                 for child in self.graph.successors(task):
+    #                     if lookahead:
+    #                         action_values = [OCP[child.ID][q] + d[p + q] * task.comm_costs[p + q][child.ID] + child.comp_costs[q] for q in ["C", "G"]]
+    #                     else:
+    #                         action_values = [OCP[child.ID][q] + d[p + q] * task.comm_costs[p + q][child.ID] for q in ["C", "G"]]
+    #                     child_values.append(min(action_values))
+    #                 OCP[task.ID][p] += max(child_values)             
+    #     else:
+    #         for task in self.top_sort:
+    #             for p in ["C", "G"]:
+    #                 OCP[task.ID][p] = task.comp_costs[p]
+    #                 if task.entry:
+    #                     continue
+    #                 parent_values = []
+    #                 for parent in self.graph.predecessors(task):
+    #                     action_values = [OCP[parent.ID][q] + d[q + p] * parent.comm_costs[q + p][task.ID] for q in ["C", "G"]]
+    #                     parent_values.append(min(action_values))
+    #                 OCP[task.ID][p] += max(parent_values)   
+    #     return OCP    
 
-    def expected_critical_path(self, platform, direction="downward", lookahead=False, weighted=False):
-        """
-        Similar to above but expected critical path...
-        """  
+    # def expected_critical_path(self, platform, direction="downward", lookahead=False, weighted=False):
+    #     """
+    #     Similar to above but expected critical path...
+    #     """  
                          
-        if direction == "upward":
-            u = defaultdict(lambda: defaultdict(float))
-            backward_traversal = list(reversed(self.top_sort))
-            for task in backward_traversal:
-                # Compute u^c and u^g.
-                u[task.ID]["C"] = task.comp_costs["C"] if not lookahead else 0.0
-                u[task.ID]["G"] = task.comp_costs["G"] if not lookahead else 0.0
-                if task.exit:
-                    continue
-                c_child_values, g_child_values = [], []
-                A = task.acceleration_ratio if weighted else 1.0
-                d1 = platform.n_CPUs + A * platform.n_GPUs
-                for child in self.graph.successors(task):
-                    B = child.acceleration_ratio if weighted else 1.0
-                    d2 = platform.n_CPUs + B * platform.n_GPUs
-                    if lookahead:
-                        common = platform.n_CPUs * (u[child.ID]["C"] + child.comp_costs["C"]) 
-                        common += B * platform.n_GPUs * (u[child.ID]["G"] + child.comp_costs["G"])
-                    else:
-                        common = platform.n_CPUs * u[child.ID]["C"] 
-                        common += B * platform.n_GPUs * u[child.ID]["G"]
+    #     if direction == "upward":
+    #         u = defaultdict(lambda: defaultdict(float))
+    #         backward_traversal = list(reversed(self.top_sort))
+    #         for task in backward_traversal:
+    #             # Compute u^c and u^g.
+    #             u[task.ID]["C"] = task.comp_costs["C"] if not lookahead else 0.0
+    #             u[task.ID]["G"] = task.comp_costs["G"] if not lookahead else 0.0
+    #             if task.exit:
+    #                 continue
+    #             c_child_values, g_child_values = [], []
+    #             A = task.acceleration_ratio if weighted else 1.0
+    #             d1 = platform.n_CPUs + A * platform.n_GPUs
+    #             for child in self.graph.successors(task):
+    #                 B = child.acceleration_ratio if weighted else 1.0
+    #                 d2 = platform.n_CPUs + B * platform.n_GPUs
+    #                 if lookahead:
+    #                     common = platform.n_CPUs * (u[child.ID]["C"] + child.comp_costs["C"]) 
+    #                     common += B * platform.n_GPUs * (u[child.ID]["G"] + child.comp_costs["G"])
+    #                 else:
+    #                     common = platform.n_CPUs * u[child.ID]["C"] 
+    #                     common += B * platform.n_GPUs * u[child.ID]["G"]
                     
-                    c_maximand = platform.n_CPUs * (platform.n_CPUs - 1) * task.comm_costs["CC"][child.ID]
-                    c_maximand += platform.n_CPUs * B * platform.n_GPUs * task.comm_costs["CG"][child.ID]
-                    c_maximand /= d1 
-                    c_maximand += common
-                    c_maximand /= d2
-                    c_child_values.append(c_maximand)
+    #                 c_maximand = platform.n_CPUs * (platform.n_CPUs - 1) * task.comm_costs["CC"][child.ID]
+    #                 c_maximand += platform.n_CPUs * B * platform.n_GPUs * task.comm_costs["CG"][child.ID]
+    #                 c_maximand /= d1 
+    #                 c_maximand += common
+    #                 c_maximand /= d2
+    #                 c_child_values.append(c_maximand)
                     
-                    g_maximand = A * platform.n_GPUs * platform.n_CPUs * task.comm_costs["GC"][child.ID]
-                    g_maximand += A * platform.n_GPUs * B * (platform.n_GPUs - 1) * task.comm_costs["GG"][child.ID]
-                    g_maximand /= d1
-                    g_maximand += common
-                    g_maximand /= d2
-                    g_child_values.append(g_maximand)                    
+    #                 g_maximand = A * platform.n_GPUs * platform.n_CPUs * task.comm_costs["GC"][child.ID]
+    #                 g_maximand += A * platform.n_GPUs * B * (platform.n_GPUs - 1) * task.comm_costs["GG"][child.ID]
+    #                 g_maximand /= d1
+    #                 g_maximand += common
+    #                 g_maximand /= d2
+    #                 g_child_values.append(g_maximand)                    
                     
-                u[task.ID]["C"] += max(c_child_values) 
-                u[task.ID]["G"] += max(g_child_values) 
-            return u
+    #             u[task.ID]["C"] += max(c_child_values) 
+    #             u[task.ID]["G"] += max(g_child_values) 
+    #         return u
                 
-        else: 
-            d = defaultdict(lambda: defaultdict(float))
-            for task in self.top_sort:
-                # Compute d^c and d^g.
-                d[task.ID]["C"] = task.comp_costs["C"] 
-                d[task.ID]["G"] = task.comp_costs["G"] 
-                if task.entry:
-                    continue
-                c_parent_values, g_parent_values = [], []
-                A = task.acceleration_ratio if weighted else 1.0
-                d1 = platform.n_CPUs + A * platform.n_GPUs
-                for parent in self.graph.predecessors(task):
-                    B = parent.acceleration_ratio if weighted else 1.0
-                    d2 = platform.n_CPUs + B * platform.n_GPUs
+    #     else: 
+    #         d = defaultdict(lambda: defaultdict(float))
+    #         for task in self.top_sort:
+    #             # Compute d^c and d^g.
+    #             d[task.ID]["C"] = task.comp_costs["C"] 
+    #             d[task.ID]["G"] = task.comp_costs["G"] 
+    #             if task.entry:
+    #                 continue
+    #             c_parent_values, g_parent_values = [], []
+    #             A = task.acceleration_ratio if weighted else 1.0
+    #             d1 = platform.n_CPUs + A * platform.n_GPUs
+    #             for parent in self.graph.predecessors(task):
+    #                 B = parent.acceleration_ratio if weighted else 1.0
+    #                 d2 = platform.n_CPUs + B * platform.n_GPUs
                     
-                    common = platform.n_CPUs * d[parent.ID]["C"] 
-                    common += B * platform.n_GPUs * d[parent.ID]["G"]
+    #                 common = platform.n_CPUs * d[parent.ID]["C"] 
+    #                 common += B * platform.n_GPUs * d[parent.ID]["G"]
                     
-                    c_maximand = platform.n_CPUs * (platform.n_CPUs - 1) * parent.comm_costs["CC"][task.ID]
-                    c_maximand += platform.n_CPUs * B * platform.n_GPUs * parent.comm_costs["GC"][task.ID]
-                    c_maximand /= d1
-                    c_maximand += common
-                    c_maximand /= d2
-                    c_parent_values.append(c_maximand)
+    #                 c_maximand = platform.n_CPUs * (platform.n_CPUs - 1) * parent.comm_costs["CC"][task.ID]
+    #                 c_maximand += platform.n_CPUs * B * platform.n_GPUs * parent.comm_costs["GC"][task.ID]
+    #                 c_maximand /= d1
+    #                 c_maximand += common
+    #                 c_maximand /= d2
+    #                 c_parent_values.append(c_maximand)
                     
-                    g_maximand = A * platform.n_GPUs * platform.n_CPUs * parent.comm_costs["CG"][task.ID]
-                    g_maximand += A * platform.n_GPUs * B * (platform.n_GPUs - 1) * parent.comm_costs["GG"][task.ID]
-                    g_maximand /= d1
-                    g_maximand += common
-                    g_maximand /= d2
-                    g_parent_values.append(g_maximand)                    
+    #                 g_maximand = A * platform.n_GPUs * platform.n_CPUs * parent.comm_costs["CG"][task.ID]
+    #                 g_maximand += A * platform.n_GPUs * B * (platform.n_GPUs - 1) * parent.comm_costs["GG"][task.ID]
+    #                 g_maximand /= d1
+    #                 g_maximand += common
+    #                 g_maximand /= d2
+    #                 g_parent_values.append(g_maximand)                    
                     
-                d[task.ID]["C"] += max(c_parent_values) 
-                d[task.ID]["G"] += max(g_parent_values)
-            return d
+    #             d[task.ID]["C"] += max(c_parent_values) 
+    #             d[task.ID]["G"] += max(g_parent_values)
+    #         return d
             
     
            
@@ -709,172 +710,172 @@ class DAG:
             return priority_list, task_ranks
         return priority_list   
         
-    def sort_by_Fulkerson_rank(self, platform, return_f=False, downward=False, weighted=False):
-        """
-        TODO: changed to incorporate final node cost, check still everything still works (especially downward version).
-        Notes:
-            1. "Original" version is as described in Fulkerson's original paper. Much slower than the default but might be wanted.
-            2. The default version computes the ranks using the more computationally efficient method for computing Fulkerson's "f"
-               numbers as first stated by Clingen (1964? Check) and elucidated by Elmaghraby (1967). Assumes that costs are independent
-               but that's a fairly standard assumption anyway.
-        """          
+    # def sort_by_Fulkerson_rank(self, platform, return_f=False, downward=False, weighted=False):
+    #     """
+    #     TODO: changed to incorporate final node cost, check still everything still works (especially downward version).
+    #     Notes:
+    #         1. "Original" version is as described in Fulkerson's original paper. Much slower than the default but might be wanted.
+    #         2. The default version computes the ranks using the more computationally efficient method for computing Fulkerson's "f"
+    #            numbers as first stated by Clingen (1964? Check) and elucidated by Elmaghraby (1967). Assumes that costs are independent
+    #            but that's a fairly standard assumption anyway.
+    #     """          
         
-        # Define the respective probabilities of each potential edge weight.
-        # edge_probs[0] == CPU-same CPU, edge_probs[1] == CPU-different CPU, edge_probs[2] == CPU-GPU,
-        # edge_probs[3] == GPU-same GPU, edge_probs[4] == GPU-different GPU, edge_probs[5] == GPU-CPU.
-        if not weighted:
-            d = platform.n_workers**2
-            edge_probs = [platform.n_CPUs/d, (platform.n_CPUs * (platform.n_CPUs - 1))/d, platform.n_CPUs * platform.n_GPUs / d,
-                          platform.n_GPUs/d, (platform.n_GPUs * (platform.n_GPUs - 1))/d, platform.n_GPUs * platform.n_CPUs / d] 
-        f = {}
+    #     # Define the respective probabilities of each potential edge weight.
+    #     # edge_probs[0] == CPU-same CPU, edge_probs[1] == CPU-different CPU, edge_probs[2] == CPU-GPU,
+    #     # edge_probs[3] == GPU-same GPU, edge_probs[4] == GPU-different GPU, edge_probs[5] == GPU-CPU.
+    #     if not weighted:
+    #         d = platform.n_workers**2
+    #         edge_probs = [platform.n_CPUs/d, (platform.n_CPUs * (platform.n_CPUs - 1))/d, platform.n_CPUs * platform.n_GPUs / d,
+    #                       platform.n_GPUs/d, (platform.n_GPUs * (platform.n_GPUs - 1))/d, platform.n_GPUs * platform.n_CPUs / d] 
+    #     f = {}
         
-        if not downward:        
-            backward_traversal = list(reversed(self.top_sort))
-            for t in backward_traversal:
-                if t.exit:
-                    f[t] = 0.0    
-                    continue
-                children = list(self.graph.successors(t))                  
-                # Find alpha and the potential z values to check.
-                alpha, Z = 0.0, []
-                for c in children:  
-                    if c.exit:
-                        alpha = max(alpha, min(t.comp_costs["C"] + c.comp_costs["C"], t.comp_costs["G"] + c.comp_costs["G"]))
-                        n = [t.comp_costs["C"] + c.comp_costs["C"],
-                             t.comm_costs["CC"][c.ID] + t.comp_costs["C"] + c.comp_costs["C"],
-                             t.comm_costs["CG"][c.ID] + t.comp_costs["C"] + c.comp_costs["G"], 
-                             t.comp_costs["G"] + c.comp_costs["G"],
-                             t.comm_costs["GG"][c.ID] + t.comp_costs["G"] + c.comp_costs["G"],
-                             t.comm_costs["GC"][c.ID] + t.comp_costs["G"] + c.comp_costs["C"]]                        
-                    else:
-                        alpha = max(alpha, f[c] + min(t.comp_costs["C"], t.comp_costs["G"]))
-                        n = [f[c] + t.comp_costs["C"],
-                             f[c] + t.comm_costs["CC"][c.ID] + t.comp_costs["C"],
-                             f[c] + t.comm_costs["CG"][c.ID] + t.comp_costs["C"], 
-                             f[c] + t.comp_costs["G"],
-                             f[c] + t.comm_costs["GG"][c.ID] + t.comp_costs["G"],
-                             f[c] + t.comm_costs["GC"][c.ID] + t.comp_costs["G"]]
-                    Z += n          
-                # Compute f. 
-                f[t] = 0.0
-                Z = list(set(Z))    # TODO: might still need a check to prevent rounding errors.
-                for z in Z:
-                    if alpha - z > 1e-6:   
-                        continue
-                    # Iterate over edges and compute the two products.
-                    plus, minus = 1, 1                
-                    for c in children:
-                        # Compute zdash = z - f_c.
-                        zdash = z - f[c] 
-                        # Define the edge costs.
-                        if weighted:    
-                            r1, r2 = t.acceleration_ratio, c.acceleration_ratio
-                            d = (platform.n_CPUs + r1 * platform.n_GPUs) * (platform.n_CPUs + r2 * platform.n_GPUs)
-                            edge_probs = [platform.n_CPUs/d, 
-                                          (platform.n_CPUs * (platform.n_CPUs - 1))/d, 
-                                          platform.n_CPUs * r2 * platform.n_GPUs / d,
-                                          r1 * r2 * platform.n_GPUs/d, 
-                                          (r1 * r2 * platform.n_GPUs * (platform.n_GPUs - 1))/d,
-                                          r1 * platform.n_GPUs * platform.n_CPUs / d]
-                        if c.exit:
-                            edge_costs = [[t.comp_costs["C"] + c.comp_costs["C"], edge_probs[0]],
-                              [t.comm_costs["CC"][c.ID] + t.comp_costs["C"] + c.comp_costs["C"], edge_probs[1]],
-                              [t.comm_costs["CG"][c.ID] + t.comp_costs["C"] + c.comp_costs["G"], edge_probs[2]],
-                              [t.comp_costs["G"] + c.comp_costs["G"], edge_probs[3]],
-                              [t.comm_costs["GG"][c.ID] + t.comp_costs["G"] + c.comp_costs["G"], edge_probs[4]],
-                              [t.comm_costs["GC"][c.ID] + t.comp_costs["G"] + c.comp_costs["C"], edge_probs[5]]] 
-                        else:
-                            edge_costs = [[t.comp_costs["C"], edge_probs[0]],
-                              [t.comm_costs["CC"][c.ID] + t.comp_costs["C"], edge_probs[1]],
-                              [t.comm_costs["CG"][c.ID] + t.comp_costs["C"], edge_probs[2]],
-                              [t.comp_costs["G"], edge_probs[3]],
-                              [t.comm_costs["GG"][c.ID] + t.comp_costs["G"], edge_probs[4]],
-                              [t.comm_costs["GC"][c.ID] + t.comp_costs["G"], edge_probs[5]]]                                          
-                        # Compute m and p.
-                        m = sum(e[1] for e in edge_costs if zdash - e[0] > 1e-6)
-                        minus *= m 
-                        p = m + sum(e[1] for e in edge_costs if abs(zdash - e[0]) < 1e-6)
-                        plus *= p
-                    # Add to f.                                    
-                    f[t] += z * (plus - minus)
-                # print(t.ID, f[t])
-            # Sort tasks by rank. 
-            priority_list = list(reversed(sorted(f, key=f.get)))         
-        else:
-            for t in self.top_sort:
-                if t.entry:
-                    f[t] = 0.0
-                    continue
-                parents = list(self.graph.predecessors(t)) 
-                # Find alpha and the potential z values to check.
-                alpha, Z = 0.0, []
-                for p in parents: 
-                    if t.exit:
-                        alpha = max(alpha, f[p] + min(p.comp_costs["C"] + t.comp_costs["C"], p.comp_costs["G"] + p.comp_costs["G"]))
-                        n = [f[p] + p.comp_costs["C"] + t.comp_costs["C"],
-                             f[p] + p.comm_costs["CC"][t.ID] + p.comp_costs["C"] + t.comp_costs["C"],
-                             f[p] + p.comm_costs["CG"][t.ID] + p.comp_costs["C"] + t.comp_costs["G"], 
-                             f[p] + p.comp_costs["G"] + t.comp_costs["G"],
-                             f[p] + p.comm_costs["GG"][t.ID] + p.comp_costs["G"] + t.comp_costs["G"],
-                             f[p] + p.comm_costs["GC"][t.ID] + p.comp_costs["G"] + t.comp_costs["C"]]
-                    else:
-                        alpha = max(alpha, f[p] + min(p.comp_costs["C"], p.comp_costs["G"])) 
-                        n = [f[p] + p.comp_costs["C"],
-                             f[p] + p.comm_costs["CC"][t.ID] + p.comp_costs["C"],
-                             f[p] + p.comm_costs["CG"][t.ID] + p.comp_costs["C"], 
-                             f[p] + p.comp_costs["G"],
-                             f[p] + p.comm_costs["GG"][t.ID] + p.comp_costs["G"],
-                             f[p] + p.comm_costs["GC"][t.ID] + p.comp_costs["G"]]
-                    Z += n  
-                # Compute f. 
-                f[t] = 0.0
-                Z = list(set(Z))    # TODO: might still need a check to prevent rounding errors.
-                for z in Z:
-                    if alpha - z > 1e-6:   
-                        continue
-                    # Iterate over edges and compute the two products.
-                    plus, minus = 1, 1                
-                    for p in parents:
-                        # Compute zdash = z - f_p.
-                        zdash = z - f[p]    
-                        # Define the edge costs.
-                        if weighted:    # TODO: check this.
-                            r1, r2 = p.acceleration_ratio, t.acceleration_ratio
-                            d = (platform.n_CPUs + r1 * platform.n_GPUs) * (platform.n_CPUs + r2 * platform.n_GPUs)
-                            edge_probs = [platform.n_CPUs/d, 
-                                          (platform.n_CPUs * (platform.n_CPUs - 1))/d, 
-                                          platform.n_CPUs * r2 * platform.n_GPUs / d,
-                                          platform.n_GPUs/d, 
-                                          r1 * r2 * (platform.n_GPUs * (platform.n_GPUs - 1))/d,
-                                          r1 * platform.n_GPUs * platform.n_CPUs / d]
-                        if t.exit:
-                            edge_costs = [[p.comp_costs["C"] + t.comp_costs["C"], edge_probs[0]],
-                              [p.comm_costs["CC"][t.ID] + p.comp_costs["C"] + t.comp_costs["C"], edge_probs[1]],
-                              [p.comm_costs["CG"][t.ID] + p.comp_costs["C"] + t.comp_costs["G"], edge_probs[2]],
-                              [p.comp_costs["G"] + t.comp_costs["G"], edge_probs[3]],
-                              [p.comm_costs["GG"][t.ID] + p.comp_costs["G"] + t.comp_costs["G"], edge_probs[4]],
-                              [p.comm_costs["GC"][t.ID] + p.comp_costs["G"] + t.comp_costs["C"], edge_probs[5]]] 
-                        else:
-                            edge_costs = [[p.comp_costs["C"], edge_probs[0]],
-                              [p.comm_costs["CC"][t.ID] + p.comp_costs["C"], edge_probs[1]],
-                              [p.comm_costs["CG"][t.ID] + p.comp_costs["C"], edge_probs[2]],
-                              [p.comp_costs["G"], edge_probs[3]],
-                              [p.comm_costs["GG"][t.ID] + p.comp_costs["G"], edge_probs[4]],
-                              [p.comm_costs["GC"][t.ID] + p.comp_costs["G"], edge_probs[5]]]                                        
-                        # Compute m and p.
-                        m = sum(e[1] for e in edge_costs if zdash - e[0] > 1e-6)
-                        minus *= m 
-                        pl = m + sum(e[1] for e in edge_costs if abs(zdash - e[0]) < 1e-6)
-                        plus *= pl
-                    # Add to f.                                    
-                    f[t] += z * (plus - minus) 
-                # print("Task: {}, f = {}".format(t.ID, f[t]))
-            # Sort tasks by rank. 
-            priority_list = list(sorted(f, key=f.get))
+    #     if not downward:        
+    #         backward_traversal = list(reversed(self.top_sort))
+    #         for t in backward_traversal:
+    #             if t.exit:
+    #                 f[t] = 0.0    
+    #                 continue
+    #             children = list(self.graph.successors(t))                  
+    #             # Find alpha and the potential z values to check.
+    #             alpha, Z = 0.0, []
+    #             for c in children:  
+    #                 if c.exit:
+    #                     alpha = max(alpha, min(t.comp_costs["C"] + c.comp_costs["C"], t.comp_costs["G"] + c.comp_costs["G"]))
+    #                     n = [t.comp_costs["C"] + c.comp_costs["C"],
+    #                          t.comm_costs["CC"][c.ID] + t.comp_costs["C"] + c.comp_costs["C"],
+    #                          t.comm_costs["CG"][c.ID] + t.comp_costs["C"] + c.comp_costs["G"], 
+    #                          t.comp_costs["G"] + c.comp_costs["G"],
+    #                          t.comm_costs["GG"][c.ID] + t.comp_costs["G"] + c.comp_costs["G"],
+    #                          t.comm_costs["GC"][c.ID] + t.comp_costs["G"] + c.comp_costs["C"]]                        
+    #                 else:
+    #                     alpha = max(alpha, f[c] + min(t.comp_costs["C"], t.comp_costs["G"]))
+    #                     n = [f[c] + t.comp_costs["C"],
+    #                          f[c] + t.comm_costs["CC"][c.ID] + t.comp_costs["C"],
+    #                          f[c] + t.comm_costs["CG"][c.ID] + t.comp_costs["C"], 
+    #                          f[c] + t.comp_costs["G"],
+    #                          f[c] + t.comm_costs["GG"][c.ID] + t.comp_costs["G"],
+    #                          f[c] + t.comm_costs["GC"][c.ID] + t.comp_costs["G"]]
+    #                 Z += n          
+    #             # Compute f. 
+    #             f[t] = 0.0
+    #             Z = list(set(Z))    # TODO: might still need a check to prevent rounding errors.
+    #             for z in Z:
+    #                 if alpha - z > 1e-6:   
+    #                     continue
+    #                 # Iterate over edges and compute the two products.
+    #                 plus, minus = 1, 1                
+    #                 for c in children:
+    #                     # Compute zdash = z - f_c.
+    #                     zdash = z - f[c] 
+    #                     # Define the edge costs.
+    #                     if weighted:    
+    #                         r1, r2 = t.acceleration_ratio, c.acceleration_ratio
+    #                         d = (platform.n_CPUs + r1 * platform.n_GPUs) * (platform.n_CPUs + r2 * platform.n_GPUs)
+    #                         edge_probs = [platform.n_CPUs/d, 
+    #                                       (platform.n_CPUs * (platform.n_CPUs - 1))/d, 
+    #                                       platform.n_CPUs * r2 * platform.n_GPUs / d,
+    #                                       r1 * r2 * platform.n_GPUs/d, 
+    #                                       (r1 * r2 * platform.n_GPUs * (platform.n_GPUs - 1))/d,
+    #                                       r1 * platform.n_GPUs * platform.n_CPUs / d]
+    #                     if c.exit:
+    #                         edge_costs = [[t.comp_costs["C"] + c.comp_costs["C"], edge_probs[0]],
+    #                           [t.comm_costs["CC"][c.ID] + t.comp_costs["C"] + c.comp_costs["C"], edge_probs[1]],
+    #                           [t.comm_costs["CG"][c.ID] + t.comp_costs["C"] + c.comp_costs["G"], edge_probs[2]],
+    #                           [t.comp_costs["G"] + c.comp_costs["G"], edge_probs[3]],
+    #                           [t.comm_costs["GG"][c.ID] + t.comp_costs["G"] + c.comp_costs["G"], edge_probs[4]],
+    #                           [t.comm_costs["GC"][c.ID] + t.comp_costs["G"] + c.comp_costs["C"], edge_probs[5]]] 
+    #                     else:
+    #                         edge_costs = [[t.comp_costs["C"], edge_probs[0]],
+    #                           [t.comm_costs["CC"][c.ID] + t.comp_costs["C"], edge_probs[1]],
+    #                           [t.comm_costs["CG"][c.ID] + t.comp_costs["C"], edge_probs[2]],
+    #                           [t.comp_costs["G"], edge_probs[3]],
+    #                           [t.comm_costs["GG"][c.ID] + t.comp_costs["G"], edge_probs[4]],
+    #                           [t.comm_costs["GC"][c.ID] + t.comp_costs["G"], edge_probs[5]]]                                          
+    #                     # Compute m and p.
+    #                     m = sum(e[1] for e in edge_costs if zdash - e[0] > 1e-6)
+    #                     minus *= m 
+    #                     p = m + sum(e[1] for e in edge_costs if abs(zdash - e[0]) < 1e-6)
+    #                     plus *= p
+    #                 # Add to f.                                    
+    #                 f[t] += z * (plus - minus)
+    #             # print(t.ID, f[t])
+    #         # Sort tasks by rank. 
+    #         priority_list = list(reversed(sorted(f, key=f.get)))         
+    #     else:
+    #         for t in self.top_sort:
+    #             if t.entry:
+    #                 f[t] = 0.0
+    #                 continue
+    #             parents = list(self.graph.predecessors(t)) 
+    #             # Find alpha and the potential z values to check.
+    #             alpha, Z = 0.0, []
+    #             for p in parents: 
+    #                 if t.exit:
+    #                     alpha = max(alpha, f[p] + min(p.comp_costs["C"] + t.comp_costs["C"], p.comp_costs["G"] + p.comp_costs["G"]))
+    #                     n = [f[p] + p.comp_costs["C"] + t.comp_costs["C"],
+    #                          f[p] + p.comm_costs["CC"][t.ID] + p.comp_costs["C"] + t.comp_costs["C"],
+    #                          f[p] + p.comm_costs["CG"][t.ID] + p.comp_costs["C"] + t.comp_costs["G"], 
+    #                          f[p] + p.comp_costs["G"] + t.comp_costs["G"],
+    #                          f[p] + p.comm_costs["GG"][t.ID] + p.comp_costs["G"] + t.comp_costs["G"],
+    #                          f[p] + p.comm_costs["GC"][t.ID] + p.comp_costs["G"] + t.comp_costs["C"]]
+    #                 else:
+    #                     alpha = max(alpha, f[p] + min(p.comp_costs["C"], p.comp_costs["G"])) 
+    #                     n = [f[p] + p.comp_costs["C"],
+    #                          f[p] + p.comm_costs["CC"][t.ID] + p.comp_costs["C"],
+    #                          f[p] + p.comm_costs["CG"][t.ID] + p.comp_costs["C"], 
+    #                          f[p] + p.comp_costs["G"],
+    #                          f[p] + p.comm_costs["GG"][t.ID] + p.comp_costs["G"],
+    #                          f[p] + p.comm_costs["GC"][t.ID] + p.comp_costs["G"]]
+    #                 Z += n  
+    #             # Compute f. 
+    #             f[t] = 0.0
+    #             Z = list(set(Z))    # TODO: might still need a check to prevent rounding errors.
+    #             for z in Z:
+    #                 if alpha - z > 1e-6:   
+    #                     continue
+    #                 # Iterate over edges and compute the two products.
+    #                 plus, minus = 1, 1                
+    #                 for p in parents:
+    #                     # Compute zdash = z - f_p.
+    #                     zdash = z - f[p]    
+    #                     # Define the edge costs.
+    #                     if weighted:    # TODO: check this.
+    #                         r1, r2 = p.acceleration_ratio, t.acceleration_ratio
+    #                         d = (platform.n_CPUs + r1 * platform.n_GPUs) * (platform.n_CPUs + r2 * platform.n_GPUs)
+    #                         edge_probs = [platform.n_CPUs/d, 
+    #                                       (platform.n_CPUs * (platform.n_CPUs - 1))/d, 
+    #                                       platform.n_CPUs * r2 * platform.n_GPUs / d,
+    #                                       platform.n_GPUs/d, 
+    #                                       r1 * r2 * (platform.n_GPUs * (platform.n_GPUs - 1))/d,
+    #                                       r1 * platform.n_GPUs * platform.n_CPUs / d]
+    #                     if t.exit:
+    #                         edge_costs = [[p.comp_costs["C"] + t.comp_costs["C"], edge_probs[0]],
+    #                           [p.comm_costs["CC"][t.ID] + p.comp_costs["C"] + t.comp_costs["C"], edge_probs[1]],
+    #                           [p.comm_costs["CG"][t.ID] + p.comp_costs["C"] + t.comp_costs["G"], edge_probs[2]],
+    #                           [p.comp_costs["G"] + t.comp_costs["G"], edge_probs[3]],
+    #                           [p.comm_costs["GG"][t.ID] + p.comp_costs["G"] + t.comp_costs["G"], edge_probs[4]],
+    #                           [p.comm_costs["GC"][t.ID] + p.comp_costs["G"] + t.comp_costs["C"], edge_probs[5]]] 
+    #                     else:
+    #                         edge_costs = [[p.comp_costs["C"], edge_probs[0]],
+    #                           [p.comm_costs["CC"][t.ID] + p.comp_costs["C"], edge_probs[1]],
+    #                           [p.comm_costs["CG"][t.ID] + p.comp_costs["C"], edge_probs[2]],
+    #                           [p.comp_costs["G"], edge_probs[3]],
+    #                           [p.comm_costs["GG"][t.ID] + p.comp_costs["G"], edge_probs[4]],
+    #                           [p.comm_costs["GC"][t.ID] + p.comp_costs["G"], edge_probs[5]]]                                        
+    #                     # Compute m and p.
+    #                     m = sum(e[1] for e in edge_costs if zdash - e[0] > 1e-6)
+    #                     minus *= m 
+    #                     pl = m + sum(e[1] for e in edge_costs if abs(zdash - e[0]) < 1e-6)
+    #                     plus *= pl
+    #                 # Add to f.                                    
+    #                 f[t] += z * (plus - minus) 
+    #             # print("Task: {}, f = {}".format(t.ID, f[t]))
+    #         # Sort tasks by rank. 
+    #         priority_list = list(sorted(f, key=f.get))
                 
-        if return_f:
-            return priority_list, f
-        return priority_list        
+    #     if return_f:
+    #         return priority_list, f
+    #     return priority_list        
                  
     def draw_graph(self, filepath):
         """
@@ -1028,8 +1029,7 @@ class Worker:
             if task.entry: 
                 return (task_cost, 0)
             else:
-                return (task_cost + max(p.FT + p.comm_costs[task.ID][(p.where_scheduled, self.ID)] for p in dag.graph.predecessors(task)), 0)  
-                # TODO: ideally want to remove the FT attribute for tasks. 
+                return (task_cost + max(p.FT + p.comm_costs[task.ID][(p.where_scheduled, self.ID)] for p in dag.graph.predecessors(task)), 0)                  
             
         # At least one task already scheduled on processor... 
                 
@@ -1037,7 +1037,7 @@ class Worker:
         drt = 0
         if not task.entry:                    
             parents = dag.graph.predecessors(task) 
-            drt += max(p.FT + p.comm_costs[task.ID][(p.where_scheduled, self.ID)] for p in parents)  # TODO: ideally want to remove this.
+            drt += max(p.FT + p.comm_costs[task.ID][(p.where_scheduled, self.ID)] for p in parents)  
         
         if not insertion:
             return (task_cost + max(self.load[-1][2], drt), -1)
@@ -1050,7 +1050,7 @@ class Worker:
                 continue
             poss_finish_time = max(prev_finish_time, drt) + task_cost
             if poss_finish_time <= t[1]:
-                return (poss_finish_time, i) # TODO: should this be i - 1?
+                return (poss_finish_time, i) 
             prev_finish_time = t[2]
         
         # No valid gap found.
@@ -1201,7 +1201,6 @@ class Platform:
     def follow_schedule(self, dag, schedule):
         """
         Follow the input schedule.
-        TODO.
         """        
         
         info = {}     
@@ -1364,29 +1363,21 @@ def PEFT(dag, platform, return_schedule=False, schedule_dest=None, expected_comm
     else:
         OCT = dag.optimistic_cost_table()       
     
-    task_ranks = {t : (platform.n_CPUs * OCT[t.ID]["C"] + platform.n_GPUs * OCT[t.ID]["G"]) / platform.n_workers for t in dag.top_sort} 
+    task_ranks = {t : sum(OCT[t.ID][w.ID] for w in platform.workers) / platform.n_workers for t in dag.top_sort} 
     
     ready_tasks = list(t for t in dag.top_sort if t.entry)    
     while len(ready_tasks):   
         # Find ready task with highest priority (ties broken randomly according to max function).
         t = max(ready_tasks, key=task_ranks.get) 
-        # Find fastest CPU and GPU workers for t.
-        worker_finish_times = list(w.earliest_finish_time(t, dag, platform) for w in platform.workers)
-        min_cpu_val = min(worker_finish_times[:platform.n_CPUs], key=lambda w:w[0]) 
-        min_cpu = worker_finish_times.index(min_cpu_val)
-        min_gpu_val = min(worker_finish_times[platform.n_CPUs:], key=lambda w:w[0]) 
-        min_gpu = worker_finish_times[platform.n_CPUs:].index(min_gpu_val) + platform.n_CPUs 
         # Add optimistic critical path length to finish times and compare.
-        if min_cpu_val[0] + OCT[t.ID]["C"] < min_gpu_val[0] + OCT[t.ID]["G"]:
-            min_worker = min_cpu
-            ft, idx = min_cpu_val
-        else:
-            min_worker = min_gpu
-            ft, idx = min_gpu_val
+        worker_makespans = list(w.earliest_finish_time(t, dag, platform) + OCT[t.ID][w.ID] for w in platform.workers)
+        opt_worker_val = min(worker_makespans, key=lambda w:w[0]) 
+        opt_worker = worker_makespans.index(opt_worker_val)
+        ft, idx = opt_worker_val
         # Schedule the task.
-        platform.workers[min_worker].schedule_task(t, finish_time=ft, load_idx=idx)          
+        platform.workers[opt_worker].schedule_task(t, finish_time=ft, load_idx=idx)          
         if return_schedule or schedule_dest is not None:
-            pi[t] = min_worker 
+            pi[t] = opt_worker 
         # Update ready tasks.                          
         ready_tasks.remove(t)
         for c in dag.graph.successors(t):
@@ -1429,21 +1420,19 @@ def CPOP(dag, platform, return_schedule=False, schedule_dest=None):
     
     # Identify the tasks on the critical path.
     ready_tasks = list(t for t in dag.graph if t.entry)  
-    cp_tasks = set()
+    cp_tasks = []
     for t in ready_tasks:
         if any(abs(task_ranks[s.ID] - task_ranks[t.ID]) < 1e-6 for s in dag.graph.successors(t)):
             cp = t
             cp_prio = task_ranks[t.ID] 
-            cpu_cost, gpu_cost = t.comp_costs["C"], t.comp_costs["G"]
-            cp_tasks.add(cp.ID)
+            cp_tasks.add(cp)
             break        
     while not cp.exit:
         cp = np.random.choice(list(s for s in dag.graph.successors(cp) if abs(task_ranks[s.ID] - cp_prio) < 1e-6))
         cp_tasks.add(cp.ID)
-        cpu_cost += cp.comp_costs["C"]
-        gpu_cost += cp.comp_costs["G"]
     # Find the fastest worker for the CP tasks.
-    cp_worker = platform.workers[0] if cpu_cost < gpu_cost else platform.workers[platform.n_CPUs]     
+    worker_cp_times = {w.ID : sum(c.comp_costs[w.ID] for c in cp_tasks) for w in platform.workers}
+    cp_worker = min(worker_cp_times, key=worker_cp_times.get)   
        
     while len(ready_tasks):
         t = max(ready_tasks, key=lambda t : task_ranks[t.ID])
@@ -1486,63 +1475,63 @@ def CPOP(dag, platform, return_schedule=False, schedule_dest=None):
         return mkspan, pi    
     return mkspan 
 
-def EEFT(dag, platform, weighted=False, return_schedule=False, schedule_dest=None):
-    """
-    Modification of PEFT that uses HEFT-like critical path estimates in the lookahead.
-    """ 
+# def EEFT(dag, platform, weighted=False, return_schedule=False, schedule_dest=None):
+#     """
+#     Modification of PEFT that uses HEFT-like critical path estimates in the lookahead.
+#     """ 
     
-    if return_schedule or schedule_dest is not None:
-        pi = {}
+#     if return_schedule or schedule_dest is not None:
+#         pi = {}
     
-    U = dag.expected_cost_table(platform, weighted=weighted)    
-    if weighted:
-        task_ranks = {t : (platform.n_CPUs * U[t.ID]["C"] + t.acceleration_ratio * platform.n_GPUs * U[t.ID]["G"]) / (platform.n_CPUs + t.acceleration_ratio * platform.n_GPUs) for t in dag.top_sort}
-    else:
-        task_ranks = {t : (platform.n_CPUs * U[t.ID]["C"] + platform.n_GPUs * U[t.ID]["G"]) / (platform.n_CPUs + platform.n_GPUs) for t in dag.top_sort}
+#     U = dag.expected_cost_table(platform, weighted=weighted)    
+#     if weighted:
+#         task_ranks = {t : (platform.n_CPUs * U[t.ID]["C"] + t.acceleration_ratio * platform.n_GPUs * U[t.ID]["G"]) / (platform.n_CPUs + t.acceleration_ratio * platform.n_GPUs) for t in dag.top_sort}
+#     else:
+#         task_ranks = {t : (platform.n_CPUs * U[t.ID]["C"] + platform.n_GPUs * U[t.ID]["G"]) / (platform.n_CPUs + platform.n_GPUs) for t in dag.top_sort}
         
-    ready_tasks = list(t for t in dag.top_sort if t.entry)    
-    while len(ready_tasks):   
-        # Find ready task with highest priority (ties broken randomly according to max function).
-        t = max(ready_tasks, key=task_ranks.get) 
-        # print(t.ID, task_ranks[t])
-        # Find fastest CPU and GPU workers for t.
-        worker_finish_times = list(w.earliest_finish_time(t, dag, platform) for w in platform.workers)
-        min_cpu_val = min(worker_finish_times[:platform.n_CPUs], key=lambda w:w[0]) 
-        min_cpu = worker_finish_times.index(min_cpu_val)
-        min_gpu_val = min(worker_finish_times[platform.n_CPUs:], key=lambda w:w[0]) 
-        min_gpu = worker_finish_times[platform.n_CPUs:].index(min_gpu_val) + platform.n_CPUs 
-        # Add optimistic critical path length to finish times and compare.
-        if min_cpu_val[0] + U[t.ID]["C"] < min_gpu_val[0] + U[t.ID]["G"]:
-            min_worker = min_cpu
-            ft, idx = min_cpu_val
-        else:
-            min_worker = min_gpu
-            ft, idx = min_gpu_val
-        # Schedule the task.
-        platform.workers[min_worker].schedule_task(t, finish_time=ft, load_idx=idx)          
-        if return_schedule or schedule_dest is not None:
-            pi[t] = min_worker 
-        # Update ready tasks.                          
-        ready_tasks.remove(t)
-        for c in dag.graph.successors(t):
-            if dag.ready_to_schedule(c):
-                ready_tasks.append(c) 
+#     ready_tasks = list(t for t in dag.top_sort if t.entry)    
+#     while len(ready_tasks):   
+#         # Find ready task with highest priority (ties broken randomly according to max function).
+#         t = max(ready_tasks, key=task_ranks.get) 
+#         # print(t.ID, task_ranks[t])
+#         # Find fastest CPU and GPU workers for t.
+#         worker_finish_times = list(w.earliest_finish_time(t, dag, platform) for w in platform.workers)
+#         min_cpu_val = min(worker_finish_times[:platform.n_CPUs], key=lambda w:w[0]) 
+#         min_cpu = worker_finish_times.index(min_cpu_val)
+#         min_gpu_val = min(worker_finish_times[platform.n_CPUs:], key=lambda w:w[0]) 
+#         min_gpu = worker_finish_times[platform.n_CPUs:].index(min_gpu_val) + platform.n_CPUs 
+#         # Add optimistic critical path length to finish times and compare.
+#         if min_cpu_val[0] + U[t.ID]["C"] < min_gpu_val[0] + U[t.ID]["G"]:
+#             min_worker = min_cpu
+#             ft, idx = min_cpu_val
+#         else:
+#             min_worker = min_gpu
+#             ft, idx = min_gpu_val
+#         # Schedule the task.
+#         platform.workers[min_worker].schedule_task(t, finish_time=ft, load_idx=idx)          
+#         if return_schedule or schedule_dest is not None:
+#             pi[t] = min_worker 
+#         # Update ready tasks.                          
+#         ready_tasks.remove(t)
+#         for c in dag.graph.successors(t):
+#             if dag.ready_to_schedule(c):
+#                 ready_tasks.append(c) 
         
-    # If schedule_dest, print the schedule to file.
-    if schedule_dest is not None: 
-        print("The tasks were scheduled in the following order:", file=schedule_dest)
-        for t in pi:
-            print(t.ID, file=schedule_dest)
-        print("\n", file=schedule_dest)
-        platform.print_info(print_schedule=True, filepath=schedule_dest)
+#     # If schedule_dest, print the schedule to file.
+#     if schedule_dest is not None: 
+#         print("The tasks were scheduled in the following order:", file=schedule_dest)
+#         for t in pi:
+#             print(t.ID, file=schedule_dest)
+#         print("\n", file=schedule_dest)
+#         platform.print_info(print_schedule=True, filepath=schedule_dest)
 
-    # Compute makespan.
-    mkspan = dag.makespan()        
+#     # Compute makespan.
+#     mkspan = dag.makespan()        
     
-    # Reset DAG and platform.
-    dag.reset()
-    platform.reset()  
+#     # Reset DAG and platform.
+#     dag.reset()
+#     platform.reset()  
       
-    if return_schedule:
-        return mkspan, pi    
-    return mkspan 
+#     if return_schedule:
+#         return mkspan, pi    
+#     return mkspan 
