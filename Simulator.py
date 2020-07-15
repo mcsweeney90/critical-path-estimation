@@ -394,7 +394,7 @@ class DAG:
         """ 
         
         workers = list(k for k in self.top_sort[0].comp_costs)    # Assumes all workers can execute all tasks etc...    
-        worker_serial_times = list(sum(t.comp_costs[w.ID] for t in self.graph) for w in workers)        
+        worker_serial_times = list(sum(t.comp_costs[w] for t in self.graph) for w in workers)        
         return min(worker_serial_times)
     
     def CCR(self, avg_type="HEFT"):
@@ -920,7 +920,7 @@ class DAG:
         A.layout('dot')
         A.draw('{}/{}_{}tasks_DAG.png'.format(filepath, self.name.split(" ")[0], self.n_tasks)) 
     
-    def print_info(self, target_platform=None, return_mst_and_cp=False, detailed=False, filepath=None):
+    def print_info(self, return_mst_and_cp=False, detailed=False, filepath=None):
         """
         Print basic information about the DAG, either to screen or as txt file.
         
@@ -952,9 +952,9 @@ class DAG:
         if self.costs_set:  
             mst = self.minimal_serial_time()
             print("Minimal serial time: {}".format(mst), file=filepath)
-            OCP = self.optimistic_critical_path()
-            cp = max(min(OCP[task.ID][p] for p in OCP[task.ID]) for task in self.graph if task.exit) 
-            print("Optimal critical path length: {}".format(cp), file=filepath) 
+            # OCP = self.optimistic_critical_path()
+            # cp = max(min(OCP[task.ID][p] for p in OCP[task.ID]) for task in self.graph if task.exit) 
+            # print("Optimal critical path length: {}".format(cp), file=filepath) 
             ccr = self.CCR()
             print("Computation-to-communication ratio: {}".format(ccr), file=filepath)        
                     
@@ -972,8 +972,8 @@ class DAG:
                     print("Task type: {}".format(task.type), file=filepath)              
         print("--------------------------------------------------------", file=filepath) 
         
-        if return_mst_and_cp:
-            return mst, cp
+        # if return_mst_and_cp:
+        #     return mst, cp
           
 class Worker:
     """
@@ -1164,7 +1164,7 @@ class Platform:
         
         self.name = name     
         self.n_workers = n_workers      # Often useful.
-        self.workers = [Worker(ID=i) for i in range(self.n_workers)]       # List of all Worker objects.       
+        self.workers = [Worker(ID="P{}".format(i)) for i in range(self.n_workers)]       # List of all Worker objects.       
     
     def reset(self):
         """Resets some attributes to defaults so we can simulate the execution of another DAG."""
