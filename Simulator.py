@@ -128,10 +128,10 @@ class Task:
         elif avg_type == "best" or avg_type == "B" or avg_type == "simple best" or avg_type == "sb":
             return min(self.comp_costs.values())   
         elif avg_type == "HEFT-WM" or avg_type == "WM":
-            if weights is not None:
-                return sum(weights[k]*v for k, v in self.comp_costs.items()) / sum(weights)
-            s = sum(self.comp_costs.values())
-            return sum(v**2 for v in self.comp_costs.values()) / s # TODO: check this.         
+            if weights is not None:              
+                return sum(weights[k]*v for k, v in self.comp_costs.items()) / sum(weights.values())
+            s = sum(1/v for v in self.comp_costs.values())
+            return len(self.comp_costs) / s         
         raise ValueError('Unrecognized avg_type specified for average_cost.') 
         
     def average_comm_cost(self, child, avg_type="HEFT", weights=None):
@@ -180,13 +180,13 @@ class Task:
         elif avg_type == "simple best" or avg_type == "sb":
             return 0.0 # min(v for k, v in self.comm_costs[child.ID].items() if k[0] != k[1])   
         elif avg_type == "HEFT-WM" or avg_type == "WM":
-            s1 = sum(self.comp_costs.values())
-            s2 = sum(child.comp_costs.values())
+            s1 = sum(1/v for v in self.comp_costs.values())
+            s2 = sum(1/v for v in child.comp_costs.values())
             cbar = 0.0
             for k, v in self.comm_costs[child.ID].items():
-                t_cost = self.comp_costs[k[0]]
-                c_cost = child.comp_costs[k[1]]                
-                cbar += t_cost * c_cost * v
+                t_w = self.comp_costs[k[0]]
+                c_w = child.comp_costs[k[1]]                
+                cbar += v/(t_w * c_w) 
             cbar /= (s1 * s2)
             return cbar                    
         raise ValueError('Unrecognized avg_type specified for average_comm_cost.')        
@@ -411,17 +411,16 @@ class DAG:
                 exp_comm += task.average_comm_cost(child, avg_type=avg_type)
         return exp_comp / exp_comm
     
-    def optimistic_cost_table(self, original=False):
+    def optimistic_cost_table(self):
         """
         Incorporated into optimistic critical path method.
         """  
         
         workers = list(k for k in self.top_sort[0].comp_costs)  
-        if original:
-            d = {}
-            for w1, w2 in zip(workers, workers):
-                d[(w1, w2)] = 1.0 if w1 == w2 else 0.0
-                         
+        d = {}
+        for w in workers:
+            for v in workers:
+                d[(w, v)] = 0.0 if w == v else 1.0   
         OCT = {}        
         backward_traversal = list(reversed(self.top_sort))
         for task in backward_traversal:
@@ -432,13 +431,58 @@ class DAG:
                     continue
                 child_values = []
                 for child in self.graph.successors(task):
-                    if original:
-                        action_values = [OCT[child.ID][v] + d[(w, v)] * task.average_comm_cost(child) + child.comp_costs[v] for v in workers]
-                    else:
-                        action_values = [OCT[child.ID][v] + task.comm_costs[child.ID][(w, v)] + child.comp_costs[v] for v in workers]
+                    action_values = [OCT[child.ID][v] + d[(w, v)] * task.average_comm_cost(child) + child.comp_costs[v] for v in workers]
                     child_values.append(min(action_values))
                 OCT[task.ID][w] += max(child_values)      
-        return OCT 
+        return OCT    
+    
+    def optimistic_critical_path(self, direction="downward", lookahead=False):
+        """
+        Computes the optimistic finish time, as defined in the Heterogeneous Optimistic Finish Time (HOFT) algorithm,
+        of all tasks assuming they are scheduled on either CPU or GPU.                   
+
+        Returns
+        ------------------------                          
+        OCP - Nested defaultdict
+        The optimistic finish time table in the form {Task 1: {Worker 1 : c1, Worker 2 : c2, ...}, ...}.         
+        
+        Notes
+        ------------------------ 
+        1. No target platform is necessary.
+        2. If "remaining == True" is almost identical to the Optimistic Cost Table (OCT) from the PEFT heuristic.
+        """  
+        
+        workers = list(k for k in self.top_sort[0].comp_costs) 
+        OCP = {}          
+        if direction == "upward":
+            backward_traversal = list(reversed(self.top_sort))
+            for task in backward_traversal:
+                OCP[task.ID] = {}
+                for w in workers:
+                    OCP[task.ID][w] = task.comp_costs[w] if not lookahead else 0.0
+                    if task.exit:
+                        continue
+                    child_values = []
+                    for child in self.graph.successors(task):
+                        if lookahead:
+                            action_values = [OCP[child.ID][v] + task.comm_costs[child.ID][(w, v)] + child.comp_costs[v] for v in workers]
+                        else:
+                            action_values = [OCP[child.ID][v] + task.comm_costs[child.ID][(w, v)] for v in workers]
+                        child_values.append(min(action_values))
+                    OCP[task.ID][w] += max(child_values)             
+        else:
+            for task in self.top_sort:
+                OCP[task.ID] = {}
+                for w in workers:
+                    OCP[task.ID][w] = task.comp_costs[w]
+                    if task.entry:
+                        continue
+                    parent_values = []
+                    for parent in self.graph.predecessors(task):
+                        action_values = [OCP[parent.ID][v] + parent.comm_costs[task.ID][(v, w)] for v in workers]
+                        parent_values.append(min(action_values))
+                    OCP[task.ID][w] += max(parent_values)   
+        return OCP    
     
     # def expected_cost_table(self, platform, weighted=False):
     #     """
@@ -480,54 +524,6 @@ class DAG:
     #         u[task.ID]["C"] += max(c_child_values) 
     #         u[task.ID]["G"] += max(g_child_values)
     #     return u
-    
-    # def optimistic_critical_path(self, direction="downward", lookahead=False):
-    #     """
-    #     Computes the optimistic finish time, as defined in the Heterogeneous Optimistic Finish Time (HOFT) algorithm,
-    #     of all tasks assuming they are scheduled on either CPU or GPU. 
-    #     Used in the HOFT heuristic - see Heuristics.py.                  
-
-    #     Returns
-    #     ------------------------                          
-    #     OCP - Nested defaultdict
-    #     The optimistic finish time table in the form {Task 1: {Worker 1 : c1, Worker 2 : c2, ...}, ...}.         
-        
-    #     Notes
-    #     ------------------------ 
-    #     1. No target platform is necessary.
-    #     2. If "remaining == True" is almost identical to the Optimistic Cost Table (OCT) from the PEFT heuristic.
-    #     """  
-             
-    #     OCP = defaultdict(lambda: defaultdict(float))  
-    #     d = {"CC" : 0, "CG" : 1, "GC" : 1, "GG" : 0} 
-        
-    #     if direction == "upward":
-    #         backward_traversal = list(reversed(self.top_sort))
-    #         for task in backward_traversal:
-    #             for p in ["C", "G"]:
-    #                 OCP[task.ID][p] = task.comp_costs[p] if not lookahead else 0.0
-    #                 if task.exit:
-    #                     continue
-    #                 child_values = []
-    #                 for child in self.graph.successors(task):
-    #                     if lookahead:
-    #                         action_values = [OCP[child.ID][q] + d[p + q] * task.comm_costs[p + q][child.ID] + child.comp_costs[q] for q in ["C", "G"]]
-    #                     else:
-    #                         action_values = [OCP[child.ID][q] + d[p + q] * task.comm_costs[p + q][child.ID] for q in ["C", "G"]]
-    #                     child_values.append(min(action_values))
-    #                 OCP[task.ID][p] += max(child_values)             
-    #     else:
-    #         for task in self.top_sort:
-    #             for p in ["C", "G"]:
-    #                 OCP[task.ID][p] = task.comp_costs[p]
-    #                 if task.entry:
-    #                     continue
-    #                 parent_values = []
-    #                 for parent in self.graph.predecessors(task):
-    #                     action_values = [OCP[parent.ID][q] + d[q + p] * parent.comm_costs[q + p][task.ID] for q in ["C", "G"]]
-    #                     parent_values.append(min(action_values))
-    #                 OCP[task.ID][p] += max(parent_values)   
-    #     return OCP    
 
     # def expected_critical_path(self, platform, direction="downward", lookahead=False, weighted=False):
     #     """
@@ -950,11 +946,13 @@ class DAG:
         print("Edge density: {}".format(edge_density), file=filepath)                
             
         if self.costs_set:  
+            print("--------------------------------------------------------", file=filepath) 
+            print("Target platform: {}".format(self.target_platform), file=filepath)
             mst = self.minimal_serial_time()
             print("Minimal serial time: {}".format(mst), file=filepath)
-            # OCP = self.optimistic_critical_path()
-            # cp = max(min(OCP[task.ID][p] for p in OCP[task.ID]) for task in self.graph if task.exit) 
-            # print("Optimal critical path length: {}".format(cp), file=filepath) 
+            OCP = self.optimistic_critical_path()
+            cp = max(min(OCP[task.ID][p] for p in OCP[task.ID]) for task in self.graph if task.exit) 
+            print("Optimal critical path length: {}".format(cp), file=filepath) 
             ccr = self.CCR()
             print("Computation-to-communication ratio: {}".format(ccr), file=filepath)        
                     
@@ -1322,7 +1320,7 @@ def HEFT(dag, platform, priority_list=None, avg_type="HEFT", return_schedule=Fal
         return mkspan, pi    
     return mkspan 
 
-def PEFT(dag, platform, return_schedule=False, schedule_dest=None, expected_comm=True):
+def PEFT(dag, platform, return_schedule=False, schedule_dest=None):
     """
     Predict Earliest Finish Time.
     'List scheduling algorithm for heterogeneous systems by an optimistic cost table',
@@ -1357,12 +1355,7 @@ def PEFT(dag, platform, return_schedule=False, schedule_dest=None, expected_comm
     
     if return_schedule or schedule_dest is not None:
         pi = {}
-                
-    if expected_comm:    
-        OCT = dag.optimistic_cost_table(expected_comm=expected_comm, platform=platform)
-    else:
-        OCT = dag.optimistic_cost_table()       
-    
+    OCT = dag.optimistic_cost_table()
     task_ranks = {t : sum(OCT[t.ID][w.ID] for w in platform.workers) / platform.n_workers for t in dag.top_sort} 
     
     ready_tasks = list(t for t in dag.top_sort if t.entry)    
@@ -1370,10 +1363,11 @@ def PEFT(dag, platform, return_schedule=False, schedule_dest=None, expected_comm
         # Find ready task with highest priority (ties broken randomly according to max function).
         t = max(ready_tasks, key=task_ranks.get) 
         # Add optimistic critical path length to finish times and compare.
-        worker_makespans = list(w.earliest_finish_time(t, dag, platform) + OCT[t.ID][w.ID] for w in platform.workers)
-        opt_worker_val = min(worker_makespans, key=lambda w:w[0]) 
+        worker_finish_times = list(w.earliest_finish_time(t, dag, platform) for w in platform.workers)
+        worker_makespans = list(f[0] + OCT[t.ID]["P{}".format(i)] for i, f in enumerate(worker_finish_times)) 
+        opt_worker_val = min(worker_makespans)
         opt_worker = worker_makespans.index(opt_worker_val)
-        ft, idx = opt_worker_val
+        ft, idx = worker_finish_times[opt_worker]
         # Schedule the task.
         platform.workers[opt_worker].schedule_task(t, finish_time=ft, load_idx=idx)          
         if return_schedule or schedule_dest is not None:

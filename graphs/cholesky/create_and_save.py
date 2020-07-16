@@ -10,7 +10,7 @@ import networkx as nx
 from timeit import default_timer as timer
 import sys
 sys.path.append('../../') 
-from Simulator import Task, DAG, Platform
+from Simulator import Task, DAG, Platform, HEFT, PEFT
 
 def cholesky(n_tiles, draw=False):
     """
@@ -185,13 +185,9 @@ with open('nb{}/{}/{}tasks.dill'.format(nb, adt, nt), 'rb') as file:
     dag = dill.load(file)
 dag.print_info()
 
-t = dag.top_sort[0]
-s = list(dag.graph.successors(t))[0]
-print("Average cost of t : {}".format(t.average_cost()))
-print("Average cost of s : {}".format(s.average_cost()))
-print("Average cost of (t, s) : {}".format(t.average_comm_cost(s)))
-print(len(t.comm_costs[s.ID]))
-
+multiple = Platform(32, name="Multiple_GPU")
+peft_mkspan = PEFT(dag, multiple)
+print("PEFT makespan: {}".format(peft_mkspan))
         
 # start = timer()
     
