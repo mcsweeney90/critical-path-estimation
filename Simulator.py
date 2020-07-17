@@ -303,76 +303,76 @@ class DAG:
             return max(t.FT for t in self.graph if t.FT is not None)  
         return max(t.FT for t in self.graph if t.exit) 
     
-    def set_costs(self, acc_ratios, target_ccr, platform, shares=[0, 1/3, 1/3, 1/3]):
-        """
-        Sets computation and communication costs for randomly generated DAGs (e.g., from the STG).
+    # def set_costs(self, acc_ratios, target_ccr, platform, shares=[0, 1/3, 1/3, 1/3]):
+    #     """
+    #     Sets computation and communication costs for randomly generated DAGs (e.g., from the STG).
         
-        Parameters
-        ------------------------
-        platform - Node object (see Environment.py module)
-        The target platform.           
+    #     Parameters
+    #     ------------------------
+    #     platform - Node object (see Environment.py module)
+    #     The target platform.           
         
-        target_ccr - float/int
-        The CCR we want the DAG to have on the target platform. Due to stochasticity in how we choose 
-        communication costs this is not precise so we might need to double check afterwards.              
+    #     target_ccr - float/int
+    #     The CCR we want the DAG to have on the target platform. Due to stochasticity in how we choose 
+    #     communication costs this is not precise so we might need to double check afterwards.              
                       
-        Notes
-        ------------------------
-        1. I not already set, we assume that GPU times are uniformly distributed integers between 1 and 100.
-        2. We assume that CPU-CPU communication costs are zero and all others are of similar magnitude to
-           one another (as we typically have throughout).
-        3. Communication costs are sampled from a Gamma distribution with a computed mean and standard deviation
-           to try and achieve the desired CCR value for the DAG.
-        """   
+    #     Notes
+    #     ------------------------
+    #     1. I not already set, we assume that GPU times are uniformly distributed integers between 1 and 100.
+    #     2. We assume that CPU-CPU communication costs are zero and all others are of similar magnitude to
+    #        one another (as we typically have throughout).
+    #     3. Communication costs are sampled from a Gamma distribution with a computed mean and standard deviation
+    #        to try and achieve the desired CCR value for the DAG.
+    #     """   
         
-        if isinstance(acc_ratios, tuple) or isinstance(acc_ratios, list):
-            dist, mu, sigma = acc_ratios
+    #     if isinstance(acc_ratios, tuple) or isinstance(acc_ratios, list):
+    #         dist, mu, sigma = acc_ratios
         
-        # Set the computation costs.
-        for task in self.graph:
-            if task.comp_costs["G"] == 0.0:
-                task.comp_costs["G"] = np.random.randint(1, 100)         
-            if isinstance(acc_ratios, dict) or isinstance(acc_ratios, defaultdict):
-                task.acceleration_ratio = acc_ratios[task.type] 
-            elif isinstance(acc_ratios, tuple) or isinstance(acc_ratios, list):
-                if dist == "GAMMA" or dist == "gamma":
-                    task.acceleration_ratio = np.random.gamma(shape=(mu/sigma)**2, scale=sigma**2/mu) 
-                elif dist == "NORMAL" or dist == "normal":
-                    task.acceleration_ratio = abs(np.random.normal(mu, sigma)) 
-                else:
-                    raise ValueError('Unrecognized acceleration ratio distribution specified in set_costs!')                    
-            task.comp_costs["C"] = task.comp_costs["G"] * task.acceleration_ratio
+    #     # Set the computation costs.
+    #     for task in self.graph:
+    #         if task.comp_costs["G"] == 0.0:
+    #             task.comp_costs["G"] = np.random.randint(1, 100)         
+    #         if isinstance(acc_ratios, dict) or isinstance(acc_ratios, defaultdict):
+    #             task.acceleration_ratio = acc_ratios[task.type] 
+    #         elif isinstance(acc_ratios, tuple) or isinstance(acc_ratios, list):
+    #             if dist == "GAMMA" or dist == "gamma":
+    #                 task.acceleration_ratio = np.random.gamma(shape=(mu/sigma)**2, scale=sigma**2/mu) 
+    #             elif dist == "NORMAL" or dist == "normal":
+    #                 task.acceleration_ratio = abs(np.random.normal(mu, sigma)) 
+    #             else:
+    #                 raise ValueError('Unrecognized acceleration ratio distribution specified in set_costs!')                    
+    #         task.comp_costs["C"] = task.comp_costs["G"] * task.acceleration_ratio
         
-        # Set the communication costs.        
-        # Compute the expected total compute of the entire DAG.
-        cpu_compute = list(task.comp_costs["C"] for task in self.graph)
-        gpu_compute = list(task.comp_costs["G"] for task in self.graph)
-        expected_total_compute = sum(cpu_compute) * platform.n_CPUs + sum(gpu_compute) * platform.n_GPUs
-        expected_total_compute /= platform.n_workers
+    #     # Set the communication costs.        
+    #     # Compute the expected total compute of the entire DAG.
+    #     cpu_compute = list(task.comp_costs["C"] for task in self.graph)
+    #     gpu_compute = list(task.comp_costs["G"] for task in self.graph)
+    #     expected_total_compute = sum(cpu_compute) * platform.n_CPUs + sum(gpu_compute) * platform.n_GPUs
+    #     expected_total_compute /= platform.n_workers
         
-        # Calculate the expected communication cost of the entire DAG - i.e., for all edges.        
-        expected_total_comm = expected_total_compute / target_ccr
-        expected_comm_per_edge = expected_total_comm / self.n_edges
-        for task in self.top_sort:
-            for child in self.graph.successors(task):
-                if isinstance(acc_ratios, tuple) or isinstance(acc_ratios, list):
-                    if dist == "GAMMA" or dist == "gamma":
-                        w_bar = np.random.gamma(shape=1.0, scale=expected_comm_per_edge)
-                    elif dist == "NORMAL" or dist == "normal":
-                        w_bar = abs(np.random.normal(expected_comm_per_edge, expected_comm_per_edge))
-                else:
-                    w_bar = np.random.uniform(0, 2) * expected_comm_per_edge
-                # Now sets the costs according to the relative shares.
-                x = w_bar * platform.n_workers**2   
-                s0, s1, s2, s3 = shares
-                d = s0 * platform.n_CPUs * (platform.n_CPUs - 1)
-                d += (s1 + s3) * platform.n_CPUs * platform.n_GPUs
-                d += s2 * platform.n_GPUs * (platform.n_GPUs - 1)
-                x /= d
-                task.comm_costs["CC"][child.ID] = s0 * x
-                task.comm_costs["CG"][child.ID] = s1 * x
-                task.comm_costs["GG"][child.ID] = s2 * x
-                task.comm_costs["GC"][child.ID] = s3 * x    
+    #     # Calculate the expected communication cost of the entire DAG - i.e., for all edges.        
+    #     expected_total_comm = expected_total_compute / target_ccr
+    #     expected_comm_per_edge = expected_total_comm / self.n_edges
+    #     for task in self.top_sort:
+    #         for child in self.graph.successors(task):
+    #             if isinstance(acc_ratios, tuple) or isinstance(acc_ratios, list):
+    #                 if dist == "GAMMA" or dist == "gamma":
+    #                     w_bar = np.random.gamma(shape=1.0, scale=expected_comm_per_edge)
+    #                 elif dist == "NORMAL" or dist == "normal":
+    #                     w_bar = abs(np.random.normal(expected_comm_per_edge, expected_comm_per_edge))
+    #             else:
+    #                 w_bar = np.random.uniform(0, 2) * expected_comm_per_edge
+    #             # Now sets the costs according to the relative shares.
+    #             x = w_bar * platform.n_workers**2   
+    #             s0, s1, s2, s3 = shares
+    #             d = s0 * platform.n_CPUs * (platform.n_CPUs - 1)
+    #             d += (s1 + s3) * platform.n_CPUs * platform.n_GPUs
+    #             d += s2 * platform.n_GPUs * (platform.n_GPUs - 1)
+    #             x /= d
+    #             task.comm_costs["CC"][child.ID] = s0 * x
+    #             task.comm_costs["CG"][child.ID] = s1 * x
+    #             task.comm_costs["GG"][child.ID] = s2 * x
+    #             task.comm_costs["GC"][child.ID] = s3 * x    
                 
     def minimal_serial_time(self):
         """
@@ -413,7 +413,8 @@ class DAG:
     
     def optimistic_cost_table(self):
         """
-        Incorporated into optimistic critical path method.
+        Optimistic Cost Table as used in PEFT heuristic. 
+        Note this is slightly different to the (upward, optimistic) conditional critical path below. 
         """  
         
         workers = list(k for k in self.top_sort[0].comp_costs)  
@@ -436,53 +437,171 @@ class DAG:
                 OCT[task.ID][w] += max(child_values)      
         return OCT    
     
-    def optimistic_critical_path(self, direction="downward", lookahead=False):
+    def critical_paths(self, direction="upward", cp_type="HEFT", avg_type="HEFT"):
         """
-        Computes the optimistic finish time, as defined in the Heterogeneous Optimistic Finish Time (HOFT) algorithm,
+        Compute critical path length estimates to/from all tasks.
+        
+        Parameters
+        ------------------------
+        
+        direction - string in ["upward", "downward"]
+        Whether to compute critical path length from root to task (downward) or from task to leaves (upward).
+        
+        avg_type - string
+        How the tasks and edges should be weighted in platform.average_comm_cost and task.average_execution_cost.
+        Default is "HEFT" which is mean values over all processors. See referenced methods for more options.
+             
+
+        Returns
+        ------------------------                          
+        cp_lengths - dict
+        Scheduling list of all Task objects prioritized by upward rank.               
+        """    
+        
+        cp_lengths = {}
+        
+        if cp_type == "optimistic" or cp_type == "pessimistic":
+            CCP = self.conditional_critical_paths(direction, cp_type)
+            for t in self.top_sort:
+                if cp_type == "optimistic":
+                    cp_lengths[t] = min(CCP[t.ID].values())
+                elif cp_type == "pessimistic":
+                    cp_lengths[t] = max(CCP[t.ID].values())
+        elif cp_type == "HEFT":        
+            if direction == "upward": 
+                backward_traversal = list(reversed(self.top_sort))  
+                for t in backward_traversal:
+                    cp_lengths[t] = t.average_cost(avg_type=avg_type) 
+                    try:
+                        cp_lengths[t] += max(t.average_comm_cost(s, avg_type=avg_type) + cp_lengths[s] for s in self.graph.successors(t))
+                    except ValueError:
+                        pass
+            elif direction == "downward":
+                for t in self.top_sort:
+                    cp_lengths[t] = 0.0
+                    try:
+                        cp_lengths[t] += max(p.average_cost(avg_type=avg_type) + p.average_comm_cost(t, avg_type=avg_type) +
+                                  cp_lengths[p] for p in self.graph.predecessors(t))
+                    except ValueError:
+                        pass    
+        elif cp_type == "Fulkerson":
+            if direction == "upward":
+                backward_traversal = list(reversed(self.top_sort))
+                for t in backward_traversal:
+                    if t.exit:
+                        cp_lengths[t] = 0.0    
+                        continue
+                    children = list(self.graph.successors(t))                  
+                    # Find alpha and the potential z values to check.
+                    alpha, Z = 0.0, []
+                    for c in children:  
+                        if c.exit:
+                            alpha = max(alpha, min(t.comp_costs["C"] + c.comp_costs["C"], t.comp_costs["G"] + c.comp_costs["G"]))
+                            n = [t.comp_costs["C"] + c.comp_costs["C"],
+                                  t.comm_costs["CC"][c.ID] + t.comp_costs["C"] + c.comp_costs["C"],
+                                  t.comm_costs["CG"][c.ID] + t.comp_costs["C"] + c.comp_costs["G"], 
+                                  t.comp_costs["G"] + c.comp_costs["G"],
+                                  t.comm_costs["GG"][c.ID] + t.comp_costs["G"] + c.comp_costs["G"],
+                                  t.comm_costs["GC"][c.ID] + t.comp_costs["G"] + c.comp_costs["C"]]                        
+                        else:
+                            alpha = max(alpha, f[c] + min(t.comp_costs["C"], t.comp_costs["G"]))
+                            n = [f[c] + t.comp_costs["C"],
+                                  f[c] + t.comm_costs["CC"][c.ID] + t.comp_costs["C"],
+                                  f[c] + t.comm_costs["CG"][c.ID] + t.comp_costs["C"], 
+                                  f[c] + t.comp_costs["G"],
+                                  f[c] + t.comm_costs["GG"][c.ID] + t.comp_costs["G"],
+                                  f[c] + t.comm_costs["GC"][c.ID] + t.comp_costs["G"]]
+                        Z += n          
+                    # Compute f. 
+                    f[t] = 0.0
+                    Z = list(set(Z))    # TODO: might still need a check to prevent rounding errors.
+                    for z in Z:
+                        if alpha - z > 1e-6:   
+                            continue
+                        # Iterate over edges and compute the two products.
+                        plus, minus = 1, 1                
+                        for c in children:
+                            # Compute zdash = z - f_c.
+                            zdash = z - f[c] 
+                            # Define the edge costs.
+                            if c.exit:
+                                edge_costs = [[t.comp_costs["C"] + c.comp_costs["C"], edge_probs[0]],
+                                  [t.comm_costs["CC"][c.ID] + t.comp_costs["C"] + c.comp_costs["C"], edge_probs[1]],
+                                  [t.comm_costs["CG"][c.ID] + t.comp_costs["C"] + c.comp_costs["G"], edge_probs[2]],
+                                  [t.comp_costs["G"] + c.comp_costs["G"], edge_probs[3]],
+                                  [t.comm_costs["GG"][c.ID] + t.comp_costs["G"] + c.comp_costs["G"], edge_probs[4]],
+                                  [t.comm_costs["GC"][c.ID] + t.comp_costs["G"] + c.comp_costs["C"], edge_probs[5]]] 
+                            else:
+                                edge_costs = [[t.comp_costs["C"], edge_probs[0]],
+                                  [t.comm_costs["CC"][c.ID] + t.comp_costs["C"], edge_probs[1]],
+                                  [t.comm_costs["CG"][c.ID] + t.comp_costs["C"], edge_probs[2]],
+                                  [t.comp_costs["G"], edge_probs[3]],
+                                  [t.comm_costs["GG"][c.ID] + t.comp_costs["G"], edge_probs[4]],
+                                  [t.comm_costs["GC"][c.ID] + t.comp_costs["G"], edge_probs[5]]]                                          
+                            # Compute m and p.
+                            m = sum(e[1] for e in edge_costs if zdash - e[0] > 1e-6)
+                            minus *= m 
+                            p = m + sum(e[1] for e in edge_costs if abs(zdash - e[0]) < 1e-6)
+                            plus *= p
+                        # Add to f.                                    
+                        f[t] += z * (plus - minus)
+                
+            
+                    
+        return cp_lengths 
+    
+    def conditional_critical_paths(self, direction="downward", cp_type="optimistic", lookahead=False):
+        """
+        Computes critical path estimates, either upward or downward, of all tasks according to 
         of all tasks assuming they are scheduled on either CPU or GPU.                   
 
         Returns
         ------------------------                          
-        OCP - Nested defaultdict
-        The optimistic finish time table in the form {Task 1: {Worker 1 : c1, Worker 2 : c2, ...}, ...}.         
+        CCP - Nested dict
+        Conditional critical path estimates in the form {Task 1: {Worker 1 : c1, Worker 2 : c2, ...}, ...}.         
         
         Notes
         ------------------------ 
         1. No target platform is necessary.
-        2. If "remaining == True" is almost identical to the Optimistic Cost Table (OCT) from the PEFT heuristic.
         """  
         
         workers = list(k for k in self.top_sort[0].comp_costs) 
-        OCP = {}          
+        CCP = {}          
         if direction == "upward":
             backward_traversal = list(reversed(self.top_sort))
             for task in backward_traversal:
-                OCP[task.ID] = {}
+                CCP[task.ID] = {}
                 for w in workers:
-                    OCP[task.ID][w] = task.comp_costs[w] if not lookahead else 0.0
+                    CCP[task.ID][w] = task.comp_costs[w] if not lookahead else 0.0
                     if task.exit:
                         continue
                     child_values = []
                     for child in self.graph.successors(task):
                         if lookahead:
-                            action_values = [OCP[child.ID][v] + task.comm_costs[child.ID][(w, v)] + child.comp_costs[v] for v in workers]
+                            action_values = [CCP[child.ID][v] + task.comm_costs[child.ID][(w, v)] + child.comp_costs[v] for v in workers]
                         else:
-                            action_values = [OCP[child.ID][v] + task.comm_costs[child.ID][(w, v)] for v in workers]
-                        child_values.append(min(action_values))
-                    OCP[task.ID][w] += max(child_values)             
+                            action_values = [CCP[child.ID][v] + task.comm_costs[child.ID][(w, v)] for v in workers]
+                        if cp_type == "optimistic":
+                            child_values.append(min(action_values))
+                        elif cp_type == "pessimistic":
+                            child_values.append(max(action_values))
+                    CCP[task.ID][w] += max(child_values)             
         else:
             for task in self.top_sort:
-                OCP[task.ID] = {}
+                CCP[task.ID] = {}
                 for w in workers:
-                    OCP[task.ID][w] = task.comp_costs[w]
+                    CCP[task.ID][w] = task.comp_costs[w]
                     if task.entry:
                         continue
                     parent_values = []
                     for parent in self.graph.predecessors(task):
-                        action_values = [OCP[parent.ID][v] + parent.comm_costs[task.ID][(v, w)] for v in workers]
-                        parent_values.append(min(action_values))
-                    OCP[task.ID][w] += max(parent_values)   
-        return OCP    
+                        action_values = [CCP[parent.ID][v] + parent.comm_costs[task.ID][(v, w)] for v in workers]
+                        if cp_type == "optimistic":
+                            parent_values.append(min(action_values))
+                        elif cp_type == "pessimistic":
+                            parent_values.append(max(action_values))
+                    CCP[task.ID][w] += max(parent_values)   
+        return CCP    
     
     # def expected_cost_table(self, platform, weighted=False):
     #     """
@@ -605,17 +724,13 @@ class DAG:
     #             d[task.ID]["C"] += max(c_parent_values) 
     #             d[task.ID]["G"] += max(g_parent_values)
     #         return d
-            
     
-           
-    def sort_by_upward_rank(self, platform, avg_type="HEFT", return_ranks=False):
+    def critical_path_priorities(self, direction="upward", cp_type="HEFT", avg_type="HEFT", return_ranks=False):
         """
         Sorts all tasks in the DAG by decreasing/non-increasing order of upward rank.
         
         Parameters
         ------------------------
-        platform - Node object (see Environment.py module)
-        The target platform.
         
         avg_type - string
         How the tasks and edges should be weighted in platform.average_comm_cost and task.average_execution_cost.
@@ -624,87 +739,23 @@ class DAG:
         return_rank_values - bool
         If True, method also returns the upward rank values for all tasks.
         
-        verbose - bool
-        If True, print the ordering of all tasks to the screen. Useful for debugging. 
-
         Returns
         ------------------------                          
         priority_list - list
         Scheduling list of all Task objects prioritized by upward rank.
         
-        If return_rank_values == True:
+        If return_ranks == True:
         task_ranks - dict
-        Gives the actual upward ranks of all tasks in the form {task : rank_u}.
-        
-        Notes
-        ------------------------ 
-        1. "Upward rank" is also called "bottom-level".        
+        Gives the actual ranks of all tasks in the form {task : rank}.               
         """      
-        
-        # Traverse the DAG starting from the exit task.
-        backward_traversal = list(reversed(self.top_sort))        
-        # Compute the upward rank of all tasks recursively.
-        task_ranks = {}
-        for t in backward_traversal:
-            task_ranks[t] = t.average_cost(avg_type=avg_type) 
-            try:
-                task_ranks[t] += max(t.average_comm_cost(s, avg_type=avg_type) + task_ranks[s] for s in self.graph.successors(t))
-            except ValueError:
-                pass  
-            # print(t.ID, task_ranks[t])
-        priority_list = list(reversed(sorted(task_ranks, key=task_ranks.get)))
-                    
+        task_ranks = self.critical_paths(direction, cp_type, avg_type)
+        if direction == "upward":
+            priority_list = list(reversed(sorted(task_ranks, key=task_ranks.get)))
+        else:
+            priority_list = list(sorted(task_ranks, key=task_ranks.get))
         if return_ranks:
             return priority_list, task_ranks
-        return priority_list  
-    
-    def sort_by_downward_rank(self, platform, avg_type="HEFT", return_ranks=False):
-        """
-        Sorts all tasks in the DAG by increasing/non-decreasing order of downward rank.
-        
-        Parameters
-        ------------------------
-        platform - Node object (see Environment.py module)
-        The target platform.
-        
-        avg_type - string
-        How the tasks and edges should be weighted in platform.average_comm_cost and task.average_execution_cost.
-        Default is "HEFT" which is mean values over all processors. See referenced methods for more options.
-        
-        return_rank_values - bool
-        If True, method also returns the downward rank values for all tasks.
-        
-        verbose - bool
-        If True, print the ordering of all tasks to the screen. Useful for debugging. 
-
-        Returns
-        ------------------------                          
-        priority_list - list
-        Scheduling list of all Task objects prioritized by downward rank.
-        
-        If return_rank_values == True:
-        task_ranks - dict
-        Gives the actual downward ranks of all tasks in the form {task : rank_d}.
-        
-        Notes
-        ------------------------ 
-        1. "Downward rank" is also called "top-level".        
-        """ 
-              
-        # Compute the downward rank of all tasks recursively.
-        task_ranks = {}
-        for t in self.top_sort:
-            task_ranks[t] = 0.0
-            try:
-                task_ranks[t] += max(p.average_cost(avg_type=avg_type) + p.average_comm_cost(t, avg_type=avg_type) +
-                          task_ranks[p] for p in self.graph.predecessors(t))
-            except ValueError:
-                pass          
-        priority_list = list(sorted(task_ranks, key=task_ranks.get))
-                        
-        if return_ranks:
-            return priority_list, task_ranks
-        return priority_list   
+        return priority_list    
         
     # def sort_by_Fulkerson_rank(self, platform, return_f=False, downward=False, weighted=False):
     #     """
@@ -712,8 +763,8 @@ class DAG:
     #     Notes:
     #         1. "Original" version is as described in Fulkerson's original paper. Much slower than the default but might be wanted.
     #         2. The default version computes the ranks using the more computationally efficient method for computing Fulkerson's "f"
-    #            numbers as first stated by Clingen (1964? Check) and elucidated by Elmaghraby (1967). Assumes that costs are independent
-    #            but that's a fairly standard assumption anyway.
+    #             numbers as first stated by Clingen (1964? Check) and elucidated by Elmaghraby (1967). Assumes that costs are independent
+    #             but that's a fairly standard assumption anyway.
     #     """          
         
     #     # Define the respective probabilities of each potential edge weight.
@@ -738,19 +789,19 @@ class DAG:
     #                 if c.exit:
     #                     alpha = max(alpha, min(t.comp_costs["C"] + c.comp_costs["C"], t.comp_costs["G"] + c.comp_costs["G"]))
     #                     n = [t.comp_costs["C"] + c.comp_costs["C"],
-    #                          t.comm_costs["CC"][c.ID] + t.comp_costs["C"] + c.comp_costs["C"],
-    #                          t.comm_costs["CG"][c.ID] + t.comp_costs["C"] + c.comp_costs["G"], 
-    #                          t.comp_costs["G"] + c.comp_costs["G"],
-    #                          t.comm_costs["GG"][c.ID] + t.comp_costs["G"] + c.comp_costs["G"],
-    #                          t.comm_costs["GC"][c.ID] + t.comp_costs["G"] + c.comp_costs["C"]]                        
+    #                           t.comm_costs["CC"][c.ID] + t.comp_costs["C"] + c.comp_costs["C"],
+    #                           t.comm_costs["CG"][c.ID] + t.comp_costs["C"] + c.comp_costs["G"], 
+    #                           t.comp_costs["G"] + c.comp_costs["G"],
+    #                           t.comm_costs["GG"][c.ID] + t.comp_costs["G"] + c.comp_costs["G"],
+    #                           t.comm_costs["GC"][c.ID] + t.comp_costs["G"] + c.comp_costs["C"]]                        
     #                 else:
     #                     alpha = max(alpha, f[c] + min(t.comp_costs["C"], t.comp_costs["G"]))
     #                     n = [f[c] + t.comp_costs["C"],
-    #                          f[c] + t.comm_costs["CC"][c.ID] + t.comp_costs["C"],
-    #                          f[c] + t.comm_costs["CG"][c.ID] + t.comp_costs["C"], 
-    #                          f[c] + t.comp_costs["G"],
-    #                          f[c] + t.comm_costs["GG"][c.ID] + t.comp_costs["G"],
-    #                          f[c] + t.comm_costs["GC"][c.ID] + t.comp_costs["G"]]
+    #                           f[c] + t.comm_costs["CC"][c.ID] + t.comp_costs["C"],
+    #                           f[c] + t.comm_costs["CG"][c.ID] + t.comp_costs["C"], 
+    #                           f[c] + t.comp_costs["G"],
+    #                           f[c] + t.comm_costs["GG"][c.ID] + t.comp_costs["G"],
+    #                           f[c] + t.comm_costs["GC"][c.ID] + t.comp_costs["G"]]
     #                 Z += n          
     #             # Compute f. 
     #             f[t] = 0.0
@@ -809,19 +860,19 @@ class DAG:
     #                 if t.exit:
     #                     alpha = max(alpha, f[p] + min(p.comp_costs["C"] + t.comp_costs["C"], p.comp_costs["G"] + p.comp_costs["G"]))
     #                     n = [f[p] + p.comp_costs["C"] + t.comp_costs["C"],
-    #                          f[p] + p.comm_costs["CC"][t.ID] + p.comp_costs["C"] + t.comp_costs["C"],
-    #                          f[p] + p.comm_costs["CG"][t.ID] + p.comp_costs["C"] + t.comp_costs["G"], 
-    #                          f[p] + p.comp_costs["G"] + t.comp_costs["G"],
-    #                          f[p] + p.comm_costs["GG"][t.ID] + p.comp_costs["G"] + t.comp_costs["G"],
-    #                          f[p] + p.comm_costs["GC"][t.ID] + p.comp_costs["G"] + t.comp_costs["C"]]
+    #                           f[p] + p.comm_costs["CC"][t.ID] + p.comp_costs["C"] + t.comp_costs["C"],
+    #                           f[p] + p.comm_costs["CG"][t.ID] + p.comp_costs["C"] + t.comp_costs["G"], 
+    #                           f[p] + p.comp_costs["G"] + t.comp_costs["G"],
+    #                           f[p] + p.comm_costs["GG"][t.ID] + p.comp_costs["G"] + t.comp_costs["G"],
+    #                           f[p] + p.comm_costs["GC"][t.ID] + p.comp_costs["G"] + t.comp_costs["C"]]
     #                 else:
     #                     alpha = max(alpha, f[p] + min(p.comp_costs["C"], p.comp_costs["G"])) 
     #                     n = [f[p] + p.comp_costs["C"],
-    #                          f[p] + p.comm_costs["CC"][t.ID] + p.comp_costs["C"],
-    #                          f[p] + p.comm_costs["CG"][t.ID] + p.comp_costs["C"], 
-    #                          f[p] + p.comp_costs["G"],
-    #                          f[p] + p.comm_costs["GG"][t.ID] + p.comp_costs["G"],
-    #                          f[p] + p.comm_costs["GC"][t.ID] + p.comp_costs["G"]]
+    #                           f[p] + p.comm_costs["CC"][t.ID] + p.comp_costs["C"],
+    #                           f[p] + p.comm_costs["CG"][t.ID] + p.comp_costs["C"], 
+    #                           f[p] + p.comp_costs["G"],
+    #                           f[p] + p.comm_costs["GG"][t.ID] + p.comp_costs["G"],
+    #                           f[p] + p.comm_costs["GC"][t.ID] + p.comp_costs["G"]]
     #                 Z += n  
     #             # Compute f. 
     #             f[t] = 0.0
@@ -950,7 +1001,7 @@ class DAG:
             print("Target platform: {}".format(self.target_platform), file=filepath)
             mst = self.minimal_serial_time()
             print("Minimal serial time: {}".format(mst), file=filepath)
-            OCP = self.optimistic_critical_path()
+            OCP = self.conditional_critical_paths(direction="downward", cp_type="optimistic")
             cp = max(min(OCP[task.ID][p] for p in OCP[task.ID]) for task in self.graph if task.exit) 
             print("Optimal critical path length: {}".format(cp), file=filepath) 
             ccr = self.CCR()
@@ -1285,7 +1336,7 @@ def HEFT(dag, platform, priority_list=None, avg_type="HEFT", return_schedule=Fal
     
     # List all tasks by upward rank unless alternative is specified.
     if priority_list is None:
-        priority_list = dag.sort_by_upward_rank(platform, avg_type=avg_type)   
+        priority_list = dag.critical_path_priorities(direction="upward", cp_type="HEFT", avg_type=avg_type)   
     
     # Schedule the tasks.
     for t in priority_list:    
@@ -1408,8 +1459,8 @@ def CPOP(dag, platform, return_schedule=False, schedule_dest=None):
         pi = {} 
     
     # Compute upward and downward ranks of all tasks to find priorities.
-    _, upward_ranks = dag.sort_by_upward_rank(platform, return_ranks=True)
-    _, downward_ranks = dag.sort_by_downward_rank(platform, return_ranks=True)
+    _, upward_ranks = dag.critical_path_priorities(direction="upward", return_ranks=True)
+    _, downward_ranks = dag.critical_path_priorities(direction="downward", return_ranks=True)
     task_ranks = {t.ID : upward_ranks[t] + downward_ranks[t] for t in dag.graph}     
     
     # Identify the tasks on the critical path.
@@ -1419,19 +1470,19 @@ def CPOP(dag, platform, return_schedule=False, schedule_dest=None):
         if any(abs(task_ranks[s.ID] - task_ranks[t.ID]) < 1e-6 for s in dag.graph.successors(t)):
             cp = t
             cp_prio = task_ranks[t.ID] 
-            cp_tasks.add(cp)
+            cp_tasks.append(cp)
             break        
     while not cp.exit:
         cp = np.random.choice(list(s for s in dag.graph.successors(cp) if abs(task_ranks[s.ID] - cp_prio) < 1e-6))
-        cp_tasks.add(cp.ID)
+        cp_tasks.append(cp)
     # Find the fastest worker for the CP tasks.
-    worker_cp_times = {w.ID : sum(c.comp_costs[w.ID] for c in cp_tasks) for w in platform.workers}
+    worker_cp_times = {w : sum(c.comp_costs[w.ID] for c in cp_tasks) for w in platform.workers}
     cp_worker = min(worker_cp_times, key=worker_cp_times.get)   
        
     while len(ready_tasks):
         t = max(ready_tasks, key=lambda t : task_ranks[t.ID])
         
-        if t.ID in cp_tasks:
+        if t in cp_tasks:
             cp_worker.schedule_task(t, dag=dag, platform=platform)
             if return_schedule or schedule_dest is not None:
                 pi[t] = cp_worker.ID

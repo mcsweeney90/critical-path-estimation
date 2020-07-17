@@ -10,7 +10,7 @@ import networkx as nx
 from timeit import default_timer as timer
 import sys
 sys.path.append('../../') 
-from Simulator import Task, DAG, Platform, HEFT, PEFT
+from Simulator import Task, DAG, Platform, HEFT, PEFT, CPOP
 
 def cholesky(n_tiles, draw=False):
     """
@@ -116,7 +116,7 @@ def cholesky(n_tiles, draw=False):
 # start = timer()
 
 # # Set up the target platforms.
-# multiple = Platform(32, name="Multiple_GPU")
+# multiple = Platform(8, name="Single_GPU")
 
 # # Create and save the actual DAG objects.
 # for nb in [128, 1024]:
@@ -145,7 +145,7 @@ def cholesky(n_tiles, draw=False):
 #             for task in dag.graph:
 #                 # Computation.
 #                 for i, w in enumerate(multiple.workers):
-#                     if i < 28:
+#                     if i < 7:
 #                         task.comp_costs[w.ID] = comp_costs["C"][task.type]
 #                     else:
 #                         task.comp_costs[w.ID] = comp_costs["G"][task.type]
@@ -156,18 +156,18 @@ def cholesky(n_tiles, draw=False):
 #                         for v in range(multiple.n_workers):
 #                             if u == v:
 #                                 task.comm_costs[child.ID][("P{}".format(u), "P{}".format(v))] = 0.0
-#                             elif u < 28 and v < 28:
+#                             elif u < 7 and v < 7:
 #                                 task.comm_costs[child.ID][("P{}".format(u), "P{}".format(v))] = comm_costs["CC"][child.type]
-#                             elif u < 28 and v > 27:
+#                             elif u < 7 and v > 6:
 #                                 task.comm_costs[child.ID][("P{}".format(u), "P{}".format(v))] = comm_costs["CG"][child.type]
-#                             elif u > 27 and v < 28:
+#                             elif u > 6 and v < 7:
 #                                 task.comm_costs[child.ID][("P{}".format(u), "P{}".format(v))] = comm_costs["GC"][child.type]
-#                             elif u > 27 and v > 27:
+#                             elif u > 6 and v > 6:
 #                                 task.comm_costs[child.ID][("P{}".format(u), "P{}".format(v))] = comm_costs["GG"][child.type]
                             
 #             # Update DAG attributes.
 #             dag.costs_set = True
-#             dag.target_platform = "Multiple_GPU"
+#             dag.target_platform = "Single_GPU"
 #             dag.name += "_nb{}_nt{}".format(nb, dag.n_tasks)
 #             with open('{}/{}tasks.dill'.format(save_path, dag.n_tasks), 'wb') as handle:
 #                 dill.dump(dag, handle)  
@@ -185,9 +185,11 @@ with open('nb{}/{}/{}tasks.dill'.format(nb, adt, nt), 'rb') as file:
     dag = dill.load(file)
 dag.print_info()
 
-multiple = Platform(32, name="Multiple_GPU")
-peft_mkspan = PEFT(dag, multiple)
-print("PEFT makespan: {}".format(peft_mkspan))
+single = Platform(8, name="Single_GPU")
+heft_mkspan = HEFT(dag, single)
+print("HEFT makespan: {}".format(heft_mkspan))
+cpop_mkspan = CPOP(dag, single)
+print("CPOP makespan: {}".format(cpop_mkspan))
         
 # start = timer()
     
