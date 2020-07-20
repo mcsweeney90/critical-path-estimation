@@ -189,7 +189,28 @@ class Task:
                 cbar += v/(t_w * c_w) 
             cbar /= (s1 * s2)
             return cbar                    
-        raise ValueError('Unrecognized avg_type specified for average_comm_cost.')        
+        raise ValueError('Unrecognized avg_type specified for average_comm_cost.')    
+        
+    def aoa_edge_pmf(self, child, weighted=False):
+        """
+        Used in Fulkerson.
+        TODO: weighted version.
+        """              
+        pmf = {}
+        if not weighted:
+            d = len(self.comm_costs[child.ID])
+        for k, v in self.comm_costs[child.ID].items():
+            w = v + self.comp_costs[k[0]] 
+            if child.exit:
+                w += child.comp_costs[k[1]]
+            try:
+                if not weighted:
+                    pmf[w] += 1/d
+            except KeyError:
+                if not weighted:
+                    pmf[w] = 1/d
+        pmf = {k: v for k, v in sorted(pmf.items(), key=lambda item: item[0])} # TODO: sort here?
+        return pmf
 
 class DAG:
     """
@@ -485,7 +506,7 @@ class DAG:
                     except ValueError:
                         pass    
         elif cp_type == "Fulkerson":
-            if direction == "upward":
+            if direction == "upward": # TODO: downward and weighted versions.
                 backward_traversal = list(reversed(self.top_sort))
                 for t in backward_traversal:
                     if t.exit:
@@ -493,27 +514,15 @@ class DAG:
                         continue
                     children = list(self.graph.successors(t))                  
                     # Find alpha and the potential z values to check.
+                    edge_pmfs = {}
                     alpha, Z = 0.0, []
-                    for c in children:  
-                        if c.exit:
-                            alpha = max(alpha, min(t.comp_costs["C"] + c.comp_costs["C"], t.comp_costs["G"] + c.comp_costs["G"]))
-                            n = [t.comp_costs["C"] + c.comp_costs["C"],
-                                  t.comm_costs["CC"][c.ID] + t.comp_costs["C"] + c.comp_costs["C"],
-                                  t.comm_costs["CG"][c.ID] + t.comp_costs["C"] + c.comp_costs["G"], 
-                                  t.comp_costs["G"] + c.comp_costs["G"],
-                                  t.comm_costs["GG"][c.ID] + t.comp_costs["G"] + c.comp_costs["G"],
-                                  t.comm_costs["GC"][c.ID] + t.comp_costs["G"] + c.comp_costs["C"]]                        
-                        else:
-                            alpha = max(alpha, f[c] + min(t.comp_costs["C"], t.comp_costs["G"]))
-                            n = [f[c] + t.comp_costs["C"],
-                                  f[c] + t.comm_costs["CC"][c.ID] + t.comp_costs["C"],
-                                  f[c] + t.comm_costs["CG"][c.ID] + t.comp_costs["C"], 
-                                  f[c] + t.comp_costs["G"],
-                                  f[c] + t.comm_costs["GG"][c.ID] + t.comp_costs["G"],
-                                  f[c] + t.comm_costs["GC"][c.ID] + t.comp_costs["G"]]
-                        Z += n          
+                    for c in children: 
+                        pmf = t.aoa_edge_pmf(c)
+                        Z += list(cp_lengths[c] + v for v in pmf)
+                        alpha = max(alpha, min(pmf))  
+                        edge_pmfs[c.ID] = pmf                               
                     # Compute f. 
-                    f[t] = 0.0
+                    cp_lengths[t] = 0.0
                     Z = list(set(Z))    # TODO: might still need a check to prevent rounding errors.
                     for z in Z:
                         if alpha - z > 1e-6:   
@@ -522,31 +531,13 @@ class DAG:
                         plus, minus = 1, 1                
                         for c in children:
                             # Compute zdash = z - f_c.
-                            zdash = z - f[c] 
-                            # Define the edge costs.
-                            if c.exit:
-                                edge_costs = [[t.comp_costs["C"] + c.comp_costs["C"], edge_probs[0]],
-                                  [t.comm_costs["CC"][c.ID] + t.comp_costs["C"] + c.comp_costs["C"], edge_probs[1]],
-                                  [t.comm_costs["CG"][c.ID] + t.comp_costs["C"] + c.comp_costs["G"], edge_probs[2]],
-                                  [t.comp_costs["G"] + c.comp_costs["G"], edge_probs[3]],
-                                  [t.comm_costs["GG"][c.ID] + t.comp_costs["G"] + c.comp_costs["G"], edge_probs[4]],
-                                  [t.comm_costs["GC"][c.ID] + t.comp_costs["G"] + c.comp_costs["C"], edge_probs[5]]] 
-                            else:
-                                edge_costs = [[t.comp_costs["C"], edge_probs[0]],
-                                  [t.comm_costs["CC"][c.ID] + t.comp_costs["C"], edge_probs[1]],
-                                  [t.comm_costs["CG"][c.ID] + t.comp_costs["C"], edge_probs[2]],
-                                  [t.comp_costs["G"], edge_probs[3]],
-                                  [t.comm_costs["GG"][c.ID] + t.comp_costs["G"], edge_probs[4]],
-                                  [t.comm_costs["GC"][c.ID] + t.comp_costs["G"], edge_probs[5]]]                                          
+                            zdash = z - cp_lengths[c] 
+                            p, m = cdf(edge_pmfs[c.ID], zdash)                                         
                             # Compute m and p.
-                            m = sum(e[1] for e in edge_costs if zdash - e[0] > 1e-6)
                             minus *= m 
-                            p = m + sum(e[1] for e in edge_costs if abs(zdash - e[0]) < 1e-6)
                             plus *= p
                         # Add to f.                                    
-                        f[t] += z * (plus - minus)
-                
-            
+                        cp_lengths[t] += z * (plus - minus)
                     
         return cp_lengths 
     
@@ -1287,7 +1278,29 @@ class Platform:
         slr = mkspan / cp
         info["SCHEDULE LENGTH RATIO"] = slr
         
-        return info          
+        return info       
+    
+# =============================================================================
+# Helper functions.
+# =============================================================================
+        
+def cdf(pmf, x):
+    """
+    Returns p and m as used in Fulkerson ranking...
+    Pmf in form {cost: P(c)}. 
+    TODO: assume sorted or not?
+    """
+    
+    p, m = 0.0, 0.0
+    for k, v in pmf.items():
+        if x - k > 1e-6:
+            p += v
+            m += v
+        elif abs(x - k) < 1e-6:
+            p += v
+        else:
+            break # Assumes sorted.
+    return p, m        
             
 # =============================================================================
 # Heuristics.   
