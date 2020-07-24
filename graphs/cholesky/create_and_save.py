@@ -177,22 +177,6 @@ def cholesky(n_tiles, draw=False):
 # =============================================================================
 # Save human-readable summaries of all the DAGs.
 # =============================================================================
-
-nb = 128
-nt = 35
-adt = "perfect_adt"
-with open('nb{}/{}/{}tasks.dill'.format(nb, adt, nt), 'rb') as file:
-    dag = dill.load(file)
-dag.print_info()
-
-cp_lengths = dag.critical_paths(cp_type="Fulkerson")
-print(cp_lengths)
-
-# single = Platform(8, name="Single_GPU")
-# heft_mkspan = HEFT(dag, single)
-# print("HEFT makespan: {}".format(heft_mkspan))
-# cpop_mkspan = CPOP(dag, single)
-# print("CPOP makespan: {}".format(cpop_mkspan))
         
 # start = timer()
     

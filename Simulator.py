@@ -189,28 +189,32 @@ class Task:
                 cbar += v/(t_w * c_w) 
             cbar /= (s1 * s2)
             return cbar                    
-        raise ValueError('Unrecognized avg_type specified for average_comm_cost.')    
+        raise ValueError('Unrecognized avg_type specified for average_comm_cost.')  
         
-    def aoa_edge_pmf(self, child, weighted=False):
+    def aoa_edge_cdf(self, child, weighted=False):
         """
         Used in Fulkerson.
         TODO: weighted version.
         """              
         pmf = {}
-        if not weighted:
-            d = len(self.comm_costs[child.ID])
         for k, v in self.comm_costs[child.ID].items():
             w = v + self.comp_costs[k[0]] 
             if child.exit:
                 w += child.comp_costs[k[1]]
             try:
                 if not weighted:
-                    pmf[w] += 1/d
+                    pmf[w] += 1
             except KeyError:
                 if not weighted:
-                    pmf[w] = 1/d
-        pmf = {k: v for k, v in sorted(pmf.items(), key=lambda item: item[0])} # TODO: sort here?
-        return pmf
+                    pmf[w] = 1
+                    
+        if not weighted:
+            d = len(self.comm_costs[child.ID])                    
+        cdf, x = {}, 0.0
+        for k, v in sorted(pmf.items(), key=lambda item: item[0]):
+            cdf[k] = v/d + x if not weighted else v + x
+            x = cdf[k]
+        return cdf
 
 class DAG:
     """
@@ -324,76 +328,59 @@ class DAG:
             return max(t.FT for t in self.graph if t.FT is not None)  
         return max(t.FT for t in self.graph if t.exit) 
     
-    # def set_costs(self, acc_ratios, target_ccr, platform, shares=[0, 1/3, 1/3, 1/3]):
-    #     """
-    #     Sets computation and communication costs for randomly generated DAGs (e.g., from the STG).
+    def set_costs(self, platform, target_ccr, method="HEFT", het_factor=1.0):
+        """
+        Sets computation and communication costs for randomly generated DAGs (e.g., from the STG).
+        Notes:
+            - het_factor in the interval (0, 2).
+        """   
         
-    #     Parameters
-    #     ------------------------
-    #     platform - Node object (see Environment.py module)
-    #     The target platform.           
-        
-    #     target_ccr - float/int
-    #     The CCR we want the DAG to have on the target platform. Due to stochasticity in how we choose 
-    #     communication costs this is not precise so we might need to double check afterwards.              
-                      
-    #     Notes
-    #     ------------------------
-    #     1. I not already set, we assume that GPU times are uniformly distributed integers between 1 and 100.
-    #     2. We assume that CPU-CPU communication costs are zero and all others are of similar magnitude to
-    #        one another (as we typically have throughout).
-    #     3. Communication costs are sampled from a Gamma distribution with a computed mean and standard deviation
-    #        to try and achieve the desired CCR value for the DAG.
-    #     """   
-        
-    #     if isinstance(acc_ratios, tuple) or isinstance(acc_ratios, list):
-    #         dist, mu, sigma = acc_ratios
-        
-    #     # Set the computation costs.
-    #     for task in self.graph:
-    #         if task.comp_costs["G"] == 0.0:
-    #             task.comp_costs["G"] = np.random.randint(1, 100)         
-    #         if isinstance(acc_ratios, dict) or isinstance(acc_ratios, defaultdict):
-    #             task.acceleration_ratio = acc_ratios[task.type] 
-    #         elif isinstance(acc_ratios, tuple) or isinstance(acc_ratios, list):
-    #             if dist == "GAMMA" or dist == "gamma":
-    #                 task.acceleration_ratio = np.random.gamma(shape=(mu/sigma)**2, scale=sigma**2/mu) 
-    #             elif dist == "NORMAL" or dist == "normal":
-    #                 task.acceleration_ratio = abs(np.random.normal(mu, sigma)) 
-    #             else:
-    #                 raise ValueError('Unrecognized acceleration ratio distribution specified in set_costs!')                    
-    #         task.comp_costs["C"] = task.comp_costs["G"] * task.acceleration_ratio
-        
-    #     # Set the communication costs.        
-    #     # Compute the expected total compute of the entire DAG.
-    #     cpu_compute = list(task.comp_costs["C"] for task in self.graph)
-    #     gpu_compute = list(task.comp_costs["G"] for task in self.graph)
-    #     expected_total_compute = sum(cpu_compute) * platform.n_CPUs + sum(gpu_compute) * platform.n_GPUs
-    #     expected_total_compute /= platform.n_workers
-        
-    #     # Calculate the expected communication cost of the entire DAG - i.e., for all edges.        
-    #     expected_total_comm = expected_total_compute / target_ccr
-    #     expected_comm_per_edge = expected_total_comm / self.n_edges
-    #     for task in self.top_sort:
-    #         for child in self.graph.successors(task):
-    #             if isinstance(acc_ratios, tuple) or isinstance(acc_ratios, list):
-    #                 if dist == "GAMMA" or dist == "gamma":
-    #                     w_bar = np.random.gamma(shape=1.0, scale=expected_comm_per_edge)
-    #                 elif dist == "NORMAL" or dist == "normal":
-    #                     w_bar = abs(np.random.normal(expected_comm_per_edge, expected_comm_per_edge))
-    #             else:
-    #                 w_bar = np.random.uniform(0, 2) * expected_comm_per_edge
-    #             # Now sets the costs according to the relative shares.
-    #             x = w_bar * platform.n_workers**2   
-    #             s0, s1, s2, s3 = shares
-    #             d = s0 * platform.n_CPUs * (platform.n_CPUs - 1)
-    #             d += (s1 + s3) * platform.n_CPUs * platform.n_GPUs
-    #             d += s2 * platform.n_GPUs * (platform.n_GPUs - 1)
-    #             x /= d
-    #             task.comm_costs["CC"][child.ID] = s0 * x
-    #             task.comm_costs["CG"][child.ID] = s1 * x
-    #             task.comm_costs["GG"][child.ID] = s2 * x
-    #             task.comm_costs["GC"][child.ID] = s3 * x    
+        if method == "HEFT" or method == "unrelated":        
+            # Set computation costs.
+            avg_task_cost = np.random.uniform(1, 100)
+            for task in self.top_sort:
+                wbar = np.random.uniform(0, 2 * avg_task_cost)
+                for w in platform.workers:
+                    task.comp_costs[w.ID] = np.random.uniform(wbar * (1 - het_factor/2), wbar * (1 + het_factor/2))                
+            # Set communication costs.
+            total_edge_costs = (avg_task_cost * self.n_tasks) / target_ccr
+            avg_edge_cost = total_edge_costs / self.n_edges 
+            for task in self.top_sort:
+                for child in self.graph.successors(task):
+                    task.comm_costs[child.ID] = {}
+                    wbar = np.random.uniform(0, 2 * avg_edge_cost)
+                    wbar *= (1 + platform.n_workers)/(platform.n_workers) # Adjust for zero costs from processor to themselves.
+                    for u in platform.workers:
+                        for v in platform.workers:
+                            c = 0.0 if u == v else np.random.uniform(wbar * (1 - het_factor/2), wbar * (1 + het_factor/2))
+                            task.comm_costs[child.ID][(u.ID, v.ID)] = c
+        elif method == "related":
+            avg_power = np.random.uniform(1, 100)
+            powers = {}
+            for w in platform.workers:
+                powers[w.ID] = np.random.uniform(avg_power * (1 - het_factor/2), avg_power * (1 + het_factor/2))
+            # Set computation costs.
+            avg_task_cost = np.random.uniform(1, 100)
+            for task in self.top_sort:
+                t = np.random.uniform(0, 2 * avg_task_cost)
+                for w in platform.workers:
+                    task.comp_costs[w.ID] = t * np.random.gamma(shape=1.0, scale=powers[w.ID])
+            # Set communication costs.
+            total_edge_costs = (avg_task_cost * avg_power * self.n_tasks) / target_ccr
+            avg_edge_cost = total_edge_costs / self.n_edges 
+            for task in self.top_sort:
+                for child in self.graph.successors(task):
+                    task.comm_costs[child.ID] = {}
+                    wbar = np.random.uniform(0, 2 * avg_edge_cost)
+                    wbar *= (1 + platform.n_workers)/(platform.n_workers) # Adjust for zero costs from processor to themselves.
+                    for u in platform.workers:
+                        for v in platform.workers:
+                            c = 0.0 if u == v else np.random.uniform(wbar * (1 - het_factor/2), wbar * (1 + het_factor/2))
+                            task.comm_costs[child.ID][(u.ID, v.ID)] = c            
+                            
+        self.costs_set = True
+        self.target_platform = platform.name
+                  
                 
     def minimal_serial_time(self):
         """
@@ -492,7 +479,7 @@ class DAG:
             if direction == "upward": 
                 backward_traversal = list(reversed(self.top_sort))  
                 for t in backward_traversal:
-                    cp_lengths[t] = t.average_cost(avg_type=avg_type) 
+                    cp_lengths[t] = t.average_cost(avg_type=avg_type)
                     try:
                         cp_lengths[t] += max(t.average_comm_cost(s, avg_type=avg_type) + cp_lengths[s] for s in self.graph.successors(t))
                     except ValueError:
@@ -514,13 +501,14 @@ class DAG:
                         continue
                     children = list(self.graph.successors(t))                  
                     # Find alpha and the potential z values to check.
-                    edge_pmfs = {}
+                    edge_cdfs = {}
                     alpha, Z = 0.0, []
                     for c in children: 
-                        pmf = t.aoa_edge_pmf(c)
-                        Z += list(cp_lengths[c] + v for v in pmf)
-                        alpha = max(alpha, min(pmf))  
-                        edge_pmfs[c.ID] = pmf                               
+                        cdf = t.aoa_edge_cdf(c)
+                        Z += list(cp_lengths[c] + v for v in cdf)
+                        alpha = max(alpha, min(cdf))  
+                        edge_cdfs[c.ID] = cdf  
+
                     # Compute f. 
                     cp_lengths[t] = 0.0
                     Z = list(set(Z))    # TODO: might still need a check to prevent rounding errors.
@@ -532,7 +520,16 @@ class DAG:
                         for c in children:
                             # Compute zdash = z - f_c.
                             zdash = z - cp_lengths[c] 
-                            p, m = cdf(edge_pmfs[c.ID], zdash)                                         
+                            p, m = 0.0, 0.0
+                            for k, v in edge_cdfs[c.ID].items():
+                                if abs(zdash - k) < 1e-6:
+                                    p = v
+                                    break
+                                elif k - zdash > 1e-6:
+                                    break
+                                else:
+                                    p, m = v, v
+                            # p, m = compute_pm(edge_cdfs[c.ID], zdash)                                     
                             # Compute m and p.
                             minus *= m 
                             plus *= p
@@ -1012,8 +1009,8 @@ class DAG:
                     print("Task type: {}".format(task.type), file=filepath)              
         print("--------------------------------------------------------", file=filepath) 
         
-        # if return_mst_and_cp:
-        #     return mst, cp
+        if return_mst_and_cp:
+            return mst, cp
           
 class Worker:
     """
@@ -1278,35 +1275,13 @@ class Platform:
         slr = mkspan / cp
         info["SCHEDULE LENGTH RATIO"] = slr
         
-        return info       
-    
-# =============================================================================
-# Helper functions.
-# =============================================================================
-        
-def cdf(pmf, x):
-    """
-    Returns p and m as used in Fulkerson ranking...
-    Pmf in form {cost: P(c)}. 
-    TODO: assume sorted or not?
-    """
-    
-    p, m = 0.0, 0.0
-    for k, v in pmf.items():
-        if x - k > 1e-6:
-            p += v
-            m += v
-        elif abs(x - k) < 1e-6:
-            p += v
-        else:
-            break # Assumes sorted.
-    return p, m        
+        return info             
             
 # =============================================================================
 # Heuristics.   
 # =============================================================================            
             
-def HEFT(dag, platform, priority_list=None, avg_type="HEFT", return_schedule=False, schedule_dest=None):
+def HEFT(dag, platform, priority_list=None, cp_type="HEFT", avg_type="HEFT", return_schedule=False, schedule_dest=None):
     """
     Heterogeneous Earliest Finish Time.
     'Performance-effective and low-complexity task scheduling for heterogeneous computing',
@@ -1349,11 +1324,10 @@ def HEFT(dag, platform, priority_list=None, avg_type="HEFT", return_schedule=Fal
     
     # List all tasks by upward rank unless alternative is specified.
     if priority_list is None:
-        priority_list = dag.critical_path_priorities(direction="upward", cp_type="HEFT", avg_type=avg_type)   
+        priority_list = dag.critical_path_priorities(direction="upward", cp_type=cp_type, avg_type=avg_type)   
     
     # Schedule the tasks.
-    for t in priority_list:    
-        
+    for t in priority_list:          
         # Compute the finish time on all workers and identify the fastest (with ties broken consistently by np.argmin).   
         worker_finish_times = list(w.earliest_finish_time(t, dag, platform) for w in platform.workers)
         min_val = min(worker_finish_times, key=lambda w:w[0]) 
