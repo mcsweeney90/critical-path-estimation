@@ -48,16 +48,28 @@ plt.ioff() # Don't show plots.
 # STG
 stg_dag_size = 100
 stg_dag_path = '../graphs/STG/{}'.format(stg_dag_size)
-with open('{}/rand0000.dill'.format(stg_dag_path), 'rb') as file:
+with open('{}/rand0028.dill'.format(stg_dag_path), 'rb') as file:
     dag = dill.load(file)
 
 plat = Platform(4, name="4P")  
-dag.set_costs(plat, target_ccr=1.0, method="related", het_factor=2.0)
+dag.set_costs(plat, target_ccr=1.0, method="unrelated", het_factor=2.0)
 dag.print_info()
 heft_mkspan = HEFT(dag, plat, cp_type="HEFT")
 print("HEFT makespan: {}".format(heft_mkspan))
-fulk_mkspan = HEFT(dag, plat, cp_type="Fulkerson")
-print("Fulk makespan: {}".format(fulk_mkspan))
+mc_priority_list = dag.critical_path_priorities(cp_type="WMC", mc_samples=10)
+mcheft_mkspan = HEFT(dag, plat, priority_list=mc_priority_list)
+print("MC makespan: {}".format(mcheft_mkspan))
+rand_list = dag.top_sort
+rand_mkspan = HEFT(dag, plat, priority_list=rand_list)
+print("Rand makespan: {}".format(rand_mkspan))
+
+
+# weighted_mkspan = HEFT(dag, plat, cp_type="HEFT", avg_type="HEFT-WM")
+# print("Weighted makespan: {}".format(weighted_mkspan))
+# fulk_mkspan = HEFT(dag, plat, cp_type="Fulkerson")
+# print("Fulkerson makespan: {}".format(fulk_mkspan))
+# wfulk_mkspan = HEFT(dag, plat, cp_type="Fulkerson", avg_type="HEFT-WM")
+# print("Weighted Fulkerson makespan: {}".format(wfulk_mkspan))
 
 
 # cp_lengths = dag.critical_paths(cp_type="Fulkerson")

@@ -17,7 +17,7 @@ from Simulator import Task, DAG
 ####################################################################################################
 
 # Variables etc used throughout.
-size = 100
+size = 1000
 src_path = 'original/{}'.format(size)
 save_path = '{}'.format(size)
 pathlib.Path(save_path).mkdir(parents=True, exist_ok=True) 

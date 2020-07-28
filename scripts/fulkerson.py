@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-HEFT vs Fulkerson.
+HEFT with alternative critical path rankings.
 """
 
 import dill, pathlib, os
@@ -53,46 +53,34 @@ start = timer()
 
 n_workers = [2, 4, 8]
 ccrs = [0.1, 1, 10]
-het_factors = [1.0, 2.0]
+het_factors = [2.0]
+cps = ["W", "F", "WF"]
 
-# reductions = {}
-# for platform in platforms:
-#     reductions[platform.name] = {}
-#     for alpha in alphas:
-#         reductions[platform.name][alpha] = {}
-#         for beta in betas:
-#             reductions[platform.name][alpha][beta] = {}
-#             for rk in rankings:
-#                 reductions[platform.name][alpha][beta][rk] = []
-
-slrs, speedups = {}, {}
+reductions = {}
 for nw in n_workers:
-    slrs[nw], speedups[nw] = {}, {}
+    reductions[nw] = {}
     for ccr in ccrs:
-        slrs[nw][ccr], speedups[nw][ccr] = {}, {}
+        reductions[nw][ccr] = {}
         for h in het_factors:
-            slrs[nw][ccr][h], speedups[nw][ccr][h] = {}, {}
-            slrs[nw][ccr][h]["HEFT"] = []
-            slrs[nw][ccr][h]["Fulkerson"] = []
-            speedups[nw][ccr][h]["HEFT"] = []
-            speedups[nw][ccr][h]["Fulkerson"] = []
+            reductions[nw][ccr][h] = {}
+            for cp in cps:
+                reductions[nw][ccr][h][cp] = []                
 
 for nw in n_workers:
     print("\nStarting {} workers...".format(nw))
     platform = Platform(nw, name="{}P".format(nw)) 
     for ccr in ccrs:
         print("Starting CCR = {}...".format(ccr))
-        for het_factor in het_factors:
-            print("Starting het factor = {}...".format(het_factor))
-            with open("{}/{}_CCR{}_H{}_{}tasks.txt".format(stg_results_path, platform.name, ccr, het_factor, stg_dag_size), "w") as dest:
-                print("COMPARISON OF HEFT WITH STANDARD UPWARD RANKING AND FULKERSON-BASED RANKING.", file=dest)
+        for h in het_factors:
+            print("Starting het factor = {}...".format(h))
+            with open("{}/{}_CCR{}_H{}_{}tasks.txt".format(stg_results_path, platform.name, ccr, h, stg_dag_size), "w") as dest:
+                print("COMPARISON OF HEFT WITH STANDARD UPWARD RANKING AND FULKERSON-BASED RANKINGS.", file=dest)
                 print("180 DAGs FROM THE STG WITH {} TASKS.".format(stg_dag_size + 2), file=dest)
                 print("TARGET DAG COMPUTATION-TO-COMMUNICATION RATIO (CCR): {}. (ACTUAL VALUE MAY DIFFER SLIGHTLY.)".format(ccr), file=dest) 
-                print("HETEROGENEITY FACTOR: {}.".format(het_factor), file=dest)                 
+                print("HETEROGENEITY FACTOR: {}.".format(h), file=dest)                 
                 platform.print_info(filepath=dest)
                 
                 # Iterate over DAG directory.
-                reductions = []
                 count = 0
                 for name in os.listdir('{}'.format(stg_dag_path)):
                     print("Starting {}...".format(name))
@@ -103,25 +91,25 @@ for nw in n_workers:
                     with open('{}/{}'.format(stg_dag_path, name), 'rb') as file:
                         dag = dill.load(file)
                     # Set DAG costs.
-                    dag.set_costs(platform, target_ccr=ccr, method="HEFT", het_factor=het_factor)
+                    dag.set_costs(platform, target_ccr=ccr, method="related", het_factor=h)
                     # Print DAG info to file.
                     mst, cp = dag.print_info(return_mst_and_cp=True, filepath=dest) 
                     
-                    for h in ["HEFT", "Fulkerson"]:                    
-                        mkspan = HEFT(dag, platform, cp_type=h)
-                        print("\n{} makespan: {}".format(h, mkspan), file=dest)
-                        slr = mkspan / cp
-                        slrs[nw][ccr][het_factor][h].append(slr)
-                        print("SLR: {}".format(slr), file=dest)
-                        speedup = mst / mkspan 
-                        speedups[nw][ccr][het_factor][h].append(speedup)
-                        print("Speedup: {}".format(speedup), file=dest)
-                        if h == "HEFT":
-                            m = mkspan
-                        else:
-                            r = 100 - (mkspan/m)*100
-                            reductions.append(r)
-                            print("Reduction vs standard HEFT (%) : {}".format(r), file=dest)                                                                  
+                    # Find HEFT makespan.
+                    heft_mkspan = HEFT(dag, platform)
+                    print("\nHEFT makespan: {}".format(heft_mkspan), file=dest)
+                    slr = heft_mkspan / cp
+                    print("SLR: {}".format(slr), file=dest)
+                    speedup = mst / heft_mkspan
+                    print("Speedup: {}".format(speedup), file=dest)
+                    
+                    for cp in cps:
+                        avg_type = "WM" if cp == "W" else "HEFT" 
+                        mkspan = HEFT(dag, platform, cp_type=cp, avg_type=avg_type) 
+                        print("\nHEFT-{} makespan: {}".format(cp, mkspan), file=dest)
+                        r = 100 - (mkspan/heft_mkspan)*100
+                        reductions[nw][ccr][h][cp].append(r)
+                        print("Reduction vs standard HEFT (%) : {}".format(r), file=dest)                                                                 
                     
                     print("--------------------------------------------------------\n", file=dest) 
                 print("\n\n\n\n\n", file=dest)
@@ -131,30 +119,18 @@ for nw in n_workers:
                 print("--------------------------------------------------------------------------------", file=dest)
                 print("--------------------------------------------------------------------------------\n", file=dest)
                 print("DAGs considered: {}".format(count), file=dest)
-                for h in ["HEFT", "Fulkerson"]:
-                    print("\n\nHEURISTIC: {}".format(h), file=dest)
-                    
-                    print("Mean SLR: {}".format(np.mean(slrs[nw][ccr][het_factor][h])), file=dest)
-                    print("Best SLR: {}".format(max(slrs[nw][ccr][het_factor][h])), file=dest)
-                    print("Worst SLR: {}".format(min(slrs[nw][ccr][het_factor][h])), file=dest)
-                    
-                    print("\nMean Speedup: {}".format(np.mean(speedups[nw][ccr][het_factor][h])), file=dest)
-                    print("Best Speedup: {}".format(max(speedups[nw][ccr][het_factor][h])), file=dest)
-                    print("Worst Speedup: {}".format(min(speedups[nw][ccr][het_factor][h])), file=dest)
-                    
-                    if h != "HEFT":
-                        print("\nMean reduction (%): {}".format(np.mean(reductions)), file=dest)
-                        print("Best reduction (%): {}".format(max(reductions)), file=dest)
-                        print("Worst reduction (%): {}".format(min(reductions)), file=dest)
-                        print("Number of times better: {}/{}".format(sum(1 for r in reductions if r > 0.0), count), file=dest)
-                        print("Number of times worse: {}/{}".format(sum(1 for r in reductions if r < 0.0), count), file=dest)
+                for cp in cps:
+                    print("\nHEURISTIC: HEFT-{}".format(cp), file=dest)    
+                    print("Mean reduction (%): {}".format(np.mean(reductions[nw][ccr][h][cp])), file=dest)
+                    print("Best reduction (%): {}".format(max(reductions[nw][ccr][h][cp])), file=dest)
+                    print("Worst reduction (%): {}".format(min(reductions[nw][ccr][h][cp])), file=dest)
+                    print("Number of times better: {}/{}".format(sum(1 for r in reductions[nw][ccr][h][cp] if r > 0.0), count), file=dest)
+                    print("Number of times worse: {}/{}".format(sum(1 for r in reductions[nw][ccr][h][cp] if r < 0.0), count), file=dest)
                         
                 
 # Save the reductions.
-with open('{}/slrs.dill'.format(stg_results_path), 'wb') as handle:
-    dill.dump(slrs, handle)
-with open('{}/speedups.dill'.format(stg_results_path), 'wb') as handle:
-    dill.dump(speedups, handle)
+with open('{}/reductions.dill'.format(stg_results_path), 'wb') as handle:
+    dill.dump(reductions, handle)
 
 elapsed = timer() - start
 print("This took {} minutes".format(elapsed / 60))

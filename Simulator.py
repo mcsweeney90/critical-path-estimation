@@ -194,19 +194,28 @@ class Task:
     def aoa_edge_cdf(self, child, weighted=False):
         """
         Used in Fulkerson.
-        TODO: weighted version.
-        """              
+        """   
+
+        if weighted:
+            s1 = sum(1/v for v in self.comp_costs.values())
+            s2 = sum(1/v for v in child.comp_costs.values())
+                   
         pmf = {}
         for k, v in self.comm_costs[child.ID].items():
             w = v + self.comp_costs[k[0]] 
             if child.exit:
                 w += child.comp_costs[k[1]]
+            if weighted:
+                t_w = self.comp_costs[k[0]]
+                c_w = child.comp_costs[k[1]]                
+                pr = 1/(t_w * c_w)
+                pr /= (s1 * s2)
+            else:
+                pr = 1
             try:
-                if not weighted:
-                    pmf[w] += 1
+                pmf[w] += pr
             except KeyError:
-                if not weighted:
-                    pmf[w] = 1
+                pmf[w] = pr
                     
         if not weighted:
             d = len(self.comm_costs[child.ID])                    
@@ -366,7 +375,7 @@ class DAG:
                 for w in platform.workers:
                     task.comp_costs[w.ID] = t * np.random.gamma(shape=1.0, scale=powers[w.ID])
             # Set communication costs.
-            total_edge_costs = (avg_task_cost * avg_power * self.n_tasks) / target_ccr
+            total_edge_costs = sum(t.average_cost() for t in self.top_sort) / target_ccr
             avg_edge_cost = total_edge_costs / self.n_edges 
             for task in self.top_sort:
                 for child in self.graph.successors(task):
@@ -445,7 +454,7 @@ class DAG:
                 OCT[task.ID][w] += max(child_values)      
         return OCT    
     
-    def critical_paths(self, direction="upward", cp_type="HEFT", avg_type="HEFT"):
+    def critical_paths(self, direction="upward", cp_type="HEFT", avg_type="HEFT", mc_samples=1000):
         """
         Compute critical path length estimates to/from all tasks.
         
@@ -475,7 +484,7 @@ class DAG:
                     cp_lengths[t] = min(CCP[t.ID].values())
                 elif cp_type == "pessimistic":
                     cp_lengths[t] = max(CCP[t.ID].values())
-        elif cp_type == "HEFT":        
+        elif cp_type == "HEFT" or cp_type == "H" or cp_type == "W":        
             if direction == "upward": 
                 backward_traversal = list(reversed(self.top_sort))  
                 for t in backward_traversal:
@@ -492,8 +501,9 @@ class DAG:
                                   cp_lengths[p] for p in self.graph.predecessors(t))
                     except ValueError:
                         pass    
-        elif cp_type == "Fulkerson":
-            if direction == "upward": # TODO: downward and weighted versions.
+        elif cp_type == "Fulkerson" or cp_type == "F" or cp_type == "WF":
+            fulk_weight = True if cp_type == "WF" else False
+            if direction == "upward": 
                 backward_traversal = list(reversed(self.top_sort))
                 for t in backward_traversal:
                     if t.exit:
@@ -504,11 +514,10 @@ class DAG:
                     edge_cdfs = {}
                     alpha, Z = 0.0, []
                     for c in children: 
-                        cdf = t.aoa_edge_cdf(c)
+                        cdf = t.aoa_edge_cdf(c, weighted=fulk_weight)
                         Z += list(cp_lengths[c] + v for v in cdf)
                         alpha = max(alpha, min(cdf))  
-                        edge_cdfs[c.ID] = cdf  
-
+                        edge_cdfs[c.ID] = cdf 
                     # Compute f. 
                     cp_lengths[t] = 0.0
                     Z = list(set(Z))    # TODO: might still need a check to prevent rounding errors.
@@ -518,7 +527,6 @@ class DAG:
                         # Iterate over edges and compute the two products.
                         plus, minus = 1, 1                
                         for c in children:
-                            # Compute zdash = z - f_c.
                             zdash = z - cp_lengths[c] 
                             p, m = 0.0, 0.0
                             for k, v in edge_cdfs[c.ID].items():
@@ -528,13 +536,89 @@ class DAG:
                                 elif k - zdash > 1e-6:
                                     break
                                 else:
-                                    p, m = v, v
-                            # p, m = compute_pm(edge_cdfs[c.ID], zdash)                                     
-                            # Compute m and p.
+                                    p, m = v, v 
                             minus *= m 
                             plus *= p
                         # Add to f.                                    
                         cp_lengths[t] += z * (plus - minus)
+            elif direction == "downward": # TODO: check this at some point but don't actually use anywhere so not a priority.
+                for t in self.top_sort:
+                    if t.entry:
+                        cp_lengths[t] = 0.0
+                        continue
+                    parents = list(self.graph.predecessors(t)) 
+                    # Find alpha and the potential z values to check.
+                    edge_cdfs = {}
+                    alpha, Z = 0.0, []
+                    for p in parents: 
+                        cdf = p.aoa_edge_cdf(t, weighted=fulk_weight)
+                        Z += list(cp_lengths[p] + v for v in cdf)
+                        alpha = max(alpha, min(cdf))  
+                        edge_cdfs[p.ID] = cdf 
+                    # Compute f. 
+                    cp_lengths[t] = 0.0
+                    Z = list(set(Z))    # TODO: might still need a check to prevent rounding errors.
+                    for z in Z:
+                        if alpha - z > 1e-6:   
+                            continue
+                        # Iterate over edges and compute the two products.
+                        plus, minus = 1, 1                
+                        for q in parents:
+                            zdash = z - cp_lengths[q] 
+                            p, m = 0.0, 0.0
+                            for k, v in edge_cdfs[q.ID].items():
+                                if abs(zdash - k) < 1e-6:
+                                    p = v
+                                    break
+                                elif k - zdash > 1e-6:
+                                    break
+                                else:
+                                    p, m = v, v  
+                            minus *= m 
+                            plus *= p
+                        # Add to f.                                    
+                        cp_lengths[t] += z * (plus - minus)
+                        
+        elif cp_type == "Monte Carlo" or cp_type == "MC" or cp_type == "WMC":
+            workers = list(k for k in self.top_sort[0].comp_costs)
+            for _ in range(mc_samples):
+                # Generate an assignment.
+                assignment = {}
+                for t in self.top_sort:
+                    if cp_type == "WMC":
+                        s = sum(1/v for v in t.comp_costs.values())
+                        p = list((1/v)/s for v in t.comp_costs.values())
+                        assignment[t.ID] = np.random.choice(workers, p=p)
+                    else:                        
+                        assignment[t.ID] = np.random.choice(workers)
+                # Compute the critical path lengths.
+                fixed_lengths = {}
+                if direction == "upward":
+                    backward_traversal = list(reversed(self.top_sort)) 
+                    for t in backward_traversal:
+                        fixed_lengths[t.ID] = t.comp_costs[assignment[t.ID]]
+                        try:
+                            fixed_lengths[t.ID] += max(t.comm_costs[s.ID][(assignment[t.ID], assignment[s.ID])] + fixed_lengths[s.ID] for s in self.graph.successors(t))
+                        except ValueError:
+                            pass
+                        try:
+                            cp_lengths[t] += fixed_lengths[t.ID]
+                        except KeyError:
+                            cp_lengths[t] = fixed_lengths[t.ID]
+                elif direction == "downward":
+                    for t in self.top_sort:
+                        fixed_lengths[t.ID] = 0.0
+                        try:
+                            fixed_lengths[t.ID] += max(p.comp_costs[assignment[p.ID]] + p.comm_costs[t.ID][(assignment[p.ID], assignment[t.ID])] +
+                                      fixed_lengths[p.ID] for p in self.graph.predecessors(t))
+                        except ValueError:
+                            pass
+                        try:
+                            cp_lengths[t] += fixed_lengths[t.ID]
+                        except KeyError:
+                            cp_lengths[t] = fixed_lengths[t.ID]
+            for t in self.top_sort:
+                cp_lengths[t] /= mc_samples # Not really necessary...           
                     
         return cp_lengths 
     
@@ -713,7 +797,7 @@ class DAG:
     #             d[task.ID]["G"] += max(g_parent_values)
     #         return d
     
-    def critical_path_priorities(self, direction="upward", cp_type="HEFT", avg_type="HEFT", return_ranks=False):
+    def critical_path_priorities(self, direction="upward", cp_type="HEFT", avg_type="HEFT", mc_samples=1000, return_ranks=False):
         """
         Sorts all tasks in the DAG by decreasing/non-increasing order of upward rank.
         
@@ -736,7 +820,7 @@ class DAG:
         task_ranks - dict
         Gives the actual ranks of all tasks in the form {task : rank}.               
         """      
-        task_ranks = self.critical_paths(direction, cp_type, avg_type)
+        task_ranks = self.critical_paths(direction, cp_type, avg_type, mc_samples)
         if direction == "upward":
             priority_list = list(reversed(sorted(task_ranks, key=task_ranks.get)))
         else:
@@ -744,173 +828,6 @@ class DAG:
         if return_ranks:
             return priority_list, task_ranks
         return priority_list    
-        
-    # def sort_by_Fulkerson_rank(self, platform, return_f=False, downward=False, weighted=False):
-    #     """
-    #     TODO: changed to incorporate final node cost, check still everything still works (especially downward version).
-    #     Notes:
-    #         1. "Original" version is as described in Fulkerson's original paper. Much slower than the default but might be wanted.
-    #         2. The default version computes the ranks using the more computationally efficient method for computing Fulkerson's "f"
-    #             numbers as first stated by Clingen (1964? Check) and elucidated by Elmaghraby (1967). Assumes that costs are independent
-    #             but that's a fairly standard assumption anyway.
-    #     """          
-        
-    #     # Define the respective probabilities of each potential edge weight.
-    #     # edge_probs[0] == CPU-same CPU, edge_probs[1] == CPU-different CPU, edge_probs[2] == CPU-GPU,
-    #     # edge_probs[3] == GPU-same GPU, edge_probs[4] == GPU-different GPU, edge_probs[5] == GPU-CPU.
-    #     if not weighted:
-    #         d = platform.n_workers**2
-    #         edge_probs = [platform.n_CPUs/d, (platform.n_CPUs * (platform.n_CPUs - 1))/d, platform.n_CPUs * platform.n_GPUs / d,
-    #                       platform.n_GPUs/d, (platform.n_GPUs * (platform.n_GPUs - 1))/d, platform.n_GPUs * platform.n_CPUs / d] 
-    #     f = {}
-        
-    #     if not downward:        
-    #         backward_traversal = list(reversed(self.top_sort))
-    #         for t in backward_traversal:
-    #             if t.exit:
-    #                 f[t] = 0.0    
-    #                 continue
-    #             children = list(self.graph.successors(t))                  
-    #             # Find alpha and the potential z values to check.
-    #             alpha, Z = 0.0, []
-    #             for c in children:  
-    #                 if c.exit:
-    #                     alpha = max(alpha, min(t.comp_costs["C"] + c.comp_costs["C"], t.comp_costs["G"] + c.comp_costs["G"]))
-    #                     n = [t.comp_costs["C"] + c.comp_costs["C"],
-    #                           t.comm_costs["CC"][c.ID] + t.comp_costs["C"] + c.comp_costs["C"],
-    #                           t.comm_costs["CG"][c.ID] + t.comp_costs["C"] + c.comp_costs["G"], 
-    #                           t.comp_costs["G"] + c.comp_costs["G"],
-    #                           t.comm_costs["GG"][c.ID] + t.comp_costs["G"] + c.comp_costs["G"],
-    #                           t.comm_costs["GC"][c.ID] + t.comp_costs["G"] + c.comp_costs["C"]]                        
-    #                 else:
-    #                     alpha = max(alpha, f[c] + min(t.comp_costs["C"], t.comp_costs["G"]))
-    #                     n = [f[c] + t.comp_costs["C"],
-    #                           f[c] + t.comm_costs["CC"][c.ID] + t.comp_costs["C"],
-    #                           f[c] + t.comm_costs["CG"][c.ID] + t.comp_costs["C"], 
-    #                           f[c] + t.comp_costs["G"],
-    #                           f[c] + t.comm_costs["GG"][c.ID] + t.comp_costs["G"],
-    #                           f[c] + t.comm_costs["GC"][c.ID] + t.comp_costs["G"]]
-    #                 Z += n          
-    #             # Compute f. 
-    #             f[t] = 0.0
-    #             Z = list(set(Z))    # TODO: might still need a check to prevent rounding errors.
-    #             for z in Z:
-    #                 if alpha - z > 1e-6:   
-    #                     continue
-    #                 # Iterate over edges and compute the two products.
-    #                 plus, minus = 1, 1                
-    #                 for c in children:
-    #                     # Compute zdash = z - f_c.
-    #                     zdash = z - f[c] 
-    #                     # Define the edge costs.
-    #                     if weighted:    
-    #                         r1, r2 = t.acceleration_ratio, c.acceleration_ratio
-    #                         d = (platform.n_CPUs + r1 * platform.n_GPUs) * (platform.n_CPUs + r2 * platform.n_GPUs)
-    #                         edge_probs = [platform.n_CPUs/d, 
-    #                                       (platform.n_CPUs * (platform.n_CPUs - 1))/d, 
-    #                                       platform.n_CPUs * r2 * platform.n_GPUs / d,
-    #                                       r1 * r2 * platform.n_GPUs/d, 
-    #                                       (r1 * r2 * platform.n_GPUs * (platform.n_GPUs - 1))/d,
-    #                                       r1 * platform.n_GPUs * platform.n_CPUs / d]
-    #                     if c.exit:
-    #                         edge_costs = [[t.comp_costs["C"] + c.comp_costs["C"], edge_probs[0]],
-    #                           [t.comm_costs["CC"][c.ID] + t.comp_costs["C"] + c.comp_costs["C"], edge_probs[1]],
-    #                           [t.comm_costs["CG"][c.ID] + t.comp_costs["C"] + c.comp_costs["G"], edge_probs[2]],
-    #                           [t.comp_costs["G"] + c.comp_costs["G"], edge_probs[3]],
-    #                           [t.comm_costs["GG"][c.ID] + t.comp_costs["G"] + c.comp_costs["G"], edge_probs[4]],
-    #                           [t.comm_costs["GC"][c.ID] + t.comp_costs["G"] + c.comp_costs["C"], edge_probs[5]]] 
-    #                     else:
-    #                         edge_costs = [[t.comp_costs["C"], edge_probs[0]],
-    #                           [t.comm_costs["CC"][c.ID] + t.comp_costs["C"], edge_probs[1]],
-    #                           [t.comm_costs["CG"][c.ID] + t.comp_costs["C"], edge_probs[2]],
-    #                           [t.comp_costs["G"], edge_probs[3]],
-    #                           [t.comm_costs["GG"][c.ID] + t.comp_costs["G"], edge_probs[4]],
-    #                           [t.comm_costs["GC"][c.ID] + t.comp_costs["G"], edge_probs[5]]]                                          
-    #                     # Compute m and p.
-    #                     m = sum(e[1] for e in edge_costs if zdash - e[0] > 1e-6)
-    #                     minus *= m 
-    #                     p = m + sum(e[1] for e in edge_costs if abs(zdash - e[0]) < 1e-6)
-    #                     plus *= p
-    #                 # Add to f.                                    
-    #                 f[t] += z * (plus - minus)
-    #             # print(t.ID, f[t])
-    #         # Sort tasks by rank. 
-    #         priority_list = list(reversed(sorted(f, key=f.get)))         
-    #     else:
-    #         for t in self.top_sort:
-    #             if t.entry:
-    #                 f[t] = 0.0
-    #                 continue
-    #             parents = list(self.graph.predecessors(t)) 
-    #             # Find alpha and the potential z values to check.
-    #             alpha, Z = 0.0, []
-    #             for p in parents: 
-    #                 if t.exit:
-    #                     alpha = max(alpha, f[p] + min(p.comp_costs["C"] + t.comp_costs["C"], p.comp_costs["G"] + p.comp_costs["G"]))
-    #                     n = [f[p] + p.comp_costs["C"] + t.comp_costs["C"],
-    #                           f[p] + p.comm_costs["CC"][t.ID] + p.comp_costs["C"] + t.comp_costs["C"],
-    #                           f[p] + p.comm_costs["CG"][t.ID] + p.comp_costs["C"] + t.comp_costs["G"], 
-    #                           f[p] + p.comp_costs["G"] + t.comp_costs["G"],
-    #                           f[p] + p.comm_costs["GG"][t.ID] + p.comp_costs["G"] + t.comp_costs["G"],
-    #                           f[p] + p.comm_costs["GC"][t.ID] + p.comp_costs["G"] + t.comp_costs["C"]]
-    #                 else:
-    #                     alpha = max(alpha, f[p] + min(p.comp_costs["C"], p.comp_costs["G"])) 
-    #                     n = [f[p] + p.comp_costs["C"],
-    #                           f[p] + p.comm_costs["CC"][t.ID] + p.comp_costs["C"],
-    #                           f[p] + p.comm_costs["CG"][t.ID] + p.comp_costs["C"], 
-    #                           f[p] + p.comp_costs["G"],
-    #                           f[p] + p.comm_costs["GG"][t.ID] + p.comp_costs["G"],
-    #                           f[p] + p.comm_costs["GC"][t.ID] + p.comp_costs["G"]]
-    #                 Z += n  
-    #             # Compute f. 
-    #             f[t] = 0.0
-    #             Z = list(set(Z))    # TODO: might still need a check to prevent rounding errors.
-    #             for z in Z:
-    #                 if alpha - z > 1e-6:   
-    #                     continue
-    #                 # Iterate over edges and compute the two products.
-    #                 plus, minus = 1, 1                
-    #                 for p in parents:
-    #                     # Compute zdash = z - f_p.
-    #                     zdash = z - f[p]    
-    #                     # Define the edge costs.
-    #                     if weighted:    # TODO: check this.
-    #                         r1, r2 = p.acceleration_ratio, t.acceleration_ratio
-    #                         d = (platform.n_CPUs + r1 * platform.n_GPUs) * (platform.n_CPUs + r2 * platform.n_GPUs)
-    #                         edge_probs = [platform.n_CPUs/d, 
-    #                                       (platform.n_CPUs * (platform.n_CPUs - 1))/d, 
-    #                                       platform.n_CPUs * r2 * platform.n_GPUs / d,
-    #                                       platform.n_GPUs/d, 
-    #                                       r1 * r2 * (platform.n_GPUs * (platform.n_GPUs - 1))/d,
-    #                                       r1 * platform.n_GPUs * platform.n_CPUs / d]
-    #                     if t.exit:
-    #                         edge_costs = [[p.comp_costs["C"] + t.comp_costs["C"], edge_probs[0]],
-    #                           [p.comm_costs["CC"][t.ID] + p.comp_costs["C"] + t.comp_costs["C"], edge_probs[1]],
-    #                           [p.comm_costs["CG"][t.ID] + p.comp_costs["C"] + t.comp_costs["G"], edge_probs[2]],
-    #                           [p.comp_costs["G"] + t.comp_costs["G"], edge_probs[3]],
-    #                           [p.comm_costs["GG"][t.ID] + p.comp_costs["G"] + t.comp_costs["G"], edge_probs[4]],
-    #                           [p.comm_costs["GC"][t.ID] + p.comp_costs["G"] + t.comp_costs["C"], edge_probs[5]]] 
-    #                     else:
-    #                         edge_costs = [[p.comp_costs["C"], edge_probs[0]],
-    #                           [p.comm_costs["CC"][t.ID] + p.comp_costs["C"], edge_probs[1]],
-    #                           [p.comm_costs["CG"][t.ID] + p.comp_costs["C"], edge_probs[2]],
-    #                           [p.comp_costs["G"], edge_probs[3]],
-    #                           [p.comm_costs["GG"][t.ID] + p.comp_costs["G"], edge_probs[4]],
-    #                           [p.comm_costs["GC"][t.ID] + p.comp_costs["G"], edge_probs[5]]]                                        
-    #                     # Compute m and p.
-    #                     m = sum(e[1] for e in edge_costs if zdash - e[0] > 1e-6)
-    #                     minus *= m 
-    #                     pl = m + sum(e[1] for e in edge_costs if abs(zdash - e[0]) < 1e-6)
-    #                     plus *= pl
-    #                 # Add to f.                                    
-    #                 f[t] += z * (plus - minus) 
-    #             # print("Task: {}, f = {}".format(t.ID, f[t]))
-    #         # Sort tasks by rank. 
-    #         priority_list = list(sorted(f, key=f.get))
-                
-    #     if return_f:
-    #         return priority_list, f
-    #     return priority_list        
                  
     def draw_graph(self, filepath):
         """
