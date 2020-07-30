@@ -1,24 +1,64 @@
-% This is samplepaper.tex, a sample chapter demonstrating the
-% LLNCS macro package for Springer Computer Science proceedings;
-% Version 2.20 of 2017/10/04
-%
-\documentclass[runningheads]{llncs}
-%
-\usepackage{graphicx}
-\graphicspath{{images/}}
-% Used for displaying a sample figure. If possible, figure files should
-% be included in EPS format.
-\usepackage{amsmath,amssymb}
-\usepackage[hyphens, spaces]{url}
-% If you use the hyperref package, please uncomment the following line
-% to display URLs in blue roman font according to Springer's eBook style:
-\usepackage{hyperref}
-\renewcommand\UrlFont{\color{blue}\rmfamily}
-\usepackage[linesnumbered, ruled]{algorithm2e}
-\usepackage{mathtools} % for coloneqq
-\usepackage{subfig}
-\usepackage{booktabs}
+% !TeX document-id = {54177b55-cdde-488b-90fe-107922d59049}
+\documentclass[12pt]{article}
 
+\usepackage{a4} 
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage[]{xcolor}
+\usepackage{graphicx}
+\usepackage[colorlinks,urlcolor=blue,linkcolor=blue,citecolor=hotpink]{hyperref}
+\usepackage{booktabs}
+\usepackage{rotating}
+\usepackage{caption}
+\usepackage[british]{babel}
+\usepackage[linesnumbered, ruled]{algorithm2e}
+\usepackage{epstopdf}
+\usepackage{mathtools} % for :=
+\usepackage{subfig}
+\usepackage[most, minted]{tcolorbox}
+\usepackage{mdwlist}
+\tcbuselibrary{listings}
+%\usepackage[cache=false]{minted} % Need cache=false or leads to funny bug.
+% !TeX TXS-program:compile = txs:///pdflatex/[--shell-escape]
+
+\newtcblisting{myminted}{%
+	listing engine=minted,
+	minted language=python,
+	listing only,
+	breakable,
+	enhanced,
+	minted options = {
+		linenos, 
+		breaklines=true, 
+		breakanywhere, 
+		fontsize=\footnotesize, 
+		numbersep=2mm,
+		tabsize=2
+	},
+	overlay={%
+		\begin{tcbclipinterior}
+			\fill[gray!25] (frame.south west) rectangle ([xshift=4mm]frame.north west);
+		\end{tcbclipinterior}
+	}   
+}
+\BeforeBeginEnvironment{minted}{\begin{tcolorbox}[breakable, enhanced]}%
+	\AfterEndEnvironment{minted}{\end{tcolorbox}}%
+
+
+\graphicspath{{images/}}
+
+\title{Critical path estimation in heterogeneous scheduling heuristics} % Think of a better title...
+\author{Thomas McSweeney%
+	\thanks{%
+		School of Mathematics,
+		University of Manchester,
+		Manchester, M13 9PL, England
+		(\texttt{thomas.mcsweeney@postgrad.manchester.ac.uk}).
+	}
+}
+\date{\today}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \def\R{\mathbb{R}}
 \def\C{\mathbb{C}}
 \def\P{\mathbb{P}}
@@ -34,44 +74,116 @@
 \DeclareMathOperator*{\argmax}{arg\,max}
 \DeclareMathOperator*{\argmin}{arg\,min}
 
+% \DeclareMathOperator{\diag}{diag}   % Requires amsmath.
+\def\diag{\mathop{\mathrm{diag}}}     % If not using amsmath.
+\def\trace{\mathop{\mathrm{trace}}}   % If not using amsmath.
+
+\def\At{\widetilde{A}}
+\def\normt#1{\|#1\|_2}
+
+% Set up lemma environment and its numbering.
+\newtheorem{lemma}{Lemma}[section]
+
+\def\proof{\par{\bf Proof}. \ignorespaces}
+\def\qedsymbol{\vbox{\hrule\hbox{%
+			\vrule height1.3ex\hskip0.8ex\vrule}\hrule}}
+\def\endproof{\qquad\qedsymbol\medskip\par}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{prop}[theorem]{Proposition}
+
+\allowdisplaybreaks[1]
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% For fine-tuning spacing in \sqrt etc=.  From \cite[p.~155]{knut99}.
+% In math mode, @ will act as a macro that adds 1 unit of space.
+% By comparison, \, skips 3mu.
+
+\mathcode`@="8000 % Make @ behave as per catcode 13 (active).  TeXbook p. 155.
+{\catcode`\@=\active\gdef@{\mkern1mu}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcounter{mylineno}
+\makeatletter
+\let\oldtabcr\@tabcr
+\def\nonumberbreak{\oldtabcr\hspace{3.5pt}}
+\def\mynewline{\refstepcounter{mylineno}%
+	\llap{\footnotesize\arabic{mylineno}\hspace{5pt}}%
+}
+\def\lineref#1{\footnotesize\ref{#1}}
+% Next macro adapted from latex.ltx
+\gdef\@tabcr{\@stopline \@ifstar{\penalty%
+		\@M \@xtabcr}\@xtabcr\mynewline}
+\def\myvspace#1{\oldtabcr[#1]\mynewline}
+\newenvironment{code}{%
+	% Swap `:' and `colon'...
+	\mathcode`\:="603A  % TeXbook pp 134, 154, 359 (top)
+	% For original colon     \mathcode`\:="303A  % TeXbook p 344
+	\def\colon{\mathchar"303A}
+	\setcounter{mylineno}{0}
+	\par
+	\upshape
+	\begin{list} % To give indentation
+		{} {\leftmargin = 1cm}
+		\item[]
+		\begin{tabbing}
+			
+			% Default tab stops
+			\hspace*{.3in} \= \hspace*{.3in} \=
+			\hspace*{.3in} \= \hspace*{.3in} \= \kill
+			\mynewline
+		}{\end{tabbing}\end{list}}
+\makeatother
+
+
+\addto\captionsbritish{	\renewcommand{\bibname}%
+	{References}%TODO: make sure reference style is consistent.
+}
+
+\definecolor{hotpink}{rgb}{0.9,0,0.5}
+
 \begin{document}
-%
-\title{Critical path estimation in heterogeneous scheduling heuristics\thanks{Supported by the Engineering and Physical Sciences Research Council (EPSRC).}}
-%
-%\titlerunning{Abbreviated paper title}
-% If the paper title is too long for the running head, you can set
-% an abbreviated paper title here
-%
-\author{Thomas McSweeney\inst{1}\orcidID{0000-0001-9866-2229} \and Neil Walton\inst{1}\orcidID{0000-0002-5241-9765} \and Mawussi Zounon\inst{1, 2}\orcidID{0000-0002-6955-1500} }
-%
-\authorrunning{T. McSweeney et al.}
-% First names are abbreviated in the running head.
-% If there are more than two authors, 'et al.' is used.
-%
-\institute{University of Manchester, Manchester, UK \\
-	\email{thomas.mcsweeney@postgrad.manchester.ac.uk} \and The Numerical Algorithms Group (NAG), Manchester, UK}
-
-%
-\maketitle              % typeset the header of the contribution
-%
-\begin{abstract}
-
-Critical path estimates are used...
-
-
-\keywords{High-performance computing \and Scheduling \and Precedence constraints \and Directed acyclic graphs.}
-\end{abstract}
+	\maketitle 	
 
 
 \section{Introduction}
 \label{sect.intro}
 
-The concept of the {\em critical path} has no real meaning at the task prioritization stage of HEFT (or any similar listing heuristic): no processor selections have been made so the DAG weights are not yet fixed and no {\em longest} path can exist. For example, consider the simple DAG in Figure X... What is the critical path of this DAG? It isn't clear: we could, for example, define an {\em optimistic} critical path length by taking the smallest possible costs for all weights, as in the PEFT heuristic, or a {\em pessimistic} critical path by using the largest possible weights. The former is a lower bound on the cost of any schedule, no matter the composition of the target platform, so can be useful but is unlikely to reflect the true critical path of the DAG at runtime since no platform-specific information is used.
+%Before describing HEFT, we first introduce the concept of the {\em critical path}. The name comes from project management, where it is defined as the longest sequence of activities that must be done in order to complete a project \cite{kel59,kel61}; for a task graph, the critical path is the longest (costliest) path through it. This is useful because, if we assume sufficient parallelism, then the time it takes to execute the tasks on the critical path of a DAG therefore gives a lower bound on the makespan of any schedule. A natural approach in a listing heuristic then is to prioritize all tasks according to the length of the critical path from that task to the end; the idea being that tasks with the greatest downward path length contribute most towards the makespan and should therefore be processed as soon as possible. This approach has a long and successful history in scheduling for homogeneous processors \cite{cof72} but it isn't clear how it should be defined for heterogeneous ones, when all DAG costs can take multiple values and there are many possible critical paths (see Chapter \ref{chap.critical_path_estimation}).
 
-\section{HEFT}
-\label{sect.heft} 
+Recall from Chapter X that the {\em Heterogeneous Earliest Finish Time} (HEFT) heuristic prioritizes all tasks $t_i$, $i = 1, \dots, n$, by recursively computing a corresponding sequence of numbers $u_i$ which are intended to represent the {\em critical path} lengths from each task to the end. However, as noted previously, the concept of the {\em critical path} is not clearly defined: DAG weights are not fixed at this stage so there are multiple ways we could define a {\em longest} (i.e., {\em costliest}) path. Consider for example the simple DAG shown in Figure X, where the labels represent...
 
-The HEFT approach is to instead compute what we {\em expect} the critical path to be, which it does by using mean values over all processors to set costs and then computing the critical path of this associated {\em fixed-cost} DAG using dynamic programming. By taking means in this manner, effectively the node and edge weights are viewed as discrete random variables (RVs) with associated probability mass functions (pmfs) given by assuming that the task is equally likely to be scheduled on all of the processors in the selection phase. More precisely, let $m_i$ be the pmf corresponding to the task weight variable $w_i$ and $m_{ik}$ that for the edge weight $w_{ik}$, then  
+Although HEFT successfully finds the optimal schedule, it's not clear what the $u_i$ really represent since they certainly aren't a lower bound on the schedule makespan... Conceptually, the HEFT critical path isn't a lower bound on any schedule makespan but a lower bound on what the schedule is likely to be...
+
+Alternative ways to definite the critical path in HEFT have been considered before, most notably by Zhao and Sakellariou \cite{zhao03}, who empirically evaluated the performance of HEFT when averages other than the mean (e.g., median, maximum, minimum) are used to compute upward (or downward) ranks. Ultimately they concluded that mean values did not appear to be a superior choice to the others, although none of the options uniformly dominated all others; the bigger takeaway was that HEFT is very sensitive to how the task ranks are computed, with significant variation being seen for individual graphs. In this chapter we undertake a similar investigation with the aim of establishing if there are choices which do consistently outperform the standard HEFT task ranking phase.   
+
+This will be an empirically-driven study, as much of this subject is... We created a simulator much like that described in the previous chapter, although in this case it simulates more general heterogeneous environments...
+
+% Focus on u_i but can analagously define d_i. TODO: below needs to be reworked in terms of length from any given processor.
+
+\section{Optimistic bounds}
+\label{sect.optimistic}
+
+Functionally, the critical path is treated as a lower bound on the makespan, so that minimizing the critical path gives us the most scope to minimize the makespan (assuming we make good use of our parallel resources). Assuming that we want to define the critical path in such a way that it represents a lower bound on the makespan of any possible schedule, there are several ways we could do so. The most straightforward would be to just set all weights to their minimal values and compute the longest path in the standard way. This is a loose bound since not all combinations may be possible. A better way to compute a tighter lower bound is to first define for all tasks $t_i$ and processors $p_a$ $u_i^a$, the critical path length from the task (inclusive), assuming it takes the weight associated with processor $p_a$ (i.e., $W_i^a$). In particular, for all $i = n, \dots, 1$ (i.e., working upward from the leaves) we recursively compute   
+\begin{align}
+u_i^a &= W_i^a + \max_{k \in S_i} \bigg( \min_{b = 1, \dots, q} \big( u_k^b + W_{ik}^{ab} \big)  \bigg), \label{eq.opt_uia} 
+\end{align}
+with $u_i^a = W_i^a$ if $t_i$ is an exit task. Then for all tasks $t_i$ the associated value
+\begin{align}
+u_i &= \min_{a = 1, \dots, q}u_i^a \label{eq.opt_ui} 
+\end{align}
+gives a true lower bound on the makespan of any schedule. 
+
+While this is a lower bound on the makespan of any schedule, it is not clear that it is truly useful in practice since the underlying principle for homogeneous processors does not hold...   
+
+Alternatively, we could use any other average over the set of processors rather than the minimum, such as the mean or maximum. These are less intuitively useful...
+
+
+\section{Sharper bounds?}
+\label{sect.fulkerson}
+
+The HEFT approach is to instead compute what we {\em expect} the critical path to be, which it does by using mean values over all processors to set costs and then computing the critical path of this associated {\em fixed-cost} DAG using dynamic programming. In some sense this approach to the scheduling problem is a symbiotic problem...By taking means in this manner, effectively the node and edge weights are viewed as discrete random variables (RVs) with associated probability mass functions (pmfs) given by assuming that the task is equally likely to be scheduled on all of the processors in the selection phase. More precisely, let $m_i$ be the pmf corresponding to the task weight variable $w_i$ and $m_{ik}$ that for the edge weight $w_{ik}$, then  
 \begin{align*}
 m_i(c_i) \coloneqq \P[w_i = c_i] = \frac{n_c}{n_p}, \qquad m_i(g_i) \coloneqq \P[w_i = g_i] = \frac{n_g}{n_p},
 \end{align*}
@@ -110,14 +222,21 @@ To sum up, since all possible node and edge weights are known but their actual v
 \end{enumerate}
 In the following two sections, we propose modifications of both steps, in turn, so as to obtain more useful critical path estimates in HEFT. The performance of the task ranking procedures defined by using these alternative estimates is then evaluated through extensive numerical simulations.
 
+Conclusion: weighted mean promising but no real evidence to justify using others... 
 
-%
-% ---- Bibliography ----
-%
-% BibTeX users should specify bibliography style 'splncs04'.
-% References will then be sorted and formatted in the correct style.
-%
- \bibliographystyle{splncs04}
- \bibliography{references}
+\section{Experimental comparison of rankings}
+\label{sect.experimental_rankings}
+
+Baseline comparison with random sort.
+
+\section{Processor selection}
+\label{sect.processor_selection}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Bibliography.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\bibliographystyle{myplain2-doi}
+\bibliography{references,strings}
 
 \end{document}
