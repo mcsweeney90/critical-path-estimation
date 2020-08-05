@@ -152,7 +152,7 @@
 
 %Before describing HEFT, we first introduce the concept of the {\em critical path}. The name comes from project management, where it is defined as the longest sequence of activities that must be done in order to complete a project \cite{kel59,kel61}; for a task graph, the critical path is the longest (costliest) path through it. This is useful because, if we assume sufficient parallelism, then the time it takes to execute the tasks on the critical path of a DAG therefore gives a lower bound on the makespan of any schedule. A natural approach in a listing heuristic then is to prioritize all tasks according to the length of the critical path from that task to the end; the idea being that tasks with the greatest downward path length contribute most towards the makespan and should therefore be processed as soon as possible. This approach has a long and successful history in scheduling for homogeneous processors \cite{cof72} but it isn't clear how it should be defined for heterogeneous ones, when all DAG costs can take multiple values and there are many possible critical paths (see Chapter \ref{chap.critical_path_estimation}).
 
-Recall from Chapter X that the {\em Heterogeneous Earliest Finish Time} (HEFT) heuristic prioritizes all tasks $t_i$, $i = 1, \dots, n$, by recursively computing a corresponding sequence of numbers $u_i$ which are intended to represent {\em critical path} lengths from each task to the end. However, as noted previously, the concept of the {\em critical path} is not clearly defined: DAG weights are not fixed at this stage so there are multiple ways we could define a {\em longest} (i.e., {\em costliest}) path. Consider for example the simple DAG shown in Figure \ref{plot.simple_example}, where the labels represent all the possible weights each task/edge may take on a two-processor target platform; more specifically, the labels $(W_i^1, W_i^2)$ near the nodes represent the computation costs on processors $P1$ and $P2$, respectively, while the edge labels $(0 = W_{ik}^{11} = W_{ik}^{22}, W_{ik}^{12}, W_{ik}^{21})$ represent the possible communication costs. What is the longest path through this graph? 
+Recall from Chapter X that the {\em Heterogeneous Earliest Finish Time} (HEFT) heuristic prioritizes all tasks $t_i$, $i = 1, \dots, n$, by recursively computing a corresponding sequence of numbers $u_i$ which are intended to represent {\em critical path} lengths from each task to the end. As noted previously, however, the concept of the {\em critical path} is not clearly defined: DAG weights are not fixed at this stage so there are multiple ways we could define a {\em longest} (i.e., {\em costliest}) path. Consider for example the simple DAG shown in Figure \ref{plot.simple_example}, where the labels represent all the possible weights each task/edge may take on a two-processor target platform; specifically, the labels $(W_i^1, W_i^2)$ near the nodes represent the computation costs on processors $P1$ and $P2$, respectively, while the edge labels $(0 = W_{ik}^{11} = W_{ik}^{22}, W_{ik}^{12}, W_{ik}^{21})$ represent the possible communication costs. What is the longest path through this graph? 
 
 \begin{figure}
 	\centering	
@@ -161,7 +161,7 @@ Recall from Chapter X that the {\em Heterogeneous Earliest Finish Time} (HEFT) h
 	\label{plot.simple_example}
 \end{figure}
 
-Clearly there are multiple possible ways this can be defined. The HEFT approach, as described in previous chapters, is to use mean values over all sets of possible task and edge costs to transform the DAG into a fixed-cost version, as in Figure Y, and then compute the critical path lengths in a standard dynamic programming way to find the task ranks. For the simple graph, we find that $u_4 = 5$, $u_3 = 19/2$, $u_2 = 21/2$ and $u_1 = 16$. Now, it should be clear that the optimal schedule for the example graph is to simply schedule all tasks on processor $P1$, which gives us a schedule of length $6$. Although HEFT finds the optimal schedule, the $u_i$ values are not bounds on the schedule makespan... Conceptually, the HEFT critical path isn't a lower bound on any schedule makespan but a lower bound on what the schedule is likely to be...
+Clearly there are multiple possible ways this can be defined. The HEFT approach, as described in previous chapters, is to use mean values over all sets of possible task and edge costs to fix the DAG weights, as in Figure Y, and then compute the critical path lengths in a standard dynamic programming way to find the task ranks. For the graph in the figure, we find that $u_4 = 5$, $u_3 = 19/2$, $u_2 = 21/2$ and $u_1 = 16$. Now, it should be clear that the optimal schedule for the example graph is to simply schedule all tasks on processor $P1$, which gives us a schedule of length $6$. So although HEFT finds the optimal schedule, the $u_i$ values are not bounds on the schedule makespan... Conceptually, the HEFT critical path isn't a lower bound on any schedule makespan but a lower bound on what the schedule is likely to be...
 
 Given this ambiguity, alternative ways to definite the critical path in HEFT have been considered before, most notably by Zhao and Sakellariou \cite{zhao03}, who empirically compared the performance of HEFT when averages other than the mean (e.g., median, maximum, minimum) are used to compute upward (or downward) ranks. Their conclusions were that using the mean is not clearly superior to other averages, although none of the other options were consistently better. Indeed, perhaps the biggest takeaway from their investigation was that HEFT is very sensitive to how priorities are computed, with significant variation being seen for different graphs and target platforms. In this chapter we undertake a similar investigation with the aim of establishing if there are choices which do consistently outperform the standard HEFT task ranking phase.   
 
@@ -187,10 +187,10 @@ Although taking the minimum over the set of processors as in \eqref{eq.opt_ui} i
 (Note that the optimistic critical path defined here is extremely similar to the optimistic cost used in the PEFT heuristic; this will be discussed further in Section \ref{sect.processor_selection}.)
 
 
-\section{Alternative rankings}
+\section{Stochastic interpretation}
 \label{sect.alt_rankings}
 
-In this section we propose a family of alternative task ranking phases in HEFT based on the following interpretation of the standard ranking phase. First, note that by using average values over all sets of possible task and edge costs, HEFT is implicitly assuming that any member of any set is just as likely to be incurred as any other; conceptually, HEFT is attempting to account for the uncertainty of the processor selection phase by assuming that for any given task all processors are equally likely to ultimately be chosen. So, effectively, at the prioritization phase HEFT views the node and edge weights as discrete random variables (RVs) with associated probability mass functions (pmfs) given by the aforementioned assumption. More precisely, let $m_i$ be the pmf corresponding to the task weight variable $w_i$ and $m_{ik}$ that for the edge weight $w_{ik}$, then  
+In this section we propose a family of alternative task ranking phases in HEFT based on the following interpretation of the standard ranking phase. First, note that by using average values over all sets of possible task and edge costs, HEFT is implicitly assuming that any member of any set is just as likely to be incurred as any other; conceptually, HEFT is attempting to account for the uncertainty of the processor selection phase by assuming that for any given task all processors are equally likely to ultimately be chosen. So, effectively, at the prioritization phase HEFT views the node and edge weights as independent discrete random variables (RVs) with associated probability mass functions (pmfs) given by the aforementioned assumption. More precisely, let $m_i$ be the pmf corresponding to the task weight variable $w_i$ and $m_{ik}$ that for the edge weight $w_{ik}$, then  
 \begin{align*}
 m_i(W_i^a) \coloneqq \P[w_i = W_i^a] = \frac{1}{n_p} \quad \forall a
 \end{align*}
@@ -210,77 +210,73 @@ u_i = \E[w_i] + \max_{k \in S_i} \big( u_k + \E[w_{ik}] \big) \label{eq.ur_expec
 \end{align}
 for all other tasks.
 
-To sum up, since all possible node and edge weights are known but their actual values at runtime aren't (at least without restricting the processor selection phase), HEFT estimates critical path lengths from all tasks in a task graph $G$ through a two-step process:
+In summary, since all possible node and edge weights are known but their actual values at runtime aren't (at least without restricting the processor selection phase), HEFT estimates critical path lengths from all tasks in a task graph $G$ through a two-step process:
 \begin{enumerate}
 	\item An associated graph $G_s$---referred to as {\em stochastic} because all of its weights are RVs---is implicitly constructed with node and edge pmfs $m_i$ and $m_{ik}$ as defined above.   
 	\item The numbers $u_i$ are recursively computed for all tasks in $G_s$ using \eqref{eq.ur_expectation}, and taken as the critical path lengths from the corresponding tasks in $G$.      
 \end{enumerate}
 In the following two sections, we propose modifications of both steps so as to obtain different critical path estimates that may be used as task ranks in HEFT. The performance of these will then be evaluated through extensive numerical simulations in Section \ref{sect.experimental_rankings}.
 
-\subsection{Sharper bounds on the critical path of $G_s$}
+\subsection{The critical path of $G_s$}
 \label{subsect.sharper_bounds}
 
-A natural question arises from the interpretation outlined in the previous section: what is the relationship between the sequence of numbers $u_i$ and the critical path of the stochastic graph $G_s$? Computing the distribution of the critical path length, or even just the moments, for a general stochastic DAG is known to be a difficult problem and is discussed in much more detail in Chapter X. However, suffice it to say here, it has long been known in the context of {\em Program Evaluation and Review Technique} (PERT) network analysis that the numbers $u_i$ are in fact {\em lower bounds} on the expected value of the critical path lengths of the stochastic DAG. This result dates back at least as far as Fulkerson \cite{fulk62}, who referred to it as already being widely-known and gave a simple proof. Furthermore, he also showed how a sequences of numbers which give tighter bounds can easily be constructed.
+A natural question arises from the interpretation outlined in the previous section: what is the relationship between the sequence of numbers $u_i$ as defined by \eqref{eq.ur_expectation} and the critical path of the stochastic graph $G_s$? (Of course, since all of the weights are RVs, the critical path of $G_s$ is itself stochastic.) In fact, it has long been known in the context of {\em Program Evaluation and Review Technique} (PERT) network analysis that the numbers $u_i$ are {\em lower bounds} on the expected value of the critical path lengths of the stochastic DAG. This result dates back at least as far as Fulkerson \cite{fulk62}, who referred to it as already being widely-known and gave a simple proof. This prompts another question: does using the actual expected values of the critical path lengths as the task priories in HEFT lead to superior performance?
+
+Unfortunately, computing the moments of the critical path length of a graph whose weights are discrete RVs was shown to be a $\#P$-complete problem by Hagstrom \cite{hagstrom88}. This means that it is generally impractical to compute the true expected values. However, efficient methods which yield better approximations than the $u_i$ numbers are known; we discuss examples in the following two sections.  
+
+\subsubsection{Monte Carlo sampling}
+\label{subsubsect.monte_carlo}
+
+Monte Carlo (MC) methods have a long history as a means of approximating the longest path distribution for PERT networks, dating back to at least the early 1960s \cite{van1963letter}. The idea is to simulate the realization of all RVs (according to their pmfs) and then evaluate the critical path of the resulting deterministic graph. This is done repeatedly, giving a set of critical path instances whose empirical distribution function is guaranteed to converge to the true distribution by the Glivenko-Cantelli theorem \cite{canon2016correlation}. Furthermore, analytical results allow us to quantify the approximation error for any given the number of realizations---and therefore the number of realizations needed to reach a desired accuracy---although we do not make use of such results here.  
+
+Table X illustrates how our estimate of the expected critical path of the stochastic graph in Figure X evolves as the number of samples increases...
+
+The downside of Monte Carlo sampling is its cost, particularly when the number of realizations required is large, although modern architectures are well-suited to this approach because of their parallelism so this problem may no longer be as acute as it once was.
 
 \subsubsection{Fulkerson's bound}
 \label{subsubsect.fulkerson}
 
-First we explain how the DAG as shown in Figure \ref{plot.cp_example} can be expressed in an equivalent formulation with only edge weights. This step is not strictly necessary but simply makes the elucidation cleaner; we should emphasize that all of the following still holds, with only minor adjustments, if this is not done.
+For all $i = 1, \dots, n$, let $c_i$ be the critical path length from task $t_i$ to the end and let $e_i = \E[c_i]$ be its expected value. In addition to proving that the $u_i$ sequence defines lower bounds on the critical path lengths, i.e., $u_i \leq e_i \; \forall i$, Fulkerson also showed how an alternative sequence of numbers which give tighter bounds can easily be constructed.
 
-Suppose $(t_i, t_k)$ is any edge of the DAG and its cost $w_{ik}$ represents the computation cost of the parent task $t_i$ plus the communication cost of the edge, unless $t_k$ is an exit task, in which case the edge cost also includes the computation cost of $t_k$. Let $\tilde{c}_{ik} = c_i + \delta_kc_k$ where $\delta_{k} = 1$ if $t_k$ is an exit task and $0$ otherwise. Likewise, let $\tilde{g}_{ik} = g_i + \delta_{k}g_k$. For $s \in \{ c, g \}$, define   
+First we assume that $G_s$ is expressed in an equivalent formulation without node weights. The most straightforward way to do this is to simply redefine the edge weights so that they also include the computation cost of the parent task and, if the child task is an exit, the computation cost of the child as well. More precisely, we define a new set of possible edge weights $\tilde{L}_{ik}$ by 
 \begin{align*}
-\tilde{C}_{ik}^s = C_{ik}^s + \tilde{c}_{ik} \quad \text{and} \quad \tilde{G}_{ik}^s = G_{ik}^s + \tilde{g}_{ik}.
+\tilde{L}_{ik} = \{ \tilde{W}_{ik}^{ab} \coloneqq W_i^a + \delta_k W_k^b + W_{ik}^{ab} \}_{a, b = 1, \dots, q}, 
 \end{align*}
-Then the edge can take one of six possible values, as illustrated in Figure \ref{plot.aoa_labels}, so that the simple DAG from Figure \ref{plot.cp_example} can be represented instead as in Figure \ref{plot.aoa_example_graph}. Let $\tilde{L}_{ik} = \{ \tilde{c}_{ik}, \tilde{C}_{ik}^c, \tilde{C}_{ik}^g, \tilde{g}_{ik}, \tilde{G}_{ik}^g, \tilde{G}_{ik}^c \}$ be the set of all possible costs the edge may represent.
+where $\delta_k = 1$ if $t_k$ is an exit task and zero otherwise. We also define a new edge weight variable $\tilde{w}_{ik} \in \tilde{L}_{ik}$ and new edge pmfs $\tilde{m}_{ik}$ for which $\tilde{m}(\tilde{W}_{ik}^{ab}) \equiv m(W_{ik}^{ab})$. Note that removing the node weights is not strictly necessary but simply makes the elucidation cleaner so we should emphasize that all of the following still holds, with only minor adjustments, if this is not done.
 
-To compute the upward ranks of all tasks, the estimated edge pmfs $m_{ik}$ need to be replaced by very similar functions $\tilde{m}_{ik}$ defined by
-\begin{align*}
-\tilde{m}_{ik}(\tilde{c}_{ik}) = \frac{n_c}{n_p^2}, &\qquad \tilde{m}_{ik}(\tilde{C}_{ik}^c) = \frac{n_c(n_c - 1)}{n_p^2}, \\
-\tilde{w}_{ik} (\tilde{g}_{ik}) = \frac{n_g}{n_p^2}, &\qquad \tilde{m}_{ik}(\tilde{G}_{ik}^g) = \frac{n_g(n_g - 1)}{n_p^2},\\
-\qquad \tilde{m}_{ik}( \tilde{C}_{ik}^g) &= \tilde{m}_{ik} (\tilde{G}_{ik}^c) = \frac{n_cn_g}{n_p^2}.
-\end{align*}
-The ranks themselves are then given by working up from the leaves of the DAG and recursively computing 
-\begin{equation}
-\tilde{u}_i =\left\{
-\begin{array}{@{}ll@{}}
-0, \quad  \text{if $t_i$ is an exit task,} \\
-\max_{k \in S_i} \{ \tilde{u}_k + \E[w_{ik}] \},  \quad \text{ otherwise},
-\end{array}\right.
-\label{eq.ur_edges_only}
-\end{equation}
-where the expectation is computed using the pmfs $\tilde{m}_{ik}$. It can readily be verified that this sequence of numbers is identical to the $u_i$, with the exception of those corresponding to exit tasks which are now equal to zero. Note that here we have used the default HEFT pmfs $m$ as the basis for $\tilde{m}$, when we could just as easily have used the {\em biased} version $\hat{m}$ defined in Section \ref{subsect.biasing}. We will use the default throughout this section but the alternative is also considered when results are presented in Section \ref{subsect.prioritization_results}. 
-
-Let $W_i \coloneqq \{ w_{ik} \}_{k \in S_i}$ be the set of all the weight RVs corresponding to edges which connect task $t_i$ to its children. Assume that all tasks are indexed in a topological order, so that in particular if $t_k$ is a child of $t_i$ then $i > k$, and define 
-\begin{align*}
-Z_i \coloneqq W_i \cup \{ W_k \}_{k \in S_i}.
-\end{align*}
-Let $R_i$ be the set of all possible {\em realizations} of the RVs in $Z_i$ and suppose that $z_i \in R_i$ can be expressed in the form 
-\begin{align*}
-z_i = z_i^i \cup \{ z_i^k \}_{k \in S_i}.
-\end{align*}
-where $z_i^k$ contains the realizations of the RVs in $W_k$. Given a realization $z_i \in R_i$, let $\ell(z_i)$ be the critical path length from task $t_i$ to the end. Define $e_i$ to be the expected downward critical path length from, and including, task $t_i$. Then by definition we have
+Now, for $i = 1, \dots, n$, define $Z_i$ to be the set of all weight RVs corresponding to edges downward of $t_i$ (i.e., the remainder of the graph). Let $R_i$ be the set of all possible {\em realizations} of the RVs in $Z_i$. Given a realization $z_i \in R_i$, let $\ell(z_i)$ be the critical path length from task $t_i$ to the end. Then by the definition of the expected value we have
 \begin{align}
 e_i &= \sum_{z_i \in R_i} \P[Z_i = z_i] \ell(z_i). \label{eq.expected_cp}
 \end{align}
-By taking average values over all processors for each task weight, HEFT effectively assumes that they are all independent of one another, although of course this may not in fact be the case. Likewise the edge weights are also implicitly regarded as being independent both of each other and the task weights, which is definitely not true since they are entirely determined once the task weights $w_i$ are realized.  Disregarding this modeling inaccuracy for the moment, for the edge weight-only version of the stochastic DAG that we are using here, all of the RVs $w_{ik} \in W_i$ incorporate the task weight RV $w_i$ so that they are no longer independent of one another---but they are still assumed to be independent of the edge weights in the other sets $W_j$, $j \neq i$. In particular, this implies that 
-\begin{align}
-\P[Z_i = z_i] = \P[W_i = z_i^i] \prod_{k \in S_i} \P[W_k = z_i^k]. \label{eq.independence_assumption}
-\end{align}  
-With this we can rewrite equation \eqref{eq.expected_cp} as
+Let $C_i \coloneqq \{ w_{ik} \}_{k \in S_i}$ be the set of all the weight RVs corresponding to edges which connect task $t_i$ to its children. Note that 
+\begin{align*}
+Z_i = C_i \cup_{k \in S_i} Z_k 
+\end{align*}
+and any realization $z_i \in R_i$ can therefore be expressed as $z_i = c_i \cup_{k \in S_i} z_k^i$, where $z_k^i \in R_k$ and $c_i = \{ z_{ik}^i\}_{k \in S_i}$ is the set of realizations of the edge weight RVs in $C_i$. In particular, this means that we can write
+\begin{align*}
+\ell(z_i) = \max_{k \in S_i} \{ \ell(z_{k}^i) + z_{ik}^i \}.
+\end{align*}
+Furthermore, by the independence assumptions made, we have that
+\begin{align*}
+\P[Z_i = z_i] = \P[C_i = c_i] \prod_{k \in S_i} \P[Z_k = z_i^k]. 
+\end{align*} 
+This means that we can rewrite equation \eqref{eq.expected_cp} as
 \begin{align}
 e_i &= \sum_{z_i \in R_i} \P[Z_i = z_i] \ell(z_i) \nonumber \\
-&= \sum_{z_i^i} \sum_{\substack{z_k \in R_k, \\ k \in S_i}} \P[W_i = z_i^i] \P[Z_{k} = z_{k}] \max_{k \in S_i} \{ \ell(z_{k}) + z_{ik} \}, 
+&= \sum_{c_i} \sum_{\substack{z_k \in R_k, \\ k \in S_i}} \P[C_i = c_i] \P[Z_{k} = z_{k}] \max_{k \in S_i} \{ \ell(z_{k}) + z_{ik} \}, \label{eq.orig_fulk} 
 \end{align}
-where $z_{ik}$ is the realization of the edge weight RV $w_{ik}$ defined by the set of realizations $z_k$. It is now relatively straightforward to show that the identity $\tilde{u}_i \leq e_i$ (and therefore $u_i \leq f_i$) holds for all tasks $t_i$ by manipulating this expression; the reader is directed to Fulkerson's original paper for full details \cite{fulk62}. Moreover, suppose we define a sequence of numbers by $f_i = 0$, if $t_i$ is an exit task, and
+where $z_{ik}$ is the realization of the edge weight RV $w_{ik}$ defined by the set of realizations $z_k$.
+
+It is relatively straightforward to show that the identity $u_i \leq e_i$ holds by manipulating equation \eqref{eq.orig_fulk}; the reader is directed to Fulkerson's original paper for details \cite{fulk62}. Moreover, suppose we define a sequence of numbers by $f_i = 0$, if $t_i$ is an exit task, and
 \begin{align}
 f_i &= \sum_{z_i \in R_i} \P[Z_i = z_i] \max_{k \in S_i} \{ f_k + z_{ik} \} \nonumber \\
-&= \sum_{z_i^i} \sum_{\substack{z_k \in R_k, \\ k \in S_i}} \P[W_i = z_i^i] \P[Z_{k} = z_{k}] \max_{k \in S_i} \{ f_k + z_{ik} \}, \label{eq.f_fulkerson}
+&= \sum_{c_i} \sum_{\substack{z_k \in R_k, \\ k \in S_i}} \P[C_i = c_i] \P[Z_{k} = z_{k}] \max_{k \in S_i} \{ f_k + z_{ik} \}, \label{eq.f_fulkerson}
 \end{align}
-for all other tasks. Then Fulkerson showed that the identity $u_i \leq f_i \leq e_i$ also holds for all tasks---i.e, the $f_i$ give a tighter bound on the expected value of the critical path lengths.
+for all other tasks, then Fulkerson showed that $u_i \leq f_i \leq e_i$ also holds---i.e, the $f_i$ give a tighter bound on the expected values of the critical path lengths.
 
-Although the bound is tighter, for each of the $f_i$ we need to do an awful lot of work: suppose $t_i$ has $K$ children, then for any one of them $t_k$ we need to do $O(|\tilde{L}_{ik}|)$ operations, i.e., $O(|\tilde{L}_{ik}|^K)$ in total. Even in this simple example for which $|\tilde{L}_{ik}| \equiv 6$ this quickly becomes impractical, as suggested by our (deliberately) tedious breakdown of the calculations above. In more general heterogeneous environments, $|\tilde{L}_{ik}|$ can be $O(p^2)$ so computing the $f_i$ is even more daunting. Fortunately, a much more efficient method of computing the $f_i$ was given by Clingen \cite{cling64} in the context of extending Fulkerson's method to the case where edge weights are modeled as continuous random variables, although here we follow the slightly more compact notation of Elmaghraby \cite{elmaghraby67}. 
+To compute each of the $f_i$ using \eqref{eq.f_fulkerson} we need to do an awful lot of work: suppose $t_i$ has $K$ children, then for any one of them $t_k$ we need to do $O(|\tilde{L}_{ik}|)$ operations, i.e., $O(|\tilde{L}_{ik}|^K)$ in total. In general, $|\tilde{L}_{ik}|$ can be $O(p^2)$ and $K$ can be $O(n^2)$ so computing the $f_i$ in this manner is not always practical. Fortunately, a more efficient method was given by Clingen \cite{cling64} in the context of extending Fulkerson's method to the case where edge weights are modeled as continuous random variables, although here we follow the slightly more compact notation of Elmaghraby \cite{elmaghraby67}. 
 
-It is well-known that the cumulative probability mass function of the maximum of a finite set of discrete RVs is equal to the product of the individual cumulative pmfs of the RVs. Let $M_{ik}$ be the cumulative pmf along edge $(t_i, t_k)$, so that $M_{ik}(x) = \P[\tilde{w}_{ik} \leq x]$. Define the related function $M_{ik}^{*}(x) = \P[\tilde{w}_{ik} < x]$. Let $Z_i$ be the set of all {\em unique} possible values of $f_k + \tilde{w}_{ik}$, for $k \in S_i$, and let $z$ run over all elements of $Z_i$. For $i = 1, \dots, n$, define 
+It is well-known that the cumulative probability mass function of the maximum of a finite set of discrete RVs is equal to the product of the individual cumulative pmfs of the RVs. Let $M_{ik}$ be the cumulative pmf along edge $(t_i, t_k)$, so that $M_{ik}(x) = \P[\tilde{w}_{ik} \leq x]$. Define the related function $M_{ik}^{*}(x) = \P[\tilde{w}_{ik} < x]$. Let $Z_i$ be the set of all possible values of $f_k + \tilde{w}_{ik}$, for $k \in S_i$, and let $z$ run over all elements of $Z_i$. For $i = 1, \dots, n$, define 
 \begin{align}
 \alpha_i &= \max_{k \in S_i}(f_k + \min(\tilde{L}_{ik})).
 \end{align}
@@ -288,7 +284,12 @@ Then, with the cost independence assumptions we have already made, we can rewrit
 \begin{align}
 f_i &= \sum_{z \geq \alpha_i} z \bigg( \prod_{k \in S_i} M_{ik}(z - f_k) - \prod_{k \in S_i} M_{ik}^{*}(z - f_k) \bigg). \label{eq.f_clingen}
 \end{align}
-A complete description of a practical procedure for computing the Fulkerson numbers $f_i$ is given in Algorithm \ref{alg.fulkerson}. At first blush this may not appear to be any simpler than before but, crucially, the number of  operations required to compute each of the $f_i$ is $O(|\tilde{L}_{ik}| \cdot K)$, where $K$ is the number of child tasks, rather than the first term being exponential in the second as before. Of course, this procedure is {\em still} more expensive than computing $\tilde{u}_i$ using \eqref{eq.ur_edges_only}, but in our experience it was practical even for large, dense DAGs and target platforms comprising numerous processing resources (albeit so far we have only consider accelerated platforms that follow the model described in Chapter \ref{chap.static_accelerated}).
+A complete description of a practical procedure for computing the Fulkerson numbers $f_i$ is given in Algorithm \ref{alg.fulkerson}. At first blush this may not appear to be any simpler than before but, crucially, the number of  operations required to compute each of the $f_i$ is now $O(|\tilde{L}_{ik}| \cdot K)$, where $K$ is the number of child tasks, rather than the first term being exponential in the second as before. Of course, it should be noted that this procedure is still more expensive than computing the $u_i$ sequence. 
+
+Once all of the $f_i$ have been computed, they can be taken as alternative task ranks in HEFT (or any listing heuristic). However, it should be emphasized here that although the $f_i$ give tighter bounds on the critical path lengths of the stochastic DAG $G_s$ there is absolutely no guarantee that this will lead to superior performance in the full heuristic. After all, $G_s$ itself is only a model of how we expect the processor selection phase to proceed---one that we know for a fact is inaccurate since, for example, it implicitly assumes that all task and edge weights are independent. Indeed, without this independence assumption it is well-known that the relation $u_i \leq f_i$ does not necessarily hold even for $G_s$; Fulkerson himself presented examples \cite{fulk62}. Still, we think this is a reasonable enough basis for an alternative ranking method in HEFT, so we investigate its performance compared to the usual $u_i$ ranks via numerical simulation in Section \ref{sect.experimental_rankings}.   
+
+Two refinements of Fulkerson's method were proposed by Elmaghraby \cite{elmaghraby67}. The first involves computing each of the $f_i$ numbers in the aforementioned manner and then reversing the direction of the remaining subgraph in order to calculate an intermediate result which can be used to improve the quality of the bound. The second is a more general approach based on using two or more {\em point estimates} of $e_i$, rather than just $f_i$, a method that was later generalized by Robillard and Trahan \cite{robillard76}. In both cases Elmagharaby proved that the new number sequences achieve tighter bounds on $e_i$ than the Fulkerson numbers $f_i$. However, small-scale experimentation suggested that the improvement of Elmaghraby's new bounds over Fulkerson's were typically minor compared to the improvement of the latter over the standard HEFT $u_i$ sequence so we chose to only evaluate here whether tightening the bounds at all is useful.
+
 \begin{algorithm}	
 	
 	\For{$i = n, \dots, 1$}
@@ -331,26 +332,56 @@ A complete description of a practical procedure for computing the Fulkerson numb
 	\label{alg.fulkerson}
 \end{algorithm} 
 
-Once all of the $f_i$ have been computed, they can be taken as alternative task ranks in HEFT (or any listing heuristic). However, it should be emphasized here that although the $f_i$ give tighter bounds on the critical path lengths of the stochastic DAG $G_s$ there is absolutely no guarantee that this will lead to superior performance in the full heuristic. After all, $G_s$ itself is only a model of how we expect the processor selection phase to proceed---one that we know for a fact is inaccurate since, for example, it implicitly assumes that all task and edge weights are independent. Indeed, without this independence assumption it is well-known that the relation $u_i \leq f_i$ does not necessarily hold even for $G_s$; Fulkerson himself presented examples \cite{fulk62}. Still, we think this is a reasonable enough basis for an alternative ranking method in HEFT, so we investigate its performance compared to the usual $u_i$ ranks via numerical simulation in the next section.   
 
-Two refinements of Fulkerson's method were proposed by Elmaghraby \cite{elmaghraby67}. The first involves computing each of the $f_i$ numbers in the aforementioned manner and then reversing the direction of the remaining subgraph in order to calculate an intermediate result which can be used to improve the quality of the bound. The second is a more general approach based on using two or more {\em point estimates} of $e_i$, rather than just $f_i$, a method that was later generalized by Robillard and Trahan \cite{robillard76}. In both cases Elmagharaby proved that the new number sequences achieve tighter bounds on $e_i$ than the Fulkerson numbers $f_i$. However, small-scale experimentation suggested that the improvement of Elmaghraby's new bounds over Fulkerson's were typically minor compared to the improvement of the latter over the standard HEFT $u_i$ sequence so we chose to only evaluate here whether tightening the bound at all does in fact lead to better performance in HEFT.
+%By taking average values over all processors for each task weight, HEFT effectively assumes that they are all independent of one another, although of course this may not in fact be the case. Likewise the edge weights are also implicitly regarded as being independent both of each other and the task weights.  Disregarding this modeling inaccuracy for the moment, for the edge weight-only version of the stochastic DAG that we are using here, all of the RVs $w_{ik} \in W_i$ incorporate the task weight RV $w_i$ so that they are no longer independent of one another---but they are still assumed to be independent of the edge weights in the other sets $W_j$, $j \neq i$. In particular, this implies that 
+%\begin{align}
+%\P[Z_i = z_i] = \P[W_i = z_i^i] \prod_{k \in S_i} \P[W_k = z_i^k]. \label{eq.independence_assumption}
+%\end{align} 
 
-\subsubsection{Monte Carlo}
-\label{subsubsect.monte_carlo}
 
-Monte Carlo simulation can also be used...
+%First we explain how the DAG as shown in Figure \ref{plot.cp_example} can be expressed in an equivalent formulation with only edge weights. This step is not strictly necessary but simply makes the elucidation cleaner; we should emphasize that all of the following still holds, with only minor adjustments, if this is not done.
+%
+%Suppose $(t_i, t_k)$ is any edge of the DAG and its cost $w_{ik}$ represents the computation cost of the parent task $t_i$ plus the communication cost of the edge, unless $t_k$ is an exit task, in which case the edge cost also includes the computation cost of $t_k$. Let $\tilde{c}_{ik} = c_i + \delta_kc_k$ where $\delta_{k} = 1$ if $t_k$ is an exit task and $0$ otherwise. Likewise, let $\tilde{g}_{ik} = g_i + \delta_{k}g_k$. For $s \in \{ c, g \}$, define   
+%\begin{align*}
+%\tilde{C}_{ik}^s = C_{ik}^s + \tilde{c}_{ik} \quad \text{and} \quad \tilde{G}_{ik}^s = G_{ik}^s + \tilde{g}_{ik}.
+%\end{align*}
+%Then the edge can take one of six possible values, as illustrated in Figure \ref{plot.aoa_labels}, so that the simple DAG from Figure \ref{plot.cp_example} can be represented instead as in Figure \ref{plot.aoa_example_graph}. Let $\tilde{L}_{ik} = \{ \tilde{c}_{ik}, \tilde{C}_{ik}^c, \tilde{C}_{ik}^g, \tilde{g}_{ik}, \tilde{G}_{ik}^g, \tilde{G}_{ik}^c \}$ be the set of all possible costs the edge may represent.
+%
+%To compute the upward ranks of all tasks, the estimated edge pmfs $m_{ik}$ need to be replaced by very similar functions $\tilde{m}_{ik}$ defined by
+%\begin{align*}
+%\tilde{m}_{ik}(\tilde{c}_{ik}) = \frac{n_c}{n_p^2}, &\qquad \tilde{m}_{ik}(\tilde{C}_{ik}^c) = \frac{n_c(n_c - 1)}{n_p^2}, \\
+%\tilde{w}_{ik} (\tilde{g}_{ik}) = \frac{n_g}{n_p^2}, &\qquad \tilde{m}_{ik}(\tilde{G}_{ik}^g) = \frac{n_g(n_g - 1)}{n_p^2},\\
+%\qquad \tilde{m}_{ik}( \tilde{C}_{ik}^g) &= \tilde{m}_{ik} (\tilde{G}_{ik}^c) = \frac{n_cn_g}{n_p^2}.
+%\end{align*}
+%The ranks themselves are then given by working up from the leaves of the DAG and recursively computing 
+%\begin{equation}
+%\tilde{u}_i =\left\{
+%\begin{array}{@{}ll@{}}
+%0, \quad  \text{if $t_i$ is an exit task,} \\
+%\max_{k \in S_i} \{ \tilde{u}_k + \E[w_{ik}] \},  \quad \text{ otherwise},
+%\end{array}\right.
+%\label{eq.ur_edges_only}
+%\end{equation}
+%where the expectation is computed using the pmfs $\tilde{m}_{ik}$. It can readily be verified that this sequence of numbers is identical to the $u_i$, with the exception of those corresponding to exit tasks which are now equal to zero. Note that here we have used the default HEFT pmfs $m$ as the basis for $\tilde{m}$, when we could just as easily have used the {\em biased} version $\hat{m}$ defined in Section \ref{subsect.biasing}. We will use the default throughout this section but the alternative is also considered when results are presented in Section \ref{subsect.prioritization_results}. 
+
+%Let $W_i \coloneqq \{ w_{ik} \}_{k \in S_i}$ be the set of all the weight RVs corresponding to edges which connect task $t_i$ to its children. Assume that all tasks are indexed in a topological order, so that in particular if $t_k$ is a child of $t_i$ then $i > k$, and define 
+%\begin{align*}
+%Z_i \coloneqq W_i \cup \{ W_k \}_{k \in S_i}.
+%\end{align*}
+%Let $R_i$ be the set of all possible {\em realizations} of the RVs in $Z_i$ and suppose that $z_i \in R_i$ can be expressed in the form 
+%\begin{align*}
+%z_i = z_i^i \cup \{ z_i^k \}_{k \in S_i}.
+%\end{align*}
+%where $z_i^k$ contains the realizations of the RVs in $W_k$.
+
+
 
 \subsection{Adjusting the pmfs}
 \label{subsect.adjusting}
 
-Ultimately the purpose of the node and edge pmfs $m_i$ and $m_{ik}$ is to simulate the dynamics of the processor selection phase of HEFT---i.e., $m_i(c_i)$ should represent the probability that task $t_i$ is assigned to a CPU, and $m_i(g_i)$ likewise for a GPU. In HEFT, tasks are assigned to the processor that is estimated to complete their execution at the earliest time and attempting to model this accurately beforehand can quickly get messy and expensive---especially given the interaction between the two phases of the algorithm.         
-
-A simple idea that seems sensible, especially for accelerated platforms, is to simply {\em bias} the processor selection probabilities according to their relative power: if, say, a task's GPU cost is 10 times smaller than its CPU cost, it seems more likely it will be scheduled on the former than the latter, even once the effect of contention is taken into account. More precisely, let $r_i$ be the acceleration ratio of task $t_i$ and define an alternative series of pmfs for all nodes and edges by
+In some sense, the purpose of the node and edge pmfs $m_i$ and $m_{ik}$ is to simulate the dynamics of the processor selection phase of HEFT---i.e., $m_i(W_i^a)$ should represent the probability that task $t_i$ is scheduled on processor $p_a$, and so on. In HEFT, tasks are assigned to the processor that is estimated to complete their execution at the earliest time and attempting to model this accurately beforehand can quickly get messy and expensive---especially given the interaction between the two phases of the algorithm. However, a sensible idea may be to simply {\em bias} the processor selection probabilities according to their relative power: if, say, a task is 10 times faster on one processor than another then it seems more likely it will be scheduled on the former than the latter, even once the effect of contention is taken into account. More precisely...
 \begin{align*}
-\hat{m}_i(c_i) = \frac{n_c}{n_c + r_in_g}, &\qquad \hat{m}_i(g_i) = \frac{r_in_g}{n_c + r_in_g}, \\
-\hat{m}_{ik}(C_{ik}^c) = \frac{n_c(n_c - 1)}{(n_c + r_in_g)(n_c + r_kn_g)}, &\qquad \hat{m}_{ik}(G_{ik}^g) = \frac{r_ir_kn_g(n_g - 1)}{(n_c + r_in_g)(n_c + r_kn_g)}, \\
-\hat{m}_{ik}(C_{ik}^g) = \frac{r_kn_cn_g}{(n_c + r_in_g)(n_c + r_kn_g)}, &\qquad \hat{m}_{ik}(G_{ik}^c) = \frac{r_in_cn_g}{(n_c + r_in_g)(n_c + r_kn_g)} \\
-\hat{m}_{ik}(0) &= \frac{n_c + r_ir_kn_g}{(n_c + r_in_g)(n_c + r_kn_g)}.
+0
 \end{align*} 
 The expected values of the weights then become 
 \begin{align}

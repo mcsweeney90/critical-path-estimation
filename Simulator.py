@@ -829,7 +829,7 @@ class DAG:
             return priority_list, task_ranks
         return priority_list    
                  
-    def draw_graph(self, filepath):
+    def draw_graph(self, filepath=None):
         """
         Draws the DAG and saves the image.
         
@@ -870,7 +870,7 @@ class DAG:
                 n.attr['fillcolor'] = '#FBC15E'
                 n.attr['label'] = 'T' 
         A.layout('dot')
-        A.draw('{}/{}_{}tasks_DAG.png'.format(filepath, self.name.split(" ")[0], self.n_tasks)) 
+        A.draw('{}.png'.format(self.name)) 
     
     def print_info(self, return_mst_and_cp=False, detailed=False, filepath=None):
         """
