@@ -337,7 +337,7 @@ class DAG:
             return max(t.FT for t in self.graph if t.FT is not None)  
         return max(t.FT for t in self.graph if t.exit) 
     
-    def set_costs(self, platform, target_ccr, method="HEFT", het_factor=1.0):
+    def set_costs(self, platform, target_ccr=1.0, method="HEFT", het_factor=1.0):
         """
         Sets computation and communication costs for randomly generated DAGs (e.g., from the STG).
         Notes:
@@ -385,7 +385,17 @@ class DAG:
                     for u in platform.workers:
                         for v in platform.workers:
                             c = 0.0 if u == v else np.random.uniform(wbar * (1 - het_factor/2), wbar * (1 + het_factor/2))
-                            task.comm_costs[child.ID][(u.ID, v.ID)] = c            
+                            task.comm_costs[child.ID][(u.ID, v.ID)] = c      
+        elif method == "diagram":
+            for task in self.top_sort:
+                for w in platform.workers:
+                    task.comp_costs[w.ID] = np.random.randint(1, 10)
+                for child in self.graph.successors(task):
+                    task.comm_costs[child.ID] = {}
+                    for u in platform.workers:
+                        for v in platform.workers:
+                            c = 0 if u == v else np.random.randint(1, 10)
+                            task.comm_costs[child.ID][(u.ID, v.ID)] = c
                             
         self.costs_set = True
         self.target_platform = platform.name

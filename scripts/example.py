@@ -1,20 +1,19 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Anything that needs to be tested...
+Create and draw simple example DAG used in write up.
 """
 
-import dill, pathlib, os
+import dill, pathlib
 import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
-import itertools as it
 from timeit import default_timer as timer
 from copy import deepcopy
 from networkx.drawing.nx_agraph import graphviz_layout
 import sys
 sys.path.append('../') 
-from Simulator import Task, DAG, Platform, HEFT, PEFT, CPOP
+from Simulator import Task, DAG, Platform, HEFT
 
 ####################################################################################################
 
@@ -36,6 +35,11 @@ plt.rcParams['legend.fontsize'] = 5
 plt.rcParams['figure.titlesize'] = 12
 #plt.rcParams["figure.figsize"] = (9.6,4)
 plt.ioff() # Don't show plots.
+
+####################################################################################################
+
+path = 'results/example'
+pathlib.Path(path).mkdir(parents=True, exist_ok=True)
 
 ####################################################################################################
 
@@ -112,21 +116,23 @@ def convert_from_nx_graph(graph, single_root=True, single_exit=True):
         if not count:
             nd.exit = True              
     return DAG(T, name="rand{}".format(len(G)))
+
+# =============================================================================
+# Create a random topology.
+# =============================================================================
     
-# Create DAG.
 # G1 = nx.gnp_random_graph(5, 0.5, directed=True)
 # G2 = nx.DiGraph([(u,v) for (u,v) in G1.edges() if u<v])
 # dag = convert_from_nx_graph(G2)
 # Save DAG.
-# with open('example_dag.dill', 'wb') as handle:
+# with open('{}/example_dag.dill'.format(path), 'wb') as handle:
 #     dill.dump(dag, handle) 
 
-
-# # Load DAG.
-# with open('example_dag.dill', 'rb') as file:
-#     dag = dill.load(file)
-
-# # Find suitable costs.
+# =============================================================================
+# Find suitable costs.
+# =============================================================================
+# with open('{}/example_dag.dill'.format(path), 'rb') as file:
+#     dag = dill.load(file) 
 # nw = 2
 # platform = Platform(nw, name="{}P".format(nw)) 
 # for _ in range(1000):
@@ -143,7 +149,7 @@ def convert_from_nx_graph(graph, single_root=True, single_exit=True):
 #     wm_mkspan = HEFT(dag, platform, cp_type="HEFT", avg_type="WM")
 #     opt_mkspan = HEFT(dag, platform, cp_type="optimistic")
 #     if fulk_mkspan < heft_mkspan and wm_mkspan < heft_mkspan and opt_mkspan < heft_mkspan:
-#         with open('example_dag_with_costs.dill', 'wb') as handle:
+#         with open('{}/example_dag_with_costs.dill'.format(path), 'wb') as handle:
 #             dill.dump(dag, handle)
 #         break
     
@@ -151,99 +157,71 @@ def convert_from_nx_graph(graph, single_root=True, single_exit=True):
 # Draw graph.
 # =============================================================================
     
+# nw = 2
+# platform = Platform(nw, name="{}P".format(nw))        
+# # Load DAG.
+# with open('{}/example_dag_with_costs.dill'.format(path), 'rb') as file:
+#     dag = dill.load(file)     
+    
+# info, node_weights, edge_weights = {}, {}, {}
+# for t in dag.top_sort:
+#     info[t.ID] = list(s.ID for s in dag.graph.successors(t))
+#     node_weights[t.ID] = tuple(t.comp_costs[w.ID] for w in platform.workers)
+#     for s in dag.graph.successors(t):        
+#         costs = [0]
+#         for w in platform.workers:
+#             for v in platform.workers:
+#                 if w.ID == v.ID:
+#                     continue
+#                 costs.append(t.comm_costs[s.ID][(w.ID, v.ID)])
+#         edge_weights[(t.ID, s.ID)] = tuple(costs)
+# D = nx.DiGraph()
+# for n, kids in info.items():
+#     for c in kids:
+#         D.add_edge(n, c)
+# plt.clf()
+# pos = graphviz_layout(D, prog='dot')    
+# nx.draw_networkx_nodes(D, pos, node_color='#E5E5E5', node_size=500, alpha=1.0)
+# nx.draw_networkx_edges(D, pos, width=1.0)
+# nx.draw_networkx_labels(D, pos, font_size=12, font_color='#348ABD')
+# nx.draw_networkx_edge_labels(D, pos, font_size=9, edge_labels=edge_weights, font_color='#E24A33')
+# alt_pos = {}
+# for p in pos:
+#     if p == 0:
+#         alt_pos[p] = (pos[p][0], pos[p][1] + 16)
+#     elif p == 1 or p == 2:
+#         alt_pos[p] = (pos[p][0] + 2, pos[p][1] + 16)
+#     elif p == 3 or p == 5:
+#         alt_pos[p] = (pos[p][0] - 2, pos[p][1] + 16)
+#     elif p == 4:
+#         alt_pos[p] = (pos[p][0] + 12, pos[p][1])
+#     elif p == 6:        
+#         alt_pos[p] = (pos[p][0] + 12, pos[p][1] - 4)            
+# nx.draw_networkx_labels(D, alt_pos, node_weights, font_size=9, font_color='#E24A33')
+# plt.axis("off")     
+# plt.savefig('{}/simple_graph.png'.format(path), bbox_inches='tight') 
+
+# =============================================================================
+# Compute HEFT ranks. 
+# =============================================================================
+
 nw = 2
-platform = Platform(nw, name="{}P".format(nw))
-        
+platform = Platform(nw, name="{}P".format(nw))        
 # Load DAG.
-with open('example_dag_with_costs.dill', 'rb') as file:
-    dag = dill.load(file)    
-    
-    
-info, node_weights, edge_weights = {}, {}, {}
-for t in dag.top_sort:
-    info[t.ID] = list(s.ID for s in dag.graph.successors(t))
-    node_weights[t.ID] = tuple(t.comp_costs[w.ID] for w in platform.workers)
-    for s in dag.graph.successors(t):        
-        costs = [0]
-        for w in platform.workers:
-            for v in platform.workers:
-                if w.ID == v.ID:
-                    continue
-                costs.append(t.comm_costs[s.ID][(w.ID, v.ID)])
-        edge_weights[(t.ID, s.ID)] = tuple(costs)
-D = nx.DiGraph()
-for n, kids in info.items():
-    for c in kids:
-        D.add_edge(n, c)
-plt.clf()
-pos = graphviz_layout(D, prog='dot')    
-nx.draw_networkx_nodes(D, pos, node_color='#E5E5E5', node_size=500, alpha=1.0)
-nx.draw_networkx_edges(D, pos, width=1.0)
-nx.draw_networkx_labels(D, pos, font_size=12, font_color='#348ABD')
-nx.draw_networkx_edge_labels(D, pos, font_size=9, edge_labels=edge_weights, font_color='#E24A33')
-alt_pos = {}
-for p in pos:
-    if p == 0:
-        alt_pos[p] = (pos[p][0], pos[p][1] + 16)
-    elif p == 1 or p == 2:
-        alt_pos[p] = (pos[p][0] + 2, pos[p][1] + 16)
-    elif p == 3 or p == 5:
-        alt_pos[p] = (pos[p][0] - 2, pos[p][1] + 16)
-    elif p == 4:
-        alt_pos[p] = (pos[p][0] + 12, pos[p][1])
-    elif p == 6:        
-        alt_pos[p] = (pos[p][0] + 12, pos[p][1] - 4)            
-nx.draw_networkx_labels(D, alt_pos, node_weights, font_size=9, font_color='#E24A33')
-plt.axis("off")     
-plt.savefig('simple_graph.png', bbox_inches='tight') 
+with open('{}/example_dag_with_costs.dill'.format(path), 'rb') as file:
+    dag = dill.load(file)
 
-
-
-
-
-
-
-# Cholesky.
-# nb = 128
-# nt = 35
-# adt = "perfect_adt"
-# with open('nb{}/{}/{}tasks.dill'.format(nb, adt, nt), 'rb') as file:
-#     dag = dill.load(file)
-# dag.print_info()
-
-# STG
-# stg_dag_size = 100
-# stg_dag_path = '../graphs/STG/{}'.format(stg_dag_size)
-# with open('{}/rand0028.dill'.format(stg_dag_path), 'rb') as file:
-#     dag = dill.load(file)
-
-# plat = Platform(4, name="4P")  
-# dag.set_costs(plat, target_ccr=1.0, method="unrelated", het_factor=2.0)
-# dag.print_info()
-# heft_mkspan = HEFT(dag, plat, cp_type="HEFT")
-# print("HEFT makespan: {}".format(heft_mkspan))
-# mc_priority_list = dag.critical_path_priorities(cp_type="WMC", mc_samples=10)
-# mcheft_mkspan = HEFT(dag, plat, priority_list=mc_priority_list)
-# print("MC makespan: {}".format(mcheft_mkspan))
-# rand_list = dag.top_sort
-# rand_mkspan = HEFT(dag, plat, priority_list=rand_list)
-# print("Rand makespan: {}".format(rand_mkspan))
-
-
-# weighted_mkspan = HEFT(dag, plat, cp_type="HEFT", avg_type="HEFT-WM")
-# print("Weighted makespan: {}".format(weighted_mkspan))
-# fulk_mkspan = HEFT(dag, plat, cp_type="Fulkerson")
-# print("Fulkerson makespan: {}".format(fulk_mkspan))
-# wfulk_mkspan = HEFT(dag, plat, cp_type="Fulkerson", avg_type="HEFT-WM")
-# print("Weighted Fulkerson makespan: {}".format(wfulk_mkspan))
-
-
-# cp_lengths = dag.critical_paths(cp_type="Fulkerson")
-# print(cp_lengths)
-
-# single = Platform(8, name="Single_GPU")
-# heft_mkspan = HEFT(dag, single)
-# print("HEFT makespan: {}".format(heft_mkspan))
-# cpop_mkspan = CPOP(dag, single)
-# print("CPOP makespan: {}".format(cpop_mkspan))
-
+mst = dag.minimal_serial_time()
+print("MST = {}".format(mst))
+p_list, ranks = dag.critical_path_priorities(return_ranks=True)
+print("\nHEFT task ranks: {}".format({k.ID:v for k, v in ranks.items()}))
+heft_mkspan = HEFT(dag, platform, priority_list=p_list)
+print("HEFT makespan: {}".format(heft_mkspan))
+opt_list, ranks = dag.critical_path_priorities(cp_type="optimistic", return_ranks=True)
+print("\nOpt task ranks: {}".format({k.ID:v for k, v in ranks.items()}))
+opt_mkspan = HEFT(dag, platform, priority_list=opt_list)
+print("Opt makespan: {}".format(opt_mkspan))
+fulk_list, ranks = dag.critical_path_priorities(cp_type="F", return_ranks=True)
+print("\nFulk task ranks: {}".format({k.ID:v for k, v in ranks.items()}))
+fulk_mkspan = HEFT(dag, platform, priority_list=fulk_list)
+print("Fulk makespan: {}".format(fulk_mkspan))

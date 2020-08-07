@@ -152,7 +152,7 @@
 
 %Before describing HEFT, we first introduce the concept of the {\em critical path}. The name comes from project management, where it is defined as the longest sequence of activities that must be done in order to complete a project \cite{kel59,kel61}; for a task graph, the critical path is the longest (costliest) path through it. This is useful because, if we assume sufficient parallelism, then the time it takes to execute the tasks on the critical path of a DAG therefore gives a lower bound on the makespan of any schedule. A natural approach in a listing heuristic then is to prioritize all tasks according to the length of the critical path from that task to the end; the idea being that tasks with the greatest downward path length contribute most towards the makespan and should therefore be processed as soon as possible. This approach has a long and successful history in scheduling for homogeneous processors \cite{cof72} but it isn't clear how it should be defined for heterogeneous ones, when all DAG costs can take multiple values and there are many possible critical paths (see Chapter \ref{chap.critical_path_estimation}).
 
-Recall from Chapter X that the {\em Heterogeneous Earliest Finish Time} (HEFT) heuristic prioritizes all tasks $t_i$, $i = 1, \dots, n$, by recursively computing a corresponding sequence of numbers $u_i$ which are intended to represent {\em critical path} lengths from each task to the end. As noted previously, however, the concept of the {\em critical path} is not clearly defined: DAG weights are not fixed at this stage so there are multiple ways we could define a {\em longest} (i.e., {\em costliest}) path. Consider for example the simple DAG shown in Figure \ref{plot.simple_example}, where the labels represent all the possible weights each task/edge may take on a two-processor target platform; specifically, the labels $(W_i^1, W_i^2)$ near the nodes represent the computation costs on processors $P1$ and $P2$, respectively, while the edge labels $(0 = W_{ik}^{11} = W_{ik}^{22}, W_{ik}^{12}, W_{ik}^{21})$ represent the possible communication costs. What is the longest path through this graph? 
+Recall from Chapter X that the {\em Heterogeneous Earliest Finish Time} (HEFT) heuristic prioritizes all tasks $t_i$, $i = 1, \dots, n$, by recursively computing a corresponding sequence of numbers $u_i$ which are intended to represent {\em critical path} lengths from each task to the end. As noted previously, however, the concept of the {\em critical path} is not clearly defined for heterogeneous target platforms: DAG weights are not fixed at this stage so there are multiple ways we could define a {\em longest} (i.e., {\em costliest}) path. Consider for example the simple DAG shown in Figure \ref{plot.simple_example}, where the labels represent all the possible weights each task/edge may take on a two-processor target platform; specifically, the labels $(W_i^1, W_i^2)$ near the nodes represent the computation costs on processors $P1$ and $P2$, respectively, while the edge labels $(0 = W_{ik}^{11} = W_{ik}^{22}, W_{ik}^{12}, W_{ik}^{21})$ represent the possible communication costs. What is the longest path through this graph? 
 
 \begin{figure}
 	\centering	
@@ -161,9 +161,14 @@ Recall from Chapter X that the {\em Heterogeneous Earliest Finish Time} (HEFT) h
 	\label{plot.simple_example}
 \end{figure}
 
-Clearly there are multiple possible ways this can be defined. The HEFT approach, as described in previous chapters, is to use mean values over all sets of possible task and edge costs to fix the DAG weights, as in Figure Y, and then compute the critical path lengths in a standard dynamic programming way to find the task ranks. For the graph in the figure, we find that $u_4 = 5$, $u_3 = 19/2$, $u_2 = 21/2$ and $u_1 = 16$. Now, it should be clear that the optimal schedule for the example graph is to simply schedule all tasks on processor $P1$, which gives us a schedule of length $6$. So although HEFT finds the optimal schedule, the $u_i$ values are not bounds on the schedule makespan... Conceptually, the HEFT critical path isn't a lower bound on any schedule makespan but a lower bound on what the schedule is likely to be...
+It is not obvious how this should be defined. The HEFT approach, as described in previous chapters, is to use mean values over all sets of possible costs to fix the DAG weights and then compute the critical path lengths in a standard dynamic programming manner. For the example we find that
+\begin{align*}
+u_6 &= 2.5, u_5 = 7, u_4 = 7.75 \\
+u_3 &= 16, u_2 = 5.75, u_1 = 16.25, u_0 = 24.75,
+\end{align*}
+giving a scheduling priority list of $\{0, 1, 3, 4, 5, 2, 6\}$. The schedule length obtained by HEFT with these priorities is 22, so note in particular that $u_0$, the rank of the single entry task, is not a lower bound on this value, unlike in the homogeneous case. The question then is, what quantity do the $u_i$ values actually represent? The most intuitive interpretation is perhaps that the HEFT ranks are estimates of what the critical paths are {\em likely} to be but there is no robust mathematical justification for believing that such a definition is truly the most useful.  
 
-Given this ambiguity, alternative ways to definite the critical path in HEFT have been considered before, most notably by Zhao and Sakellariou \cite{zhao03}, who empirically compared the performance of HEFT when averages other than the mean (e.g., median, maximum, minimum) are used to compute upward (or downward) ranks. Their conclusions were that using the mean is not clearly superior to other averages, although none of the other options were consistently better. Indeed, perhaps the biggest takeaway from their investigation was that HEFT is very sensitive to how priorities are computed, with significant variation being seen for different graphs and target platforms. In this chapter we undertake a similar investigation with the aim of establishing if there are choices which do consistently outperform the standard HEFT task ranking phase.   
+Given this ambiguity, alternative ways to define the critical path in HEFT have been considered before, most notably by Zhao and Sakellariou \cite{zhao03}, who empirically compared the performance of HEFT when averages other than the mean (e.g., median, maximum, minimum) are used to compute upward (or downward) ranks. Their conclusions were that using the mean is not clearly superior to other averages, although none of the other options were consistently better. Indeed, perhaps the biggest takeaway from their investigation was that HEFT is very sensitive to how priorities are computed, with significant variation being seen for different graphs and target platforms. In this chapter we undertake a similar investigation with the aim of establishing if there are choices which do consistently outperform the standard HEFT task ranking phase.   
 
 This will be an empirically-driven study, as is common in this area. To facilitate this investigation we created a software package that simulates heterogeneous scheduling problems, much like that described in the previous chapter, although not restricted to accelerated target platforms. As before, the ({\tt Python}) source code for this simulator can be found on Github\footnote{\href{https://github.com/mcsweeney90/critical-path-estimation}{{\tt \small https://github.com/mcsweeney90/critical-path-estimation}}} and all of the results presented here can be re-run from scripts contained therein. 
 
@@ -172,17 +177,39 @@ This will be an empirically-driven study, as is common in this area. To facilita
 \section{Optimistic bounds}
 \label{sect.optimistic}
 
-Functionally, the critical path is used in HEFT as a lower bound on the makespan, so that minimizing the critical path gives us the most scope to minimize the makespan (assuming we make good use of our parallel resources). With this in mind, there are many different ways we can define the critical path so that it gives a lower bound on the makespan of any possible schedule. The most straightforward approach would be to just set all weights to their minimal values but a tighter bound can be computed in the following manner. First, define $u_i^a$ for all tasks $t_i$ and processors $p_a$ to be the critical path length from $t_i$ to the end (inclusive), assuming that it is scheduled on processor $p_a$. These values can easily be computed recursively by setting $u_i^a = W_i^a \; \forall a$ for all exit tasks then moving up the DAG and setting 
+Functionally, the critical path is used in HEFT as a lower bound on the makespan, so that minimizing the critical path gives us the most scope to minimize the makespan (assuming we make good use of our parallel resources). With this in mind, there are many different ways we can define the critical path so that it gives a lower bound on the makespan of any possible schedule. The most straightforward approach would be to just set all weights to their minimal values but a tighter bound can be computed in the following manner. First, define $O_i^a$ for all tasks $t_i$ and processors $p_a$ to be the critical path length from $t_i$ to the end (inclusive), assuming that it is scheduled on processor $p_a$. These values can easily be computed recursively by setting $O_i^a = W_i^a \; \forall a$ for all exit tasks then moving up the DAG and setting 
 \begin{align}
-u_i^a &= W_i^a + \max_{k \in S_i} \bigg( \min_{b = 1, \dots, q} \big( u_k^b + W_{ik}^{ab} \big)  \bigg) \quad \forall a \label{eq.opt_uia} 
+O_i^a &= W_i^a + \max_{k \in S_i} \bigg( \min_{b = 1, \dots, q} \big( O_k^b + W_{ik}^{ab} \big)  \bigg) \quad \forall a \label{eq.opt_uia} 
 \end{align}
 for all other tasks. Then for each $i = 1, \dots, n$,
 \begin{align}
-u_i &= \min_{a = 1, \dots, q}u_i^a \label{eq.opt_ui} 
+O_i &= \min_{a = 1, \dots, q}O_i^a \label{eq.opt_ui} 
 \end{align}
-gives a true lower bound on the remaining cost of any schedule once the execution of task $t_i$ begins. These $u_i$ values could be useful as alternative task priorities in HEFT, especially since the cost of computing all of the $u_i^a$ in this manner is only $O(m + n) \approx O(n^2)$ so in particular is no more expensive than the usual HEFT prioritization phase. Of course, it should be emphasized here that there is absolutely no mathematically valid reason to suppose that doing so will actually lead to superior performance. Still, it seems worthwhile to investigate this empirically using our simulator, which we duly do in Section \ref{sect.experimental_rankings}. 
+gives a true lower bound on the remaining cost of any schedule once the execution of task $t_i$ begins. These $O_i$ values could be useful as alternative task priorities in HEFT, especially since the cost of computing all of the $O_i^a$ in this manner is only $O(m + n) \approx O(n^2)$ so in particular is no more expensive than the usual HEFT prioritization phase. For example, for the simple graph shown in Figure \ref{plot.simple_example}, we find that the $O_i$ values are as given in Table \ref{tb.opt_example} (with the $u_i$ included for comparison). Interestingly, we see that tasks 1 and 3 have the same optimistic rank (8) and the performance of the alternative ranks relative to the standard $u_i$ sequence in HEFT depends on which is chosen to be scheduled first; if Task 1, the priority list does not change so the schedule makespan is 22, but if Task 3 is selected instead, the final schedule makespan is smaller than the original at 20.
 
-Although taking the minimum over the set of processors as in \eqref{eq.opt_ui} is the only choice that gives a true lower bound, we could use any other average over the set of processors, such as the mean or maximum, in order to compute task priorities. Since we also consider those two alternatives in Section \ref{sect.experimental_rankings}, we refer to the ranking phase defined by using the minimum, maximum and mean as OPT-MIN, OPT-MAX and OPT-MEAN respectively.    
+\begin{table}
+	\caption{Upward and optimistic ranks.} 
+	\begin{center}	
+		\begin{tabular}{c c c}
+			\cmidrule{1-3}
+			Task & Upward rank & Optimistic rank\\
+			\cmidrule{1-3}
+			$0$ & $24.75$ & $16$ \\
+			$1$ & $16.25$ & 8 \\
+			$2$ & $5.75$ & 2 \\
+			$3$ & $16$ & 8 \\
+			$4$ & $7.75$ & 5 \\
+			$5$ & $7$ & 3 \\
+			$6$ & $2.5$ & 1 \\
+			\bottomrule
+		\end{tabular}
+		\label{tb.opt_example}
+	\end{center}	
+\end{table}
+
+Of course, this is only one example: it should be emphasized here that there is absolutely no mathematically valid reason to suppose that using the $O_i$ sequence instead of $u_i$ as the task ranks in HEFT will actually lead to superior performance in general. Still, it seems worthwhile to investigate this empirically using our simulator, which we do in Section \ref{sect.experimental_rankings}. 
+
+%Although taking the minimum over the set of processors as in \eqref{eq.opt_ui} is the only choice that gives a true lower bound, we could use any other average over the set of processors, such as the mean or maximum, in order to compute task priorities. Since we also consider those two alternatives in Section \ref{sect.experimental_rankings}, we refer to the ranking phase defined by using the minimum, maximum and mean as OPT-MIN, OPT-MAX and OPT-MEAN respectively.    
 
 (Note that the optimistic critical path defined here is extremely similar to the optimistic cost used in the PEFT heuristic; this will be discussed further in Section \ref{sect.processor_selection}.)
 
