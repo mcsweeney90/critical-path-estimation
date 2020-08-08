@@ -601,6 +601,8 @@ class DAG:
                         assignment[t.ID] = np.random.choice(workers, p=p)
                     else:                        
                         assignment[t.ID] = np.random.choice(workers)
+                    for s in self.graph.successors(t):
+                        assignment[(t.ID, s.ID)] = np.random.choice(list(t.comm_costs[s.ID].values()))
                 # Compute the critical path lengths.
                 fixed_lengths = {}
                 if direction == "upward":
@@ -608,7 +610,8 @@ class DAG:
                     for t in backward_traversal:
                         fixed_lengths[t.ID] = t.comp_costs[assignment[t.ID]]
                         try:
-                            fixed_lengths[t.ID] += max(t.comm_costs[s.ID][(assignment[t.ID], assignment[s.ID])] + fixed_lengths[s.ID] for s in self.graph.successors(t))
+                            # fixed_lengths[t.ID] += max(t.comm_costs[s.ID][(assignment[t.ID], assignment[s.ID])] + fixed_lengths[s.ID] for s in self.graph.successors(t))
+                            fixed_lengths[t.ID] += max(assignment[(t.ID, s.ID)] + fixed_lengths[s.ID] for s in self.graph.successors(t))
                         except ValueError:
                             pass
                         try:

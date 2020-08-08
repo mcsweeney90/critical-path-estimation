@@ -202,7 +202,32 @@ def convert_from_nx_graph(graph, single_root=True, single_exit=True):
 # plt.savefig('{}/simple_graph.png'.format(path), bbox_inches='tight') 
 
 # =============================================================================
-# Compute HEFT ranks. 
+# Compute ranks. 
+# =============================================================================
+
+# nw = 2
+# platform = Platform(nw, name="{}P".format(nw))        
+# # Load DAG.
+# with open('{}/example_dag_with_costs.dill'.format(path), 'rb') as file:
+#     dag = dill.load(file)
+
+# mst = dag.minimal_serial_time()
+# print("MST = {}".format(mst))
+# p_list, ranks = dag.critical_path_priorities(return_ranks=True)
+# print("\nHEFT task ranks: {}".format({k.ID:v for k, v in ranks.items()}))
+# heft_mkspan = HEFT(dag, platform, priority_list=p_list)
+# print("HEFT makespan: {}".format(heft_mkspan))
+# opt_list, ranks = dag.critical_path_priorities(cp_type="optimistic", return_ranks=True)
+# print("\nOpt task ranks: {}".format({k.ID:v for k, v in ranks.items()}))
+# opt_mkspan = HEFT(dag, platform, priority_list=opt_list)
+# print("Opt makespan: {}".format(opt_mkspan))
+# fulk_list, ranks = dag.critical_path_priorities(cp_type="F", return_ranks=True)
+# print("\nFulk task ranks: {}".format({k.ID:v for k, v in ranks.items()}))
+# fulk_mkspan = HEFT(dag, platform, priority_list=fulk_list)
+# print("Fulk makespan: {}".format(fulk_mkspan))
+
+# =============================================================================
+# Monte Carlo ranks.
 # =============================================================================
 
 nw = 2
@@ -211,17 +236,10 @@ platform = Platform(nw, name="{}P".format(nw))
 with open('{}/example_dag_with_costs.dill'.format(path), 'rb') as file:
     dag = dill.load(file)
 
-mst = dag.minimal_serial_time()
-print("MST = {}".format(mst))
-p_list, ranks = dag.critical_path_priorities(return_ranks=True)
-print("\nHEFT task ranks: {}".format({k.ID:v for k, v in ranks.items()}))
-heft_mkspan = HEFT(dag, platform, priority_list=p_list)
-print("HEFT makespan: {}".format(heft_mkspan))
-opt_list, ranks = dag.critical_path_priorities(cp_type="optimistic", return_ranks=True)
-print("\nOpt task ranks: {}".format({k.ID:v for k, v in ranks.items()}))
-opt_mkspan = HEFT(dag, platform, priority_list=opt_list)
-print("Opt makespan: {}".format(opt_mkspan))
-fulk_list, ranks = dag.critical_path_priorities(cp_type="F", return_ranks=True)
-print("\nFulk task ranks: {}".format({k.ID:v for k, v in ranks.items()}))
-fulk_mkspan = HEFT(dag, platform, priority_list=fulk_list)
-print("Fulk makespan: {}".format(fulk_mkspan))
+nsamples = [1, 10, 20, 50, 100, 1000]
+
+for ns in nsamples:
+    p_list, ranks = dag.critical_path_priorities(cp_type="MC", mc_samples=ns, return_ranks=True)
+    print("\nMC{} task ranks: {}".format(ns, {k.ID:v for k, v in ranks.items()}))
+    # mkspan = HEFT(dag, platform, priority_list=p_list)
+    # print("MC{} makespan: {}".format(ns, mkspan))
