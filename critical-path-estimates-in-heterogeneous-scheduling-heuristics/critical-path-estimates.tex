@@ -256,7 +256,7 @@ Unfortunately, computing the moments of the critical path length of a graph whos
 
 Monte Carlo (MC) methods have a long history as a means of approximating the longest path distribution for PERT networks, dating back to at least the early 1960s \cite{van1963letter}. The idea is to simulate the realization of all RVs (according to their pmfs) and then evaluate the critical path of the resulting deterministic graph. This is done repeatedly, giving a set of critical path instances whose empirical distribution function is guaranteed to converge to the true distribution by the Glivenko-Cantelli theorem \cite{canon2016correlation}. Furthermore, analytical results allow us to quantify the approximation error for any given the number of realizations---and therefore the number of realizations needed to reach a desired accuracy.  
 
-Table \ref{tb.mc_example} illustrates how our estimate of the expected critical path lengths of the stochastic graph in Figure \ref{plot.simple_example} evolve as the number of realizations increases; the corresponding $u_i$ numbers are included as well to show that they do indeed appear to be a lower bound on the values that the Monte Carlo method appear to be converging toward. More importantly, we see that after about X realizations, the critical path length estimate for task 3 begins to exceed that of task 1 so it would have a higher priority if these estimates are taken as task ranks in HEFT; as noted in the previous section, interchanging these two tasks---and keeping the same ordering for all others---leads to a smaller schedule makespan (20) compared to the standard ranking (22). Of course, this is only one example, but it does serve to illustrate that in some cases at least a tighter bound on the critical path of $G_s$ can be useful.  
+Table \ref{tb.mc_example} illustrates how our estimate of the expected critical path lengths of the stochastic graph in Figure \ref{plot.simple_example} evolve as the number of realizations increases; the corresponding $u_i$ numbers are included as well to show that they do indeed appear to be a lower bound on the values that the Monte Carlo method appear to be converging toward. More importantly, we see that somewhere between 1 and 10 realizations, the critical path length estimate for task 3 begins to exceed that of task 1 so it would have a higher priority if these estimates are taken as task ranks in HEFT; as noted in the previous section, interchanging these two tasks---and keeping the same ordering for all others---leads to a smaller schedule makespan (20) compared to the standard ranking (22). Of course, this is only one example, but it does serve to illustrate that in some cases at least a tighter bound on the critical path of $G_s$ can be useful.  
 
 \begin{table}
 	\caption{Monte Carlo estimates of critical path lengths for example graph.} 
@@ -474,9 +474,63 @@ and these can be used with equation \eqref{eq.ur_expectation} to compute an alte
 \section{Experimental comparison of rankings}
 \label{sect.experimental_rankings}
 
-First we define a set of graphs...
+In order to evaluate the alternative task prioritization phases in HEFT that we have outlined so far, we make use of our software simulator. However, first we need to define a suitably large and diverse set of graphs to compare them on. 
 
-Baseline comparison with random sort.
+\subsection{Set up}
+\label{subsect.graphs}
+
+We decided to evaluate the new rankings using the same two types of graphs as in the previous chapter: a set of Cholesky graphs, with real costs based on timings from an accelerated machine that we have access to, and several sets of randomly-generated graphs based on topologies provided by the STG \cite{tob02}. The former are identical to those described in Section X so note that in particular they target only the two accelerated platforms detailed there: one comprising 1 GPU and 7 CPU cores and the other 4 GPUs and 28 CPU cores.
+
+Since we are now interested in more general heterogeneous platforms we consider multiple sets of graphs based on randomly-generated graph topologies from the STG which differ from those in the previous chapter. In particular, a set is defined by the following parameters:
+\begin{itemize}
+	\item $n \in \{ 100, 500, 1000 \}$, the number of non-entry/exit tasks in each of the graphs. Each graph also has a single entry and exit task so that altogether it has e.g., $102$ tasks rather than $100$. Once this parameter has been specified, we use the topologies of the corresponding set of that size from the STG. 
+	\item $n_p \in \{2, 4, 8\}$, the number of processors in the target platform. 
+	\item $\beta \in \{0.1, 1, 10\}$, the computation-to-communication ratio (CCR). Defined as before, although the manner used to generate costs that give the target CCR differs (see below).
+	\item $h \in \{1.0, 2.0\}$, the {\em heterogeneity factor} of the processors. Basically, the relative powers of the processors to one another. 
+\end{itemize}
+Once all of these parameters are chosen, costs are generated in the following manner. First, an average power $\overline{p}$ across the set of processors is chosen uniformly at random from the interval $[1, 100]$. Then for each processor $p_a$, $a = 1, \dots, n_p$, its power $r_a$ is chosen uniformly at random from the interval
+\begin{align*}
+\big[ \overline{p} \times (1 - h/2), \enspace \overline{p} \times (1 + h/2)     \big].
+\end{align*}  
+Now an average task cost $\overline{t}$ is also chosen uniformly at random from the interval $[1, 100]$. For each task $t_i$, $i = 1, \dots, n$, choose $x_i \in [0, 2\overline{t}]$ uniformly at random and for all $a = 1, \dots, n_p$, realize $g_a \sim \Gamma(1, r_a)$ (i.e., choose $g_a$ from a Gamma distribution with mean and variance $r_a$). Finally, let $W_i^a = x_i g_a$ be the computation cost of task $t_i$ on processor $p_a$. This method is similar to that used in the original HEFT paper \cite{topcuoglu2002performance} except that we use the processor power attribute to reflect the fact that the ratios of task computation costs on different processors are often very similar for different tasks. Multiplication by a RV from a Gamma distribution is used to ensure that the computation costs are not entirely determined by the power; this distribution was chosen because it is always positive and heavy-tailed, so has roughly the shape we're after. Note that we also considered the completely unrelated alternative and results were very similar... Continuity with original HEFT paper...
+
+% Change to unrelated machines?
+
+Communication costs are generated in a similar manner. First, an average edge cost $\overline{e} $is computed such that the specified CCR is (approximately) achieved. Then for all edges $(t_i, t_k)$, we choose $\overline{w_{ik}}$ uniformly at random from the interval $[0, 2\overline{e}]$. Then specific communication costs between the tasks on all possible pairs of distinct processors are chosen uniformly at random from the interval    
+\begin{align*}
+\big[ \overline{w_{ik}} \times (1 - h/2), \enspace \overline{w_{ik}} \times (1 + h/2)   \big].
+\end{align*} 
+(Recall that costs are assumed to be zero when both tasks are scheduled on the same processor.) Note that the randomness here means that sometimes the target CCR is not precisely achieved, although it is usually acceptably close.
+
+% Note there's different behaviour for the two different methods of generating costs...
+
+\subsection{Benchmarking}
+\label{subsect.benchmarking}
+
+First we want to see how well HEFT actually does compared to a random sort...
+
+Comments: difference between related and unrelated methods of generating costs (why? closer to MSP? Or something deeper?), failures, any differences in magnitude of improvement over random sort (e.g., size).
+
+\subsection{Evaluation of proposed rankings}
+\label{subsect.evaluation}
+
+We compare the following alternative ranking phases....
+\begin{itemize}
+	\item Normal HEFT.
+	\item Different tiebreaking criterion.
+	\item Fulkerson.
+	\item Weighted mean.
+	\item Fulkerson-weighted mean.
+	\item Lower bound.
+\end{itemize}
+%different tiebreaking criterion
+
+Only considered Fulkerson for the smaller DAG sizes since two expensive---conclusion: doesn't appear to do any better, even the weighted version. But maybe discuss example for CPU-GPU. Monte Carlo results, same thing. 
+
+\subsection{Conclusions}
+\label{subsect.conclusions}
+
+Only weighted mean showed any consistent improvement...
 
 \section{Processor selection}
 \label{sect.processor_selection}

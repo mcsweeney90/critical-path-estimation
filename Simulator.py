@@ -344,7 +344,7 @@ class DAG:
             - het_factor in the interval (0, 2).
         """   
         
-        if method == "HEFT" or method == "unrelated":        
+        if method == "HEFT" or method == "unrelated" or method == "UR":        
             # Set computation costs.
             avg_task_cost = np.random.uniform(1, 100)
             for task in self.top_sort:
@@ -363,7 +363,7 @@ class DAG:
                         for v in platform.workers:
                             c = 0.0 if u == v else np.random.uniform(wbar * (1 - het_factor/2), wbar * (1 + het_factor/2))
                             task.comm_costs[child.ID][(u.ID, v.ID)] = c
-        elif method == "related":
+        elif method == "related" or method == "R":
             avg_power = np.random.uniform(1, 100)
             powers = {}
             for w in platform.workers:
