@@ -483,10 +483,11 @@ We decided to evaluate the new rankings using the same two types of graphs as in
 
 Since we are now interested in more general heterogeneous platforms we consider multiple sets of graphs based on randomly-generated graph topologies from the STG which differ from those in the previous chapter. In particular, a set is defined by the following parameters:
 \begin{itemize}
-	\item $n \in \{ 100, 500, 1000 \}$, the number of non-entry/exit tasks in each of the graphs. Each graph also has a single entry and exit task so that altogether it has e.g., $102$ tasks rather than $100$. Once this parameter has been specified, we use the topologies of the corresponding set of that size from the STG. 
+	\item $n \in \{ 100, 1000 \}$, the number of non-entry/exit tasks in each of the graphs. Each graph also has a single entry and exit task so that altogether it has e.g., $102$ tasks rather than $100$. Once this parameter has been specified, we use the topologies of the corresponding set of that size from the STG. 
 	\item $n_p \in \{2, 4, 8\}$, the number of processors in the target platform. 
 	\item $\beta \in \{0.1, 1, 10\}$, the computation-to-communication ratio (CCR). Defined as before, although the manner used to generate costs that give the target CCR differs (see below).
 	\item $h \in \{1.0, 2.0\}$, the {\em heterogeneity factor} of the processors. Basically, the relative powers of the processors to one another. 
+	\item $m \in \{\text{R}, \text{UR} \}$, the method used to generate the costs.
 \end{itemize}
 Once all of these parameters are chosen, costs are generated in the following manner. First, an average power $\overline{p}$ across the set of processors is chosen uniformly at random from the interval $[1, 100]$. Then for each processor $p_a$, $a = 1, \dots, n_p$, its power $r_a$ is chosen uniformly at random from the interval
 \begin{align*}
@@ -507,30 +508,41 @@ Communication costs are generated in a similar manner. First, an average edge co
 \subsection{Benchmarking}
 \label{subsect.benchmarking}
 
-First we want to see how well HEFT actually does compared to a random sort...
+First we want to establish how effective the HEFT task prioritization phase actually is for the sets of graphs described above. More so than the speedup and schedule length ratio, which were described in Section X, the metric that we perhaps really want to use here is how well the task list computed by HEFT compares to other {\em topological sorts}---orderings which respects precedence constraints---of the tasks. Now, the {\tt Networkx} function {\tt topological\_sort} returns a topologically sorted list of nodes in an input graph. Furthermore, the algorithm which this implements does not consider any objective other than meeting the precedence constraints, so we can in some sense regard this as a random sample from the set of all possible topological orderings for the graph. Hence to gauge the effectiveness of the HEFT task prioritization phase, we compare the makespan obtained with the standard ranking with that which would be obtained when using the task priority list returned by {\tt topological\_sort} instead. Figure \ref{plot.benchmark_reductions_100} shows the average makespan reduction, as a percentage, for all of the subsets of DAGs from the STG with 100 tasks.
 
-Comments: difference between related and unrelated methods of generating costs (why? closer to MSP? Or something deeper?), failures, any differences in magnitude of improvement over random sort (e.g., size).
+\begin{figure}
+	\centering	
+	\includegraphics[scale=0.8]{100tasks_reductions.png}
+	\caption{Average makespan reduction (\%) for standard HEFT ranking phase vs random topological sort.}	
+	\label{plot.benchmark_reductions_100}
+\end{figure}
+
+Clearly the most interesting takeaway from the figure is the negative reduction that we see for one of the DAG sets in the bottom-left corner---i.e., the random sort did better on average for those DAGs with CCR $0.1$ and $h = 2.0$ for which costs were generated using the {\em related} method. Interestingly, the effect appears to become more pronounced as the ratio of tasks to processors decreases: the reduction is always positive for the larger DAG sets ($n = 1000$) with the same parameters, although the raw number of instances for which the random sort outperformed standard HEFT is high for those as well. 
+
+It is not obvious why this should be so but we suspect it is related to the similar phenomenon remarked upon in the previous chapter, where HEFT failed altogether due to difficulty managing communication costs because of its greedy processor selection phase. In fact, both standard HEFT and the random ranking alternative failed altogether in the vast majority of instances for which the former was worse than the latter; the average reduction is much smaller for certain subsets because they are precisely the ones for which HEFT is most likely to struggle in general. Disregarding those instances in which both failed, the percentage of graphs for which the random sort outperformed the standard ranking was roughly $0$--$2\%$ for all subsets (of both sizes). Given this, we conclude that HEFT's task prioritization phase is clearly useful except for those circumstances when the algorithm itself struggles because of its greedy selection phase. 
+% Why does HEFT do badly as #processors increases? Maybe more analysis of when HEFT does badly? Similarly, more analysis of those DAGs for which random sort did better than HEFT.  
+
 
 \subsection{Evaluation of proposed rankings}
 \label{subsect.evaluation}
 
-We compare the following alternative ranking phases....
+In this section we compare the performance of HEFT when the following different number sequences are used as task priorities:
 \begin{itemize}
-	\item Normal HEFT.
-	\item Different tiebreaking criterion.
-	\item Fulkerson.
-	\item Weighted mean.
-	\item Fulkerson-weighted mean.
-	\item Lower bound.
+	\item $u_i$, the standard upward ranks,
+	\item $O_i$, the optimistic ranks as defined by \eqref{eq.opt_ui},
+	\item $f_i$, the Fulkerson ranks as defined by \eqref{eq.f_clingen},
+	\item $\hat{u}_i$, the weighted mean as defined in Section \ref{subsect.adjusting},
+	\item $\hat{f}_i$, the weighted Fulkerson numbers as defined in Section \ref{subsect.adjusting}.
 \end{itemize}
-%different tiebreaking criterion
+    
 
-Only considered Fulkerson for the smaller DAG sizes since two expensive---conclusion: doesn't appear to do any better, even the weighted version. But maybe discuss example for CPU-GPU. Monte Carlo results, same thing. 
+%
+%Only considered Fulkerson for the smaller DAG sizes since too expensive---conclusion: doesn't appear to do any better, even the weighted version. But maybe discuss example for CPU-GPU. Monte Carlo results, same thing. 
 
 \subsection{Conclusions}
 \label{subsect.conclusions}
 
-Only weighted mean showed any consistent improvement...
+%Only weighted mean showed any consistent improvement...
 
 \section{Processor selection}
 \label{sect.processor_selection}

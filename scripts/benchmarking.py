@@ -37,14 +37,9 @@ plt.ioff() # Don't show plots.
 
 ####################################################################################################
 
-# Variables etc used throughout.
-
-chol_dag_path = '../DAGs/cholesky/'
-chol_results_path = 'results/benchmarking/cholesky'
-pathlib.Path(chol_results_path).mkdir(parents=True, exist_ok=True)
-
-####################################################################################################
-
+# =============================================================================
+# STG benchmarking.
+# =============================================================================
 
 start = timer()
 
@@ -147,3 +142,55 @@ with open('results/benchmarking/stg/info.dill', 'wb') as handle:
 
 elapsed = timer() - start
 print("This took {} minutes".format(elapsed / 60))
+
+# =============================================================================
+# Plots for STG.
+# =============================================================================
+
+with open('results/benchmarking/stg/info.dill', 'rb') as file:
+    info = dill.load(file) 
+    
+sizes = [100, 1000]
+n_workers = [2, 4, 8]
+ccrs = [0.1, 1, 10]
+het_factors = [1.0, 2.0]
+methods = ["R", "UR"]
+
+
+length, width = 3, 0.16
+x = np.arange(length)
+xlabels = [0.1, 1.0, 10]
+
+for sz in sizes:
+    fig = plt.figure(dpi=400) 
+    ax = fig.add_subplot(111, frameon=False)
+    # hide tick and tick label of the big axes
+    plt.tick_params(labelcolor='none', top=False, bottom=False, left=False, right=False)
+    ax.set_xlabel("CCR", labelpad=5)
+    ax.set_ylabel("AVG. REDUCTION (%)", labelpad=10)
+    
+    for i, nw in enumerate(n_workers):
+        ax1 = fig.add_subplot(311 + i)
+        
+        avg_reductions = {}
+        for h, m in [(1.0, "R"), (1.0, "UR"), (2.0, "R"), (2.0, "UR")]:
+            avg_reductions[(h, m)] = [np.mean(info[sz][nw][ccr][h][m]["reductions"]) for ccr in ccrs] 
+        j = 0
+        for h, m in [(1.0, "R"), (1.0, "UR"), (2.0, "R"), (2.0, "UR")]:
+            bcolor = '#E24A33' if m == "UR" else '#348ABD'
+            bhatch = 'x' if h == 2.0 else None
+            blabel = "h = {}, m = {}".format(h, m)
+            ax1.bar(x + j * width, avg_reductions[(h, m)], width, color=bcolor, hatch=bhatch, edgecolor='white', label=blabel)
+            j += 1   
+        ax1.set_xticks(x + (3/2) * width)
+        if i < 2:
+            ax1.set_xticklabels([]) 
+            if i == 0:
+                ax1.legend(handlelength=3, handletextpad=0.4, ncol=2, loc='best', fancybox=True, facecolor='white')                
+        else:
+            ax1.set_xticklabels(xlabels)
+        
+        ax1.set_title("{} PROCESSORS".format(nw), color="black", family='serif')
+        
+    plt.savefig('results/benchmarking/stg/{}tasks_reductions'.format(sz), bbox_inches='tight') 
+    plt.close(fig) 

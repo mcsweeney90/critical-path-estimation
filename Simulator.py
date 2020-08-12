@@ -487,10 +487,10 @@ class DAG:
         
         cp_lengths = {}
         
-        if cp_type == "optimistic" or cp_type == "pessimistic":
+        if cp_type == "optimistic" or cp_type == "pessimistic" or cp_type == "LB":
             CCP = self.conditional_critical_paths(direction, cp_type)
             for t in self.top_sort:
-                if cp_type == "optimistic":
+                if cp_type == "optimistic" or cp_type == "LB":
                     cp_lengths[t] = min(CCP[t.ID].values())
                 elif cp_type == "pessimistic":
                     cp_lengths[t] = max(CCP[t.ID].values())
@@ -666,7 +666,7 @@ class DAG:
                             action_values = [CCP[child.ID][v] + task.comm_costs[child.ID][(w, v)] + child.comp_costs[v] for v in workers]
                         else:
                             action_values = [CCP[child.ID][v] + task.comm_costs[child.ID][(w, v)] for v in workers]
-                        if cp_type == "optimistic":
+                        if cp_type == "optimistic" or cp_type == "LB":
                             child_values.append(min(action_values))
                         elif cp_type == "pessimistic":
                             child_values.append(max(action_values))
@@ -681,7 +681,7 @@ class DAG:
                     parent_values = []
                     for parent in self.graph.predecessors(task):
                         action_values = [CCP[parent.ID][v] + parent.comm_costs[task.ID][(v, w)] for v in workers]
-                        if cp_type == "optimistic":
+                        if cp_type == "optimistic" or cp_type == "LB":
                             parent_values.append(min(action_values))
                         elif cp_type == "pessimistic":
                             parent_values.append(max(action_values))
@@ -835,7 +835,7 @@ class DAG:
         """      
         task_ranks = self.critical_paths(direction, cp_type, avg_type, mc_samples)
         if direction == "upward":
-            priority_list = list(reversed(sorted(task_ranks, key=task_ranks.get)))
+            priority_list = list(sorted(task_ranks, key=task_ranks.get, reverse=True))
         else:
             priority_list = list(sorted(task_ranks, key=task_ranks.get))
         if return_ranks:
@@ -1257,7 +1257,7 @@ def HEFT(dag, platform, priority_list=None, cp_type="HEFT", avg_type="HEFT", ret
         priority_list = dag.critical_path_priorities(direction="upward", cp_type=cp_type, avg_type=avg_type)   
     
     # Schedule the tasks.
-    for t in priority_list:          
+    for t in priority_list:         
         # Compute the finish time on all workers and identify the fastest (with ties broken consistently by np.argmin).   
         worker_finish_times = list(w.earliest_finish_time(t, dag, platform) for w in platform.workers)
         min_val = min(worker_finish_times, key=lambda w:w[0]) 

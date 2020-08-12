@@ -226,20 +226,21 @@ def convert_from_nx_graph(graph, single_root=True, single_exit=True):
 # fulk_mkspan = HEFT(dag, platform, priority_list=fulk_list)
 # print("Fulk makespan: {}".format(fulk_mkspan))
 
+
 # =============================================================================
 # Monte Carlo ranks.
 # =============================================================================
 
-nw = 2
-platform = Platform(nw, name="{}P".format(nw))        
-# Load DAG.
-with open('{}/example_dag_with_costs.dill'.format(path), 'rb') as file:
-    dag = dill.load(file)
+# nw = 2
+# platform = Platform(nw, name="{}P".format(nw))        
+# # Load DAG.
+# with open('{}/example_dag_with_costs.dill'.format(path), 'rb') as file:
+#     dag = dill.load(file)
 
-nsamples = [1, 10, 20, 50, 100, 1000]
+# nsamples = [1, 10, 20, 50, 100, 1000]
 
-for ns in nsamples:
-    p_list, ranks = dag.critical_path_priorities(cp_type="MC", mc_samples=ns, return_ranks=True)
-    print("\nMC{} task ranks: {}".format(ns, {k.ID:v for k, v in ranks.items()}))
-    # mkspan = HEFT(dag, platform, priority_list=p_list)
-    # print("MC{} makespan: {}".format(ns, mkspan))
+# for ns in nsamples:
+#     p_list, ranks = dag.critical_path_priorities(cp_type="MC", mc_samples=ns, return_ranks=True)
+#     print("\nMC{} task ranks: {}".format(ns, {k.ID:v for k, v in ranks.items()}))
+#     # mkspan = HEFT(dag, platform, priority_list=p_list)
+#     # print("MC{} makespan: {}".format(ns, mkspan))
