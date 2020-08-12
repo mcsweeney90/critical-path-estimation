@@ -465,10 +465,10 @@ Note that we take the reciprocal of the costs in order to reflect the idea that 
 
 These modified pmfs can be used in conjunction with either upward ranking, as defined by equation \eqref{eq.ur_expectation}, Fulkerson's bound, or Monte Carlo methods. For example, in the first instance, the expectations used simply become 
 \begin{align}
-\E[w_i] &= \sum_{\ell \in L_i} \ell \hat{m}_i(\ell) = \frac{n_p}{s_i}, \label{eq.expected_node_wm}\\
+\E[w_i] &= \sum_{\ell \in L_i} \ell \hat{m}_i(\ell) = \frac{q}{s_i}, \label{eq.expected_node_wm}\\
 \E[w_{ik}] &= \sum_{\ell \in L_{ik}} \ell \hat{m}_{ik}(\ell) = \frac{\sum_{a, b} W_{ik}^{ab} / (W_i^a W_k^b)}{s_i s_k} \label{eq.expected_edge_wm},
 \end{align}
-and these can be used with equation \eqref{eq.ur_expectation} to compute an alternative sequence of task ranks $\hat{u}_i$; of course, this is slightly more computationally expensive than computing the standard $u_i$ ranks but only by a constant factor. Similarly, by using the modified pmfs in conjunction with equation \eqref{eq.f_clingen} we can define alternative Fulkerson numbers $\hat{f}_i$, and by sampling realizations according to $\hat{m}$ rather than $m$ we can incorporate this idea into the Monte Carlo approach for finding longest paths. All three of these possibilities are evaluated as alternative task ranks for HEFT in the following section.
+and these can be used with equation \eqref{eq.ur_expectation} to compute an alternative sequence of task ranks $\hat{u}_i$; of course, this is slightly more computationally expensive than computing the standard $u_i$ ranks but only by a constant factor. Similarly, by using the modified pmfs in conjunction with equation \eqref{eq.f_clingen} we can define alternative Fulkerson numbers $\hat{f}_i$, and by sampling realizations according to $\hat{m}$ rather than $m$ we can incorporate this idea into the Monte Carlo approach for finding longest paths. All three of these possibilities are evaluated as alternative task ranks for HEFT in the following section. Note that since equations \eqref{eq.expected_node_wm} and \eqref{eq.expected_edge_wm} are simply weighted averages we do not believe that computing $\hat{u}_i$ instead of $u_i$ is a new idea: although we could not find any explicit references in the literature, we suspect this has been done before in practice.  
 
 
 \section{Experimental comparison of rankings}
@@ -476,7 +476,7 @@ and these can be used with equation \eqref{eq.ur_expectation} to compute an alte
 
 In order to evaluate the alternative task prioritization phases in HEFT that we have outlined so far, we make use of our software simulator. However, first we need to define a suitably large and diverse set of graphs to compare them on. 
 
-\subsection{Set up}
+\subsection{Test graphs}
 \label{subsect.graphs}
 
 We decided to evaluate the new rankings using the same two types of graphs as in the previous chapter: a set of Cholesky graphs, with real costs based on timings from an accelerated machine that we have access to, and several sets of randomly-generated graphs based on topologies provided by the STG \cite{tob02}. The former are identical to those described in Section X so note that in particular they target only the two accelerated platforms detailed there: one comprising 1 GPU and 7 CPU cores and the other 4 GPUs and 28 CPU cores.
@@ -484,26 +484,27 @@ We decided to evaluate the new rankings using the same two types of graphs as in
 Since we are now interested in more general heterogeneous platforms we consider multiple sets of graphs based on randomly-generated graph topologies from the STG which differ from those in the previous chapter. In particular, a set is defined by the following parameters:
 \begin{itemize}
 	\item $n \in \{ 100, 1000 \}$, the number of non-entry/exit tasks in each of the graphs. Each graph also has a single entry and exit task so that altogether it has e.g., $102$ tasks rather than $100$. Once this parameter has been specified, we use the topologies of the corresponding set of that size from the STG. 
-	\item $n_p \in \{2, 4, 8\}$, the number of processors in the target platform. 
+	\item $q \in \{2, 4, 8\}$, the number of processors in the target platform. 
 	\item $\beta \in \{0.1, 1, 10\}$, the computation-to-communication ratio (CCR). Defined as before, although the manner used to generate costs that give the target CCR differs (see below).
-	\item $h \in \{1.0, 2.0\}$, the {\em heterogeneity factor} of the processors. Basically, the relative powers of the processors to one another. 
+	\item $h \in \{1.0, 2.0\}$, the {\em heterogeneity factor} of the processors. This basically determines how similar costs on different processors are to one another (again, see below for more detail).  
 	\item $m \in \{\text{R}, \text{UR} \}$, the method used to generate the costs.
 \end{itemize}
-Once all of these parameters are chosen, costs are generated in the following manner. First, an average power $\overline{p}$ across the set of processors is chosen uniformly at random from the interval $[1, 100]$. Then for each processor $p_a$, $a = 1, \dots, n_p$, its power $r_a$ is chosen uniformly at random from the interval
+Once all of the other parameters are chosen, if $m = \text{UR}$ (for {\em unrelated}), then we use the same method as in the original HEFT paper \cite{topcuoglu2002performance} or \cite{arabnejad14} to determine all of the task computation costs on each of the processors. To wit, first an average computation cost for the entire graph $\overline{w_G}$ is chosen randomly (in our case an integer in the interval $[1, 100]$). Then, for all $i = 1, \dots, n$, the average computation cost $\overline{w_i}$ of task $t_i$, is chosen uniformly at random from the interval $[0, \overline{w_G}]$. Finally, for all $a = 1, \dots, q$, $W_i^a$ is also chosen uniformly at random but from the interval  
+\begin{align*}
+\big[ \overline{w_i} \times (1 - h/2), \enspace \overline{w_i} \times (1 + h/2)     \big].
+\end{align*}
+This method is perhaps somewhat unrealistic since task costs are generated independently of whichever processor they represent; typically costs are determined at least in part by the relative processor {\em powers}. With this in mind, if $m = \text{R}$ (for {\em related}), then the method proceeds by first selecting an average power $\overline{p}$ across the set of processors uniformly at random from the interval $[1, 100]$. Then for each processor $p_a$, $a = 1, \dots, n_p$, its power $r_a$ is in turn chosen uniformly at random from the interval
 \begin{align*}
 \big[ \overline{p} \times (1 - h/2), \enspace \overline{p} \times (1 + h/2)     \big].
 \end{align*}  
-Now an average task cost $\overline{t}$ is also chosen uniformly at random from the interval $[1, 100]$. For each task $t_i$, $i = 1, \dots, n$, choose $x_i \in [0, 2\overline{t}]$ uniformly at random and for all $a = 1, \dots, n_p$, realize $g_a \sim \Gamma(1, r_a)$ (i.e., choose $g_a$ from a Gamma distribution with mean and variance $r_a$). Finally, let $W_i^a = x_i g_a$ be the computation cost of task $t_i$ on processor $p_a$. This method is similar to that used in the original HEFT paper \cite{topcuoglu2002performance} except that we use the processor power attribute to reflect the fact that the ratios of task computation costs on different processors are often very similar for different tasks. Multiplication by a RV from a Gamma distribution is used to ensure that the computation costs are not entirely determined by the power; this distribution was chosen because it is always positive and heavy-tailed, so has roughly the shape we're after. Note that we also considered the completely unrelated alternative and results were very similar... Continuity with original HEFT paper...
+Now an average task cost $\overline{t}$ is also chosen uniformly at random from the interval $[1, 100]$. For each task $t_i$, $i = 1, \dots, n$, choose $x_i \in [0, 2\overline{t}]$ uniformly at random and for all $a = 1, \dots, n_p$, realize $g_a \sim \Gamma(1, r_a)$ (i.e., choose $g_a$ from a Gamma distribution with mean and variance $r_a$). This is done to ensure that the computation costs are not entirely determined by the power; a Gamma distribution was chosen because it is always positive and heavy-tailed, so has roughly the shape we're after.  Finally, let $W_i^a = x_i g_a$ be the computation cost of task $t_i$ on processor $p_a$. 
 
-% Change to unrelated machines?
-
-Communication costs are generated in a similar manner. First, an average edge cost $\overline{e} $is computed such that the specified CCR is (approximately) achieved. Then for all edges $(t_i, t_k)$, we choose $\overline{w_{ik}}$ uniformly at random from the interval $[0, 2\overline{e}]$. Then specific communication costs between the tasks on all possible pairs of distinct processors are chosen uniformly at random from the interval    
+Communication costs are generated in the same manner for both choices of $m$. First, an average edge cost $\overline{e} $is computed such that the specified CCR is (approximately) achieved. Then for all edges $(t_i, t_k)$, we choose $\overline{w_{ik}}$ uniformly at random from the interval $[0, 2\overline{e}]$. Then specific communication costs between the tasks on all possible pairs of distinct processors are chosen uniformly at random from the interval    
 \begin{align*}
 \big[ \overline{w_{ik}} \times (1 - h/2), \enspace \overline{w_{ik}} \times (1 + h/2)   \big].
 \end{align*} 
 (Recall that costs are assumed to be zero when both tasks are scheduled on the same processor.) Note that the randomness here means that sometimes the target CCR is not precisely achieved, although it is usually acceptably close.
 
-% Note there's different behaviour for the two different methods of generating costs...
 
 \subsection{Benchmarking}
 \label{subsect.benchmarking}
@@ -536,7 +537,7 @@ In this section we compare the performance of HEFT when the following different 
 \end{itemize}
 First, we consider the sets of DAGs based on the STG with 100 tasks as an exploratory example. Ultimately, when deciding whether to use an alternative ranking we want to know whether it's more likely to help rather than harm performance, so Figure \ref{plot.rankings_diff_100} shows the difference between the percentage of DAGs for which each of the alternative rankings obtained a schedule makespan better than the standard $u_i$ ranks and the percentage for which they were worse. Note that we combine all four of the subsets ($h = 1.0$ or $2.0$, $m = \text{R}$ or UR) for each CCR and processor number combination, so that each of the bars represents a percentage over $4 \times 180 = 720$ DAGs. 
 
-Of course, the figure does not tell the whole story: what about the relative magnitudes of the reductions/increases? Table X shows the average reductions, as a percentage of the HEFT makespans, for the same sets of graphs. The data is roughly what we would expect from the figure, with the exception of the large negative values for the W ranking with $\beta = 0.1$. In fact, this discrepancy is due to only a handful of graphs and is related to the previously-discussed problem of HEFT failing altogether in some cases. Typically, all of the rankings tend to fail for the same instances, but for a small number of graphs the W ranking fails spectacularly whereas the HEFT ranking doesn't fail at all; this leads to a very large percentage difference in makespan which distorts the average. These cases are clearly important so we have not omitted them but they do lead to perhaps a slightly misleading average reduction.     
+Of course, the figure does not tell the whole story: what about the relative magnitudes of the makespan reductions and increases? Table X shows the average reductions, as a percentage of the HEFT makespans, for the same sets of graphs. The data is roughly what we would expect from the figure, with the exception of the large negative values for the W ranking with $\beta = 0.1$. In fact, this discrepancy is due to only a handful of graphs and is related to the previously-discussed problem of HEFT failing altogether in some cases. Typically, all of the rankings tend to fail for the same instances, but for a small number of graphs the W ranking fails spectacularly whereas the HEFT ranking doesn't fail at all; this leads to a very large percentage difference in makespan which distorts the average. These cases are clearly important so we have not omitted them but they do lead to perhaps a slightly misleading average reduction.     
 
 \begin{figure}
 	\centering	
@@ -552,16 +553,24 @@ Of course, the figure does not tell the whole story: what about the relative mag
 %	\label{plot.rankings_reductions_100}
 %\end{figure}
 
-The Fulkerson ranking in particular does not fare particularly well overall. Given how much more expensive it can be than standard upward ranking, this is a big problem: only large makespan reductions can really justify the extra cost. Indeed, although the weighted Fulkerson ranking WF did much better, both compared to F and the standard ranking, it was not a significant improvement over the W ranking.  
+Both the figure and the table suggest that the Fulkerson ranking in particular does not seem to be an improvement on the standard ranking. Given how much more expensive it can be, this is a big problem: only large makespan reductions can really justify the extra cost. Indeed, although the weighted Fulkerson ranking WF did much better, both compared to F and the standard ranking, it was not a significant improvement over the W ranking. This suggests that there is little advantage if any to obtaining a tighter bound on the associated stochastic graph (see Section \ref{subsect.sharper_bounds}). To confirm this, we repeated the experiments described above when the Monte Carlo approach (with a sufficient number of samples) is used to compute even tighter bounds on the critical path lengths (which are then used as ranks in HEFT). We used both the original pmfs $m$ and the weighted pmfs $\hat{m}_i$ for this. Our results can be found in full at [link to Github folder] but overall our conclusions were the same as before: tightening the bound did not appear to be useful, but weighting the pmfs did.       
+
+Despite this, there are situations for which the Fulkerson ranking is competitive with the standard ranking in terms of both cost and performance. In particular, for accelerated environments, such as in the previous chapter, the number of possible values each weight may take is significantly reduced, improving efficiency to a large extent. Furthermore, the Fulkerson ranking appears to perform well for some application task graphs, such as the Cholesky DAG shown in Figure X... Larger DAGs should also be considered in future, although we don't have the computational budget to do that here...
+
+\begin{figure}
+	\centering	
+	\subfloat[1 GPU, 7 CPU.]{\label{plot.fulk_cholesky_single}\includegraphics[scale=0.5]{fulk_Single_GPU_reductions.png}}
+	\subfloat[4 GPU, 28 CPU.]{\label{plot.fulk_cholesky_multiple}\includegraphics[scale=0.5]{fulk_Multiple_GPU_reductions.png}}
+	\caption{Schedule makespan reduction of HEFT with alternative ranking phases for Cholesky DAGs.}	
+	\label{plot.fulk_cholesky} 
+\end{figure}   
+
+Disregarding the Fulkerson rankings, we consider $LB$ and $W$ for the larger DAGs from the STG...
     
 
 %
 %Only considered Fulkerson for the smaller DAG sizes since too expensive---conclusion: doesn't appear to do any better, even the weighted version. But maybe discuss example for CPU-GPU. Monte Carlo results, same thing. 
 
-\subsection{Conclusions}
-\label{subsect.conclusions}
-
-%Only weighted mean showed any consistent improvement...
 
 \section{Processor selection}
 \label{sect.processor_selection}
