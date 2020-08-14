@@ -177,15 +177,15 @@ This will be an empirically-driven study, as is common in this area. To facilita
 \section{Optimistic bounds}
 \label{sect.optimistic}
 
-Functionally, the critical path is used in HEFT as a lower bound on the makespan, so that minimizing the critical path gives us the most scope to minimize the makespan (assuming we make good use of our parallel resources). With this in mind, there are many different ways we can define the critical path so that it gives a lower bound on the makespan of any possible schedule. The most straightforward approach would be to just set all weights to their minimal values but a tighter bound can be computed in the following manner. First, define $O_i^a$ for all tasks $t_i$ and processors $p_a$ to be the critical path length from $t_i$ to the end (inclusive), assuming that it is scheduled on processor $p_a$. These values can easily be computed recursively by setting $O_i^a = W_i^a \; \forall a$ for all exit tasks then moving up the DAG and setting 
+Functionally, the critical path is used in HEFT as a lower bound on the makespan, so that minimizing the critical path gives us the most scope to minimize the makespan (assuming we make good use of our parallel resources). With this in mind, there are many different ways we can define the critical path so that it gives a lower bound on the makespan of any possible schedule. The most straightforward approach would be to just set all weights to their minimal values but a tighter bound can be computed in the following manner. First, define $\ell_i^a$ for all tasks $t_i$ and processors $p_a$ to be the critical path length from $t_i$ to the end (inclusive), assuming that it is scheduled on processor $p_a$. These values can easily be computed recursively by setting $\ell_i^a = W_i^a$, $a = 1, \dots, q$, for all exit tasks then moving up the DAG and setting 
 \begin{align}
-O_i^a &= W_i^a + \max_{k \in S_i} \bigg( \min_{b = 1, \dots, q} \big( O_k^b + W_{ik}^{ab} \big)  \bigg) \quad \forall a \label{eq.opt_uia} 
+\ell_i^a &= W_i^a + \max_{k \in S_i} \bigg( \min_{b = 1, \dots, q} \big( \ell_k^b + W_{ik}^{ab} \big)  \bigg) \quad \forall a \label{eq.opt_uia} 
 \end{align}
 for all other tasks. Then for each $i = 1, \dots, n$,
 \begin{align}
-O_i &= \min_{a = 1, \dots, q}O_i^a \label{eq.opt_ui} 
+\ell_i &= \min_{a = 1, \dots, q}\ell_i^a \label{eq.opt_ui} 
 \end{align}
-gives a true lower bound on the remaining cost of any schedule once the execution of task $t_i$ begins. These $O_i$ values could be useful as alternative task priorities in HEFT, especially since the cost of computing all of the $O_i^a$ in this manner is only $O((m + n)q) \approx O(n^2q)$ so in particular is the same order as the usual HEFT prioritization phase. For example, for the simple graph shown in Figure \ref{plot.simple_example}, we find that the $O_i$ values are as given in Table \ref{tb.opt_example} (with the $u_i$ included for comparison). Interestingly, we see that tasks 1 and 3 have the same optimistic rank (8 units) and the performance of the alternative ranks relative to the standard $u_i$ sequence in HEFT depends on which is chosen to be scheduled first; if task 1, the priority list does not change so the schedule makespan is 22 units, but if task 3 is selected instead, the final schedule makespan is 20 units---i.e., smaller than the original.
+gives a true lower bound on the remaining cost of any schedule once the execution of task $t_i$ begins. These $\ell_i$ values could be useful as alternative task priorities in HEFT, especially since the cost of computing all of the $\ell_i^a$ in this manner is only $O((m + n)q) \approx O(n^2q)$ so in particular is the same order as the usual HEFT prioritization phase. For example, for the simple graph shown in Figure \ref{plot.simple_example}, we find that the $\ell_i$ values are as given in Table \ref{tb.opt_example} (with the $u_i$ included for comparison). Interestingly, we see that tasks 1 and 3 have the same optimistic rank (8 units) and the performance of the alternative ranks relative to the standard $u_i$ sequence in HEFT depends on which is chosen to be scheduled first; if task 1, the priority list does not change so the schedule makespan is 22 units, but if task 3 is selected instead, the final schedule makespan is 20 units---i.e., smaller than the original.
 
 \begin{table}
 	\caption{Upward and optimistic ranks.} 
@@ -207,7 +207,7 @@ gives a true lower bound on the remaining cost of any schedule once the executio
 	\end{center}	
 \end{table}
 
-Of course, this is only one example: it should be emphasized here that there is absolutely no mathematically valid reason to suppose that using the $O_i$ sequence instead of $u_i$ as the task ranks in HEFT will actually lead to superior performance in general. Still, it seems worthwhile to investigate this empirically using our simulator, which we do in Section \ref{sect.experimental_rankings}. 
+Of course, this is only one example: it should be emphasized here that there is absolutely no mathematically valid reason to suppose that using the $\ell_i$ sequence instead of $u_i$ as the task ranks in HEFT will actually lead to superior performance in general. Still, it seems worthwhile to investigate this empirically using our simulator, which we do in Section \ref{sect.experimental_rankings}. 
 
 %Although taking the minimum over the set of processors as in \eqref{eq.opt_ui} is the only choice that gives a true lower bound, we could use any other average over the set of processors, such as the mean or maximum, in order to compute task priorities. Since we also consider those two alternatives in Section \ref{sect.experimental_rankings}, we refer to the ranking phase defined by using the minimum, maximum and mean as OPT-MIN, OPT-MAX and OPT-MEAN respectively.    
 
@@ -228,8 +228,8 @@ m_{ik}(W_{ik}^{ab}) &= m_i(W_i^a) \cdot m_k(W_k^b) \\
 \end{align*}
 Note that the expected values of the node and edge weights are therefore given by
 \begin{align}
-\E[w_i] &= \sum_{\ell \in L_i} \ell m_i(\ell) = \frac{1}{n_p} \sum_{a} W_i^a \label{eq.expected_node}\\
-\E[w_{ik}] &= \sum_{\ell \in L_{ik}} \ell m_{ik}(\ell) = \frac{1}{n_p^2} \sum_{a, b} W_{ik}^{ab} \label{eq.expected_edge}.
+\E[w_i] &= \sum_{\ell \in L_i} \ell m_i(\ell) = \frac{1}{q} \sum_{a} W_i^a \label{eq.expected_node}\\
+\E[w_{ik}] &= \sum_{\ell \in L_{ik}} \ell m_{ik}(\ell) = \frac{1}{q^2} \sum_{a, b} W_{ik}^{ab} \label{eq.expected_edge}.
 \end{align}
 In particular, this means that $\E[w_i] = \overline{w_i}$ and $\E[w_{ik}] = \overline{w_{ik}}$. So the computation of the upward ranks $u_i$ in HEFT can instead be done by setting $u_i = \E[w_i]$ for all exit tasks, then moving up the DAG and recursively computing
 \begin{align}
@@ -333,7 +333,7 @@ f_i &= \sum_{z \geq \alpha_i} z \bigg( \prod_{k \in S_i} M_{ik}(z - f_k) - \prod
 \end{align}
 A complete description of a practical procedure for computing the Fulkerson numbers $f_i$ is given in Algorithm \ref{alg.fulkerson}. At first blush this may not appear to be any simpler than before but, crucially, the number of  operations required to compute each of the $f_i$ is now $O(|\tilde{L}_{ik}| \cdot K)$, where $K$ is the number of child tasks, rather than the first term being exponential in the second as before. Of course, it should also be noted that this procedure is still more expensive than computing the $u_i$ sequence. 
 
-Once all of the $f_i$ have been computed, they can be taken as alternative task ranks in HEFT (or indeed any other listing heuristic). In Table \ref{tb.fulk_example} we compare the $f_i$ values to the standard $u_i$ ones for the small DAG from Figure \ref{plot.simple_example}; also included is {\em MC1000}, the critical path estimates based on 1000 Monte Carlo realizations (see Section \ref{subsubsect.monte_carlo}), as a reference for the true critical path of the stochastic graph. We see that the $f_i$ values do indeed give tighter bounds than the $u_i$ and, more pertinently, if we use the former as task ranks then task 3 is scheduled before task 1 and we obtain the smaller schedule makespan of 20 rather than the standard HEFT makespan of 22. 
+Once all of the $f_i$ have been computed, they can be taken as alternative task ranks in HEFT (or indeed any other listing heuristic). In Table \ref{tb.fulk_example} we compare the $f_i$ values to the standard $u_i$ for the small DAG from Figure \ref{plot.simple_example}; also included is {\em MC1000}, the critical path estimates based on 1000 Monte Carlo realizations (see Section \ref{subsubsect.monte_carlo}), as a reference for the true critical path of the stochastic graph. We see that the $f_i$ values do indeed give tighter bounds than the $u_i$ and, more pertinently, if we use the former as task ranks then task 3 is scheduled before task 1 and we obtain the smaller schedule makespan of 20 rather than the standard HEFT makespan of 22. 
 
 \begin{table}
 	\caption{Fulkerson numbers for example graph.} 
@@ -384,16 +384,16 @@ Two refinements of Fulkerson's method were proposed by Elmaghraby \cite{elmaghra
 		{
 			\If{$z \geq \alpha_i$}
 			{
-				$g = 1$, $q = 1$
+				$g = 1$, $d = 1$
 				
 				\For{$k \in S_i$}
 				{
 					$g \leftarrow g \times M_{ik}(z - f_k)$
 					
-					$q \leftarrow q \times M_{ik}^{*}(z - f_k)$
+					$d \leftarrow d \times M_{ik}^{*}(z - f_k)$
 				}
 				
-				$f_i \leftarrow f_i + z \times (g - q)$				
+				$f_i \leftarrow f_i + z \times (g - d)$				
 			}
 		}		
 	}	
@@ -463,12 +463,12 @@ and
 \end{align*}
 Note that we take the reciprocal of the costs in order to reflect the idea that processors with smaller costs are more likely to be chosen than larger ones.
 
-These modified pmfs can be used in conjunction with either upward ranking, as defined by equation \eqref{eq.ur_expectation}, Fulkerson's bound, or Monte Carlo methods. For example, in the first instance, the expectations used simply become 
+These modified pmfs can be used in conjunction with either upward ranking, as defined by equation \eqref{eq.ur_expectation}, Fulkerson's bound, or Monte Carlo methods. For example, in the first instance, the expectations simply become 
 \begin{align}
 \E[w_i] &= \sum_{\ell \in L_i} \ell \hat{m}_i(\ell) = \frac{q}{s_i}, \label{eq.expected_node_wm}\\
 \E[w_{ik}] &= \sum_{\ell \in L_{ik}} \ell \hat{m}_{ik}(\ell) = \frac{\sum_{a, b} W_{ik}^{ab} / (W_i^a W_k^b)}{s_i s_k} \label{eq.expected_edge_wm},
 \end{align}
-and these can be used with equation \eqref{eq.ur_expectation} to compute an alternative sequence of task ranks $\hat{u}_i$; of course, this is slightly more computationally expensive than computing the standard $u_i$ ranks but only by a constant factor. Similarly, by using the modified pmfs in conjunction with equation \eqref{eq.f_clingen} we can define alternative Fulkerson numbers $\hat{f}_i$, and by sampling realizations according to $\hat{m}$ rather than $m$ we can incorporate this idea into the Monte Carlo approach for finding longest paths. All three of these possibilities are evaluated as alternative task ranks for HEFT in the following section. Note that since equations \eqref{eq.expected_node_wm} and \eqref{eq.expected_edge_wm} are simply weighted averages we do not believe that computing $\hat{u}_i$ instead of $u_i$ is a new idea: although we could not find any explicit references in the literature, we suspect this has been done before in practice.  
+and these can be used with equation \eqref{eq.ur_expectation} to compute an alternative sequence of task ranks $\hat{u}_i$. Of course, this is slightly more computationally expensive than computing the standard $u_i$ ranks but only by a constant factor. Similarly, by using the modified pmfs in conjunction with equation \eqref{eq.f_clingen} we can define alternative Fulkerson numbers $\hat{f}_i$, and by sampling realizations according to $\hat{m}$ rather than $m$ we can incorporate this idea into the Monte Carlo approach for finding longest paths. All three of these possibilities are evaluated as alternative task ranks for HEFT in the following section. Note that since equations \eqref{eq.expected_node_wm} and \eqref{eq.expected_edge_wm} are simply weighted averages we do not believe that computing $\hat{u}_i$ instead of $u_i$ is a new idea: although we could not find any explicit references in the literature, we suspect this has been done before in practice.  
 
 
 \section{Experimental comparison of rankings}
@@ -493,13 +493,13 @@ Once all of the other parameters are chosen, if $m = \text{UR}$ (for {\em unrela
 \begin{align*}
 \big[ \overline{w_i} \times (1 - h/2), \enspace \overline{w_i} \times (1 + h/2)     \big].
 \end{align*}
-This method is perhaps somewhat unrealistic since task costs are generated independently of whichever processor they represent; typically costs are determined at least in part by the relative processor {\em powers}. With this in mind, if $m = \text{R}$ (for {\em related}), then the method proceeds by first selecting an average power $\overline{p}$ across the set of processors uniformly at random from the interval $[1, 100]$. Then for each processor $p_a$, $a = 1, \dots, n_p$, its power $r_a$ is in turn chosen uniformly at random from the interval
+This method is perhaps somewhat unrealistic since task costs are generated independently of whichever processor they represent; typically costs are determined at least in part by the relative processor {\em powers}. With this in mind, if $m = \text{R}$ (for {\em related}), then the method proceeds by first selecting an average power $\overline{p}$ across the set of processors uniformly at random from the interval $[1, 100]$. Then for each processor $p_a$, $a = 1, \dots, q$, its power $r_a$ is in turn chosen uniformly at random from the interval
 \begin{align*}
 \big[ \overline{p} \times (1 - h/2), \enspace \overline{p} \times (1 + h/2)     \big].
 \end{align*}  
-Now an average task cost $\overline{t}$ is also chosen uniformly at random from the interval $[1, 100]$. For each task $t_i$, $i = 1, \dots, n$, choose $x_i \in [0, 2\overline{t}]$ uniformly at random and for all $a = 1, \dots, n_p$, realize $g_a \sim \Gamma(1, r_a)$ (i.e., choose $g_a$ from a Gamma distribution with mean and variance $r_a$). This is done to ensure that the computation costs are not entirely determined by the power; a Gamma distribution was chosen because it is always positive and heavy-tailed, so has roughly the shape we're after.  Finally, let $W_i^a = x_i g_a$ be the computation cost of task $t_i$ on processor $p_a$. 
+Now an average task cost $\overline{t}$ is also chosen uniformly at random from the interval $[1, 100]$. For each task $t_i$, $i = 1, \dots, n$, choose $x_i \in [0, 2\overline{t}]$ uniformly at random and for all $a = 1, \dots, q$, realize $g_a \sim \Gamma(1, r_a)$ (i.e., choose $g_a$ from a Gamma distribution with mean and variance $r_a$). This is done to ensure that the computation costs are not entirely determined by the power; a Gamma distribution was chosen because it is always positive and heavy-tailed, so has roughly the shape we're after.  Finally, let $W_i^a = x_i g_a$ be the computation cost of task $t_i$ on processor $p_a$. 
 
-Communication costs are generated in the same manner for both choices of $m$. First, an average edge cost $\overline{e} $is computed such that the specified CCR is (approximately) achieved. Then for all edges $(t_i, t_k)$, we choose $\overline{w_{ik}}$ uniformly at random from the interval $[0, 2\overline{e}]$. Then specific communication costs between the tasks on all possible pairs of distinct processors are chosen uniformly at random from the interval    
+Communication costs are generated in the same manner for both choices of $m$. First, an average edge cost $\overline{e}$ is computed such that the specified CCR is (approximately) achieved. Then for all edges $(t_i, t_k)$, we choose $\overline{w_{ik}}$ uniformly at random from the interval $[0, 2\overline{e}]$. Then specific communication costs between the tasks on all possible pairs of distinct processors are chosen uniformly at random from the interval    
 \begin{align*}
 \big[ \overline{w_{ik}} \times (1 - h/2), \enspace \overline{w_{ik}} \times (1 + h/2)   \big].
 \end{align*} 
@@ -524,20 +524,20 @@ It is not obvious why this should be so but we suspect it is related to the simi
 % Why does HEFT do badly as #processors increases? Maybe more analysis of when HEFT does badly? Similarly, more analysis of those DAGs for which random sort did better than HEFT.  
 
 
-\subsection{Evaluation of proposed rankings}
+\subsection{Results}
 \label{subsect.evaluation}
 
-In this section we compare the performance of HEFT when the following different number sequences are used as task priorities:
+In this section we compare the performance of HEFT with the following task prioritization phases:
 \begin{itemize}
-	\item $u_i$, the standard upward ranks,
-	\item $O_i$, the optimistic ranks as defined by \eqref{eq.opt_ui},
-	\item $f_i$, the Fulkerson ranks as defined by \eqref{eq.f_clingen},
-	\item $\hat{u}_i$, the weighted mean as defined in Section \ref{subsect.adjusting},
-	\item $\hat{f}_i$, the weighted Fulkerson numbers as defined in Section \ref{subsect.adjusting}.
+	\item U, the standard upward ranks $u_i$,
+	\item LB, the optimistic ranks $\ell_i$ as defined by \eqref{eq.opt_ui},
+	\item F, the Fulkerson ranks $f_i$ as defined by \eqref{eq.f_clingen},
+	\item W, the weighted means $\hat{u}_i$ as defined in Section \ref{subsect.adjusting},
+	\item WF, the weighted Fulkerson numbers $\hat{f}_i$ as defined in Section \ref{subsect.adjusting}.
 \end{itemize}
 First, we consider the sets of DAGs based on the STG with 100 tasks as an exploratory example. Ultimately, when deciding whether to use an alternative ranking we want to know whether it's more likely to help rather than harm performance, so Figure \ref{plot.rankings_diff_100} shows the difference between the percentage of DAGs for which each of the alternative rankings obtained a schedule makespan better than the standard $u_i$ ranks and the percentage for which they were worse. Note that we combine all four of the subsets ($h = 1.0$ or $2.0$, $m = \text{R}$ or UR) for each CCR and processor number combination, so that each of the bars represents a percentage over $4 \times 180 = 720$ DAGs. 
 
-Of course, the figure does not tell the whole story: what about the relative magnitudes of the makespan reductions and increases? Table X shows the average reductions, as a percentage of the HEFT makespans, for the same sets of graphs. The data is roughly what we would expect from the figure, with the exception of the large negative values for the W ranking with $\beta = 0.1$. In fact, this discrepancy is due to only a handful of graphs and is related to the previously-discussed problem of HEFT failing altogether in some cases. Typically, all of the rankings tend to fail for the same instances, but for a small number of graphs the W ranking fails spectacularly whereas the HEFT ranking doesn't fail at all; this leads to a very large percentage difference in makespan which distorts the average. These cases are clearly important so we have not omitted them but they do lead to perhaps a slightly misleading average reduction.     
+Of course, the figure does not tell the whole story: what about the relative magnitudes of the makespan reductions and increases? Table \ref{tb.fulkerson_stg} shows the average reductions, as a percentage of the HEFT makespans, for the same sets of graphs. The data is roughly what we would expect from the figure, with the exception of the large negative values for the W ranking with $\beta = 0.1$. In fact, this discrepancy is due to only a handful of graphs and is related to the previously-discussed problem of HEFT failing altogether in some cases. Typically, all of the rankings tend to fail for the same instances, but for a small number of graphs the W ranking fails spectacularly whereas the HEFT ranking doesn't fail at all; this leads to a very large percentage difference in makespan which distorts the average. These cases are clearly important so we have not omitted them but they do lead to perhaps a slightly misleading average reduction.     
 
 \begin{figure}
 	\centering	
@@ -546,34 +546,88 @@ Of course, the figure does not tell the whole story: what about the relative mag
 	\label{plot.rankings_diff_100}
 \end{figure}
 
-%\begin{figure}
-%	\centering	
-%	\includegraphics[scale=0.8]{100tasks_rankings_reductions.png}
-%	\caption{Average reduction (\%) of new rankings versus default.}	
-%	\label{plot.rankings_reductions_100}
-%\end{figure}
+\begin{table} % TODO: looks rubbish, remove and just summarize...
+	\caption{Average schedule makespan reduction for HEFT with alternative ranking phases for randomized DAG sets from the STG.} 
+	\begin{center}	
+		\begin{tabular}{c c c c }
+			\toprule
+			Ranking & {$\beta = 0.1$} & {$\beta = 1$} & {$\beta = 10$}\\
+			\cmidrule{1-4}
+			\multicolumn{4}{c}{2 processors} \\
+			\cmidrule{1-4}
+			LB & $-3.9$ & $0.3$ & $-0.1$  \\
+			W & $0.3$ & $0.2$ & $0.1$  \\
+			F & $0.2$ & $-0.1$ & $0.0$  \\
+			WF & $0.9$ & $0.4$ & $0.1$  \\
+			\cmidrule{1-4}
+			\multicolumn{4}{c}{4 processors} \\
+			\cmidrule{1-4}
+			LB & $-10.0$ & $-0.3$ & $0.0$  \\
+			W & $-10.2$ & $0.9$ & $0.9$  \\
+			F & $0.0$ & $-0.5$ & $-0.3$  \\
+			WF & $-3.9$ & $0.9$ & $0.9$  \\
+			\cmidrule{1-4}
+			\multicolumn{4}{c}{8 processors} \\
+			\cmidrule{1-4}
+			LB & $-2.1$ & $-0.5$ & $0.9$  \\
+			W & $-0.7$ & $0.7$ & $1.9$  \\
+			F & $0.0$ & $-0.4$ & $-0.3$  \\
+			WF & $0.0$ & $0.5$ & $1.8$  \\ 
+			\bottomrule			
+		\end{tabular}
+		\label{tb.fulkerson_stg}
+	\end{center}	
+\end{table}
 
-Both the figure and the table suggest that the Fulkerson ranking in particular does not seem to be an improvement on the standard ranking. Given how much more expensive it can be, this is a big problem: only large makespan reductions can really justify the extra cost. Indeed, although the weighted Fulkerson ranking WF did much better, both compared to F and the standard ranking, it was not a significant improvement over the W ranking. This suggests that there is little advantage if any to obtaining a tighter bound on the associated stochastic graph (see Section \ref{subsect.sharper_bounds}). To confirm this, we repeated the experiments described above when the Monte Carlo approach (with a sufficient number of samples) is used to compute even tighter bounds on the critical path lengths (which are then used as ranks in HEFT). We used both the original pmfs $m$ and the weighted pmfs $\hat{m}_i$ for this. Our results can be found in full at [link to Github folder] but overall our conclusions were the same as before: tightening the bound did not appear to be useful, but weighting the pmfs did.       
 
-Despite this, there are situations for which the Fulkerson ranking is competitive with the standard ranking in terms of both cost and performance. In particular, for accelerated environments, such as in the previous chapter, the number of possible values each weight may take is significantly reduced, improving efficiency to a large extent. Furthermore, the Fulkerson ranking appears to perform well for some application task graphs, such as the Cholesky DAG shown in Figure X... Larger DAGs should also be considered in future, although we don't have the computational budget to do that here...
+Both the figure and the table suggest that the Fulkerson ranking in particular does not seem to be an improvement on the standard ranking. Given how much more expensive it can be, this is a big problem: only large makespan reductions can really justify the extra cost. Indeed, although the weighted Fulkerson ranking WF did much better, both compared to F and the standard ranking, it was not a significant improvement over the W ranking. This suggests that there is little advantage if any to obtaining a tighter bound on the associated stochastic graph (see Section \ref{subsect.sharper_bounds}). To confirm this, we repeated the experiments described above when the Monte Carlo approach (with a sufficient number of samples) is used to compute even tighter bounds on the critical path lengths (which are then used as ranks in HEFT). We used both the original pmfs $m$ and the weighted pmfs $\hat{m}_i$ for this. Our results can be found in full at [link to Github folder] but overall they supported our conclusions from the example above: tightening the bound alone led to no consistent performance gains, whereas weighting the pmfs was more promising, with a roughly $2\%$ average makespan reduction across all of the graphs we considered.       
+
+Despite this, there are situations for which the Fulkerson ranking is competitive with the standard ranking in terms of both cost and performance. In particular, for accelerated environments, such as in the previous chapter, the set of possible values each weight may take (i.e., $\tilde{L}_{ik}$) is much smaller, which significantly improves efficiency. Furthermore, the Fulkerson ranking appears to perform well for certain real application task graphs. For example, Figure \ref{plot.fulk_cholesky} shows the makespan reductions of the three rankings W, F and WF compared to U for the set of Cholesky graphs and (accelerated) target platforms defined in Section X (reference to earlier chapter). Although there is significant variation, we see that the Fulkerson ranking is superior to the standard ranking phase overall, typically only slightly but occasionally more significantly.   
 
 \begin{figure}
-	\centering	
-	\subfloat[1 GPU, 7 CPU.]{\label{plot.fulk_cholesky_single}\includegraphics[scale=0.5]{fulk_Single_GPU_reductions.png}}
-	\subfloat[4 GPU, 28 CPU.]{\label{plot.fulk_cholesky_multiple}\includegraphics[scale=0.5]{fulk_Multiple_GPU_reductions.png}}
+	\centering
+	\hspace*{-6em}	
+	\subfloat[1 GPU, 7 CPU.]{\label{plot.fulk_cholesky_single}\includegraphics[scale=0.7]{fulk_Single_GPU_reductions.png}}
+	\subfloat[4 GPU, 28 CPU.]{\label{plot.fulk_cholesky_multiple}\includegraphics[scale=0.7]{fulk_Multiple_GPU_reductions.png}}
 	\caption{Schedule makespan reduction of HEFT with alternative ranking phases for Cholesky DAGs.}	
 	\label{plot.fulk_cholesky} 
 \end{figure}   
 
-Disregarding the Fulkerson rankings, we consider $LB$ and $W$ for the larger DAGs from the STG...
-    
+While it may be worthwhile to investigate in future if the performance of the F and WF rankings improves for larger DAGs, given that the results so far suggest they offer no advantage compared to much cheaper alternatives, we decided to omit those two rankings when we repeated our comparison for sets of larger DAGs ($n = 1000$) from the STG. The metric we choose to use now us the APD... Figure X shows the APD for these graphs... Again we see that the W ranking does slightly better...
 
-%
-%Only considered Fulkerson for the smaller DAG sizes since too expensive---conclusion: doesn't appear to do any better, even the weighted version. But maybe discuss example for CPU-GPU. Monte Carlo results, same thing. 
-
+To summarize, our main conclusions from the experiments described in this section are as follows.
+\begin{itemize}
+	\item There appears to be no benefit from obtaining tighter bounds on the associated stochastic graph.
+	\item There does appear to be slight improvement on average by using the weighted mean ranking W, although the effect is small and significant variation is seen for individual graphs.
+	\item No apparent benefit to using the optimistic lower bound.
+	\item Supporting RS study, the variation is great and it's difficult to say what the best approach is... 
+\end{itemize} 
 
 \section{Processor selection}
 \label{sect.processor_selection}
+
+It has been remarked upon elsewhere that the task prioritization phase is in some sense not as important as the processor selection. Very few reasonable alternatives but PEFT suggested a sensible way that critical path estimates can be re-used... Recall from Section X that the PEFT heuristic computes a table of {\em optimistic costs} for all task and processor combinations which in some sense represents an estimate of the critical path length from any tasks assuming it is scheduled on any processor. We can generalize this approach to any other method of estimating the critical path length from each task conditional on it being scheduled on each processor. Let $c_i^a$ represent a generic estimate of the critical path length from task $t_i$ assuming it is scheduled on processor $p_a$ (not including the task itself). Then we define a general heuristic framework by the following procedure:
+\begin{enumerate}
+	\item Compute all conditional critical path estimates $c_i^a$
+	\item Compute all task ranks $c_i$ as some average of the $c_i^a$ (e.g., the mean).
+	\item At the processor selection phase define $p_{opt} \coloneqq \min_{a} \big( F_i^a + c_i^a \big)$ where $F_i^a$ is the earliest finish time as defined previously...
+\end{enumerate} 
+
+We can modify all of the critical path estimation methods introduced in previous sections in order to find the conditional estimates. The most straightforward is the optimistic lower bound, which now becomes
+\begin{align}
+\ell_i^a &= \max_{k \in S_i} \bigg( \min_{b = 1, \dots, q} \big( \ell_k^b + W_k^b + W_{ik}^{ab} \big)  \bigg) \quad \forall a. \label{eq.opt_lookahead} 
+\end{align}
+This is extremely similar to the PEFT definition... We will compare the two empirically although don't expect significant differences...
+
+We can also extend the idea for the standard upward ranks as in HEFT. Specifically, we let $u_i^a = 0$ for all exit tasks then move up the DAG and recursively compute 
+\begin{align*}
+u_i^a = \max_{k \in S_i} \bigg( \sum_{b = 1}^{q} m_k(W_k^b) (u_k^b + W_k^b + W_{ik}^{ab}) \bigg) 
+\end{align*} 
+for all other tasks. Note that we could use $\hat{m}$ rather than $m$, which is particularly attractive since it did well in the previous section... If so it probably also makes sense to use a weighted average for the ranks as well...
+
+
+\subsection{Results}
+\label{subsect.processor_selection_results}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
