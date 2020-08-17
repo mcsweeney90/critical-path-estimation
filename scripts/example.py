@@ -13,7 +13,7 @@ from copy import deepcopy
 from networkx.drawing.nx_agraph import graphviz_layout
 import sys
 sys.path.append('../') 
-from Simulator import Task, DAG, Platform, HEFT
+from Simulator import Task, DAG, Platform, HEFT, PEFT
 
 ####################################################################################################
 
@@ -244,3 +244,22 @@ def convert_from_nx_graph(graph, single_root=True, single_exit=True):
 #     print("\nMC{} task ranks: {}".format(ns, {k.ID:v for k, v in ranks.items()}))
 #     # mkspan = HEFT(dag, platform, priority_list=p_list)
 #     # print("MC{} makespan: {}".format(ns, mkspan))
+    
+# =============================================================================
+# PEFT.
+# =============================================================================
+    
+nw = 2
+platform = Platform(nw, name="{}P".format(nw))        
+# Load DAG.
+with open('{}/example_dag_with_costs.dill'.format(path), 'rb') as file:
+    dag = dill.load(file)
+    
+mst = dag.minimal_serial_time()
+print("MST = {}".format(mst))
+    
+OCT = dag.optimistic_cost_table()
+print(OCT)
+with open("{}/peft_schedule.txt".format(path), "w") as dest:
+    peft_mkspan = PEFT(dag, platform, schedule_dest=dest)
+    print(peft_mkspan)

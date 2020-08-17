@@ -635,7 +635,7 @@ class DAG:
                     
         return cp_lengths 
     
-    def conditional_critical_paths(self, direction="downward", cp_type="optimistic", lookahead=False):
+    def conditional_critical_paths(self, direction="upward", cp_type="optimistic", lookahead=False):
         """
         Computes critical path estimates, either upward or downward, of all tasks according to 
         of all tasks assuming they are scheduled on either CPU or GPU.                   
