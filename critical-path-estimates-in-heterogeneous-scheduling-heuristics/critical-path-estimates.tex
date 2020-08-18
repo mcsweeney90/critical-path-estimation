@@ -456,19 +456,19 @@ s_i = \sum_{a} \frac{1}{W_i^a}
 \end{align*} 
 and define a new set of pmfs by
 \begin{align*}
-\hat{m}_i(W_i^a) = \frac{1/W_i^a}{s_i} \enspace \forall i, a
+\hat{m}_i(W_i^a) = \frac{1}{W_i^as_i} \enspace \forall i, a
 \end{align*}
 and 
 \begin{align*}
 \hat{m}_{ik}(W_{ik}^{ab}) &= \hat{m}_i(W_i^a) \cdot \hat{m}_k(W_k^b) \\
-&= \frac{1/W_i^aW_k^b}{s_is_k} \quad \forall i, k, a, b.
+&= \frac{1}{W_i^aW_k^bs_is_k} \quad \forall i, k, a, b.
 \end{align*}
 Note that we take the reciprocal of the costs in order to reflect the idea that processors with smaller costs are more likely to be chosen than larger ones.
 
 These modified pmfs can be used in conjunction with either upward ranking, as defined by equation \eqref{eq.ur_expectation}, Fulkerson's bound, or Monte Carlo methods. For example, in the first instance, the expectations simply become 
 \begin{align}
 \E[w_i] &= \sum_{\ell \in L_i} \ell \hat{m}_i(\ell) = \frac{q}{s_i}, \label{eq.expected_node_wm}\\
-\E[w_{ik}] &= \sum_{\ell \in L_{ik}} \ell \hat{m}_{ik}(\ell) = \frac{\sum_{a, b} W_{ik}^{ab} / (W_i^a W_k^b)}{s_i s_k} \label{eq.expected_edge_wm},
+\E[w_{ik}] &= \sum_{\ell \in L_{ik}} \ell \hat{m}_{ik}(\ell) = \frac{1}{s_i s_k} \sum_{a, b} \frac{W_{ik}^{ab}}{W_i^a W_k^b} \label{eq.expected_edge_wm},
 \end{align}
 and these can be used with equation \eqref{eq.ur_expectation} to compute an alternative sequence of task ranks $\hat{u}_i$. Of course, this is slightly more computationally expensive than computing the standard $u_i$ ranks but only by a constant factor. Similarly, by using the modified pmfs in conjunction with equation \eqref{eq.f_clingen} we can define alternative Fulkerson numbers $\hat{f}_i$, and by sampling realizations according to $\hat{m}$ rather than $m$ we can incorporate this idea into the Monte Carlo approach for finding longest paths. All three of these possibilities are evaluated as alternative task ranks for HEFT in the following section. Note that since equations \eqref{eq.expected_node_wm} and \eqref{eq.expected_edge_wm} are simply weighted averages we do not believe that computing $\hat{u}_i$ instead of $u_i$ is a new idea: although we could not find any explicit references in the literature, we suspect this has been done before in practice.  
 
@@ -620,51 +620,57 @@ To summarize, our main conclusions from all of the experiments described in this
 \section{Processor selection}
 \label{sect.processor_selection}
 
-Critical path estimates are used in HEFT---and many similar listing heuristics---only at the task prioritization phase. This begs the question, can they also be useful for processor selection? Arabnejad and Barbosa's Predict Earliest Finish Time (PEFT) heuristic \cite{arabnejad14} represents one sensible way this can be done. Recall from Section X that before scheduling begins PEFT computes a table of {\em optimistic costs} $O_i^a$ for all task and processor combinations in the following manner. First, set $O_i^a = 0$, $a = 1, \dots, q$, for all exit tasks, then move up the DAG and recursively compute 
+Critical path estimates are used in HEFT---and many similar listing heuristics---only at the task prioritization phase. This begs the question, can they also be useful for processor selection? Arabnejad and Barbosa's Predict Earliest Finish Time (PEFT) heuristic \cite{arabnejad14} represents one sensible way this can be done. Recall from Section X that before scheduling begins PEFT computes a table of {\em optimistic costs} $c_i^a$ for all task and processor combinations in the following manner. First, set $C_i^a = 0$, $a = 1, \dots, q$, for all exit tasks, then move up the DAG and recursively compute 
 \begin{align}
-O_i^a &= \max_{k \in S_i} \bigg( \min_{b = 1, \dots, q} \big( \delta_{ab}\overline{w_{ik}} + W_k^b + O_k^b \big) \bigg) \label{eq.peft_lookahead}
+C_i^a &= \max_{k \in S_i} \bigg( \min_{b = 1, \dots, q} \big( \delta_{ab}\overline{w_{ik}} + W_k^b + C_k^b \big) \bigg) \label{eq.peft_lookahead}
 \end{align} 
-for all other tasks, where $\delta_{ab} = 1$ if $a = b$ and $0$ otherwise. The $O_i^a$ values are referred to in PEFT as optimistic costs but can be interpreted as {\em conditional critical paths} in that they represent some estimate of future schedule costs given a processor selection. When scheduling, say, task $t_i$, in PEFT we choose the processor $p_{opt}$ defined by
+for all other tasks, where $\delta_{ab} = 1$ if $a = b$ and $0$ otherwise. The $C_i^a$ values are referred to in PEFT as optimistic costs but can be interpreted as {\em conditional critical paths} in that they represent some estimate of future schedule costs given a processor selection. When scheduling, say, task $t_i$, in PEFT we choose the processor $p_{opt}$ defined by
+\begin{align*}
+p_{opt} \coloneqq \min_{a} \big( F_i^a + C_i^a \big)
+\end{align*}        
+where, as in previous chapters, $F_i^a$ is the estimated schedule makespan when $t_i$ is completed by $p_a$. This is a nice extension of the dynamic programming principles underlying HEFT: rather than optimizing the schedule makespan up to the current task (i.e., $F_i^a$), we extend the horizon and optimize an estimate of the complete schedule makespan. Now, computing the full optimistic cost table is only $O(n^2q)$---i.e., the same as HEFT---but since the values within are similar in nature to the upward ranks $u_i$ it is sensible (and more efficient) to make use of them for prioritizing tasks, rather than going to the effort of computing the upward ranks as well. Hence PEFT defines task priorities $C_i$ through
 \begin{align}
-p_{opt} \coloneqq \min_{a} \big( F_i^a + O_i^a \big), \label{eq.peft_selection}
-\end{align}        
-where, as in previous chapters, $F_i^a$ is the estimated schedule makespan when $t_i$ is completed by $p_a$. This is a nice extension of the dynamic programming principles underlying HEFT: rather than optimizing the schedule makespan up to the current task (i.e., $F_i^a$), we extend the horizon and optimize an estimate of the complete schedule makespan. Now, computing the full optimistic cost table is only $O(n^2q)$---i.e., the same as HEFT---but since they are similar in nature to the upward ranks $u_i$ it seems inefficient to also compute the latter. Hence PEFT defines task priorities $O_i$ through
-\begin{align}
-O_i &= \frac{1}{q} \sum_{a} O_i^a. \label{eq.peft_ranks}
+C_i &= \frac{1}{q} \sum_{a} C_i^a. \label{eq.peft_ranks}
 \end{align} 
+Note that this does not necessarily respect precedence constraints, so need additional step...
 Although it is arguably more natural that task ranks include the cost of the task itself, which these do not, it is suggested that the savings made through the alternative selection step are more beneficial overall. Certainly, numerical experiments described both by the original authors \cite{arabnejad14} and elsewhere [citation] suggest that PEFT is at least competitive with HEFT, especially when there are a large number of processing resources. 
 
 The structure of PEFT follows a more general heuristic framework defined by the following procedure:
  \begin{enumerate}
- 	\item Compute a table of conditional critical path estimates $\hat{c}_i^a$ for all $i = 1, \dots, n$ and $a = 1, \dots, q$.
- 	\item Compute all task ranks $\hat{c}_i$ as some average of the $\hat{c}_i^a$ (e.g., the mean).
- 	\item At the processor selection phase, schedule task $t_i$ on the processor which minimizes $F_i^a + \hat{c}_i^a$.
+ 	\item Compute a table of conditional critical path estimates $C_i^a$ for all $i = 1, \dots, n$ and $a = 1, \dots, q$.
+ 	\item Compute all task ranks $C_i$ as some average of the $C_i^a$ (e.g., the mean).
+ 	\item At the processor selection phase, schedule task $t_i$ on the processor which minimizes $F_i^a + C_i^a$.
  \end{enumerate}
 PEFT is defined by using equations \eqref{eq.peft_lookahead} and \eqref{eq.peft_ranks} for the first and second parts of this framework, respectively. A natural question is, are there any better choices? 
 
 \subsection{Alternative conditional critical paths}
 \label{subsect.alt_cond_cp}
 
-All of the methods for estimating critical path lengths at the prioritization phase which were introduced in the previous section can be modified to give conditional critical path estimates (which also disregard the cost of the task itself). The most straightforward is the optimistic lower bound, for which the conditional critical path lengths are given by $\ell_i^a = 0$ for all exit tasks and   
+All of the methods for estimating critical path lengths at the prioritization phase which were introduced in the previous section can be modified to give conditional critical path estimates (which also disregard the cost of the task itself). The most straightforward is the optimistic lower bound, for which the conditional critical path lengths are given by $C_i^a = 0$ for all exit tasks and   
 \begin{align}
-\ell_i^a &= \max_{k \in S_i} \bigg( \min_{b = 1, \dots, q} \big( \ell_k^b + W_k^b + W_{ik}^{ab} \big)  \bigg), \quad a = 1, \dots, q, \label{eq.opt_lookahead} 
+C_i^a &= \max_{k \in S_i} \bigg( \min_{b = 1, \dots, q} \big( C_k^b + W_k^b + W_{ik}^{ab} \big)  \bigg), \quad a = 1, \dots, q, \label{eq.opt_lookahead} 
 \end{align}
-for all other tasks. Note that this is extremely similar to the optimistic costs \eqref{eq.peft_lookahead} as used in PEFT, with the exception that the specific communication cost $W_{ik}^{ab}$ is used in the minimization rather than the average $\overline{w_{ik}}$. Arguably this is the most intuitive way to define the conditional critical path since the $\ell_i^a$ values are true lower bounds on the remaining makespan of any schedule that executes tasks $t_i$ on processor $p_a$; locally-optimal processor selections are overruled if the best possible final makespan we can hope to achieve given that selection is inferior to other choices.          
+for all other tasks. Note that this is extremely similar to the optimistic costs \eqref{eq.peft_lookahead} as used in PEFT, with the exception that the specific communication cost $W_{ik}^{ab}$ is used in the minimization rather than the average $\overline{w_{ik}}$. Arguably this is the most intuitive way to define the conditional critical path since the value $C_i^a$ is a true lower bound on the remaining makespan of any schedule which executes task $t_i$ on processor $p_a$; locally-optimal processor selections are overruled if the best possible final makespan we can hope to achieve given that selection is inferior to other choices.          
 
-Alternatively, we could take a similar tack to the standard HEFT upward ranks and use an estimate of what we expect the conditional critical paths to be. More specifically, let $u_i^a = 0$, for all exit tasks and $a = 1, \dots, q$, then move up the DAG and recursively compute 
+Alternatively, we could take a similar tack to the standard HEFT upward ranks and use an estimate of what we expect the conditional critical paths to be. More specifically, let $C_i^a = 0$, for all exit tasks and $a = 1, \dots, q$, then move up the DAG and recursively compute 
 \begin{align}
-u_i^a = \max_{k \in S_i} \bigg( \frac{1}{q} \sum_{b = 1}^{q} (u_k^b + W_k^b + W_{ik}^{ab}) \bigg), \quad a = 1, \dots, q, \label{eq.uia} 
+C_i^a = \max_{k \in S_i} \bigg( \frac{1}{q} \sum_{b = 1}^{q} (C_k^b + W_k^b + W_{ik}^{ab}) \bigg), \quad a = 1, \dots, q, \label{eq.uia} 
 \end{align} 
-for all other tasks. Note that we could just as easily use a weighted average inside the maximization, which is particularly attractive since the corresponding ranking performed well in the previous section. In particular, let $\hat{u}_i^a = 0$, for all exit tasks and $a = 1, \dots, q$ as ever, and define
+for all other tasks. Note that we could just as easily use a weighted average inside the maximization, which is particularly attractive since the corresponding ranking performed well in the previous section. In particular, let $C_i^a = 0$, for all exit tasks and $a = 1, \dots, q$ as ever, and define
 \begin{align}
-\hat{u}_i^a = \max_{k \in S_i} \bigg( \sum_{b = 1}^{q} \hat{m}_k(W_k^b) (\hat{u}_k^b + W_k^b + W_{ik}^{ab}) \bigg), \quad a = 1, \dots, q, \label{eq.uia_hat} 
+C_i^a = \max_{k \in S_i} \bigg( \sum_{b = 1}^{q} \hat{m}_k(W_k^b) (C_k^b + W_k^b + W_{ik}^{ab}) \bigg), \quad a = 1, \dots, q, \label{eq.uia_hat} 
 \end{align} 
 for all others, where $\hat{m}_k$ is as defined in Section \ref{subsect.adjusting}. 
 
-All of these alternative conditional critical path values can be used with any kind of averaging in order to compute task priorities and we investigated several different choices for each empirically. However for the simulation results presented in the next section we used a simple mean for all of the task ranks $\ell_i$, $u_i$ and $\hat{u}_i$---i.e.,
+All of these conditional critical path definitions can be used with any kind of averaging in order to compute task priorities.... We investigated several different choices for each empirically. However, given the superior performance of the weighted average task ranking that we have observed in our experiments so far, we decided that a ranking along those lines was the most sensible default choice. In particular, for all three different methods of defining the conditional critical path lengths $C_i^a$ given by equations \eqref{eq.opt_lookahead}--\eqref{eq.uia_hat}, we first compute for all $i = 1, \dots, n$,  
 \begin{align*}
-\ell_i = \frac{1}{q} \sum_{a} \ell_i^a, \quad u_i = \frac{1}{q} \sum_{a} u_i^a \quad \text{and} \quad \hat{u}_i &= \frac{1}{q} \sum_{a} \hat{u}_i^a.
+\hat{s}_i = \sum_{a} \frac{1}{W_i^a + C_i^a} 
 \end{align*}    
+and then define the corresponding task priorities by
+\begin{align}
+C_i = \frac{q}{\hat{s}_i}. \label{eq.chat_prios}
+\end{align}  
+All of the results for the modified heuristics presented in the following section use this method in order to rank tasks for scheduling, but it should again be emphasized that others are possible. 
 
 
 \subsection{Results}
