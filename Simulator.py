@@ -673,10 +673,10 @@ class DAG:
                         elif cp_type == "M":
                             child_values.append(sum(action_values) / len(action_values))
                         elif cp_type == "WM":
-                            pmfs = [] # TODO.
-                            child_values.append(sum(m*a for m, a in zip(pmfs, action_values)))
+                            sk = sum(1/(child.comp_costs[w] + CCP[child.ID][w]) for w in workers)
+                            child_values.append(sum(a/(child.comp_costs[w] + CCP[child.ID][w]) for a, w in zip(action_values, workers)) / sk)
                     CCP[task.ID][w] += max(child_values)             
-        else:
+        else: # TODO: M and WM.
             for task in self.top_sort:
                 CCP[task.ID] = {}
                 for w in workers:
@@ -1248,7 +1248,7 @@ def PEFT(dag, platform, return_schedule=False, schedule_dest=None):
         return mkspan, pi    
     return mkspan 
 
-def HSM(dag, platform, cp_type="LB", rank_avg="M", return_schedule=False, schedule_dest=None):
+def HSM(dag, platform, cp_type="WM", rank_avg="WM", return_schedule=False, schedule_dest=None):
     """
     Work in progress.
     Could be incorporated into PEFT but easier to use separate function.    

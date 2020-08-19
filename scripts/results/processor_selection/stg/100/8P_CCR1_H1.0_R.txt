@@ -1,0 +1,5639 @@
+COMPARISON OF HEFT AND PEFT WITH HSM VARIANTS.
+TARGET PLATFORM: 8 PROCESSORS.
+180 DAGs FROM THE STG WITH 102 TASKS.
+TARGET DAG COMPUTATION-TO-COMMUNICATION RATIO (CCR): 1. (ACTUAL VALUE MAY DIFFER SLIGHTLY.)
+HETEROGENEITY FACTOR: 1.0.
+COST GENERATION METHOD: R.
+----------------------------------------------------------------------------------------------------------------
+PLATFORM INFO
+----------------------------------------------------------------------------------------------------------------
+Name: 8P
+8 workers
+----------------------------------------------------------------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0012
+Number of tasks: 102
+Number of edges: 970
+Edge density: 0.18831294894195302
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 28473.93314859472
+Optimal critical path length: 3797.7424755912552
+Computation-to-communication ratio: 1.0446279820525124
+--------------------------------------------------------
+
+HEFT makespan: 4359.010504551841
+SLR: 1.1477899127094457
+Speedup: 6.532201085283272
+
+PEFT makespan: 3874.4126670088012
+Reduction vs HEFT (%) : 11.117152322459532
+
+HSM-LB makespan: 3875.561553469839
+Reduction vs HEFT (%) : 11.090795733966843
+
+HSM-M makespan: 4226.43677778979
+Reduction vs HEFT (%) : 3.0413720412835232
+
+HSM-WM makespan: 4221.684745102735
+Reduction vs HEFT (%) : 3.1503883577638874
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0162
+Number of tasks: 102
+Number of edges: 430
+Edge density: 0.08347893612890701
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 101327.98670019752
+Optimal critical path length: 8459.079818314727
+Computation-to-communication ratio: 0.9985736728903803
+--------------------------------------------------------
+
+HEFT makespan: 10299.945603097463
+SLR: 1.2176200986775279
+Speedup: 9.837720567157708
+
+PEFT makespan: 9766.345211410631
+Reduction vs HEFT (%) : 5.180613687186508
+
+HSM-LB makespan: 9779.250754063385
+Reduction vs HEFT (%) : 5.0553164948511125
+
+HSM-M makespan: 9790.33924075052
+Reduction vs HEFT (%) : 4.947660715739033
+
+HSM-WM makespan: 9790.33924075052
+Reduction vs HEFT (%) : 4.947660715739033
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0043
+Number of tasks: 102
+Number of edges: 843
+Edge density: 0.16365754222481071
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 566791.6973036361
+Optimal critical path length: 34638.38310700184
+Computation-to-communication ratio: 1.0092091439156257
+--------------------------------------------------------
+
+HEFT makespan: 43593.91458917419
+SLR: 1.2585435773519713
+Speedup: 13.001624255243856
+
+PEFT makespan: 39584.823882387725
+Reduction vs HEFT (%) : 9.196445752963072
+
+HSM-LB makespan: 38930.16785155425
+Reduction vs HEFT (%) : 10.698160010567378
+
+HSM-M makespan: 42161.526976656336
+Reduction vs HEFT (%) : 3.285751293538482
+
+HSM-WM makespan: 42161.526976656336
+Reduction vs HEFT (%) : 3.285751293538482
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0163
+Number of tasks: 102
+Number of edges: 1696
+Edge density: 0.3292564550572704
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 274493.90040377236
+Optimal critical path length: 40671.22902797552
+Computation-to-communication ratio: 1.018041730077205
+--------------------------------------------------------
+
+HEFT makespan: 41236.50649343231
+SLR: 1.0138987062591094
+Speedup: 6.656575053162922
+
+PEFT makespan: 41463.805853931546
+Reduction vs HEFT (%) : -0.5512090616488905
+
+HSM-LB makespan: 41069.65195084367
+Reduction vs HEFT (%) : 0.40462822090715633
+
+HSM-M makespan: 41236.50649343231
+Reduction vs HEFT (%) : 0.0
+
+HSM-WM makespan: 41236.50649343231
+Reduction vs HEFT (%) : 0.0
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0161
+Number of tasks: 102
+Number of edges: 979
+Edge density: 0.19006018248883713
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 284492.3522224481
+Optimal critical path length: 22344.86118482781
+Computation-to-communication ratio: 1.0323381337711997
+--------------------------------------------------------
+
+HEFT makespan: 23816.773300463174
+SLR: 1.0658725110646379
+Speedup: 11.945041783511265
+
+PEFT makespan: 23862.572217247696
+Reduction vs HEFT (%) : -0.19229690020030432
+
+HSM-LB makespan: 23266.759987336078
+Reduction vs HEFT (%) : 2.3093527665916014
+
+HSM-M makespan: 24930.060713326704
+Reduction vs HEFT (%) : -4.674383884075013
+
+HSM-WM makespan: 24732.82094960858
+Reduction vs HEFT (%) : -3.8462290319049686
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0107
+Number of tasks: 102
+Number of edges: 421
+Edge density: 0.0817317025820229
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 70374.51738157897
+Optimal critical path length: 4749.5521801182185
+Computation-to-communication ratio: 1.095917681075095
+--------------------------------------------------------
+
+HEFT makespan: 5342.174202759568
+SLR: 1.1247742945370902
+Speedup: 13.17338497595719
+
+PEFT makespan: 5131.930967597214
+Reduction vs HEFT (%) : 3.9355368653787224
+
+HSM-LB makespan: 5142.757476469848
+Reduction vs HEFT (%) : 3.7328757678233018
+
+HSM-M makespan: 5342.174202759568
+Reduction vs HEFT (%) : 0.0
+
+HSM-WM makespan: 5392.950130119528
+Reduction vs HEFT (%) : -0.9504730739355267
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0075
+Number of tasks: 102
+Number of edges: 1129
+Edge density: 0.21918074160357212
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 35476.548451505594
+Optimal critical path length: 4265.908621524224
+Computation-to-communication ratio: 1.0236471370109588
+--------------------------------------------------------
+
+HEFT makespan: 4721.854919665486
+SLR: 1.1068814029069265
+Speedup: 7.5132652432317615
+
+PEFT makespan: 4424.450211896485
+Reduction vs HEFT (%) : 6.298471952841595
+
+HSM-LB makespan: 4467.185727319198
+Reduction vs HEFT (%) : 5.393414170470308
+
+HSM-M makespan: 4721.854919665486
+Reduction vs HEFT (%) : 0.0
+
+HSM-WM makespan: 4721.854919665486
+Reduction vs HEFT (%) : 0.0
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0129
+Number of tasks: 102
+Number of edges: 857
+Edge density: 0.16637546107551932
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 58186.60032335297
+Optimal critical path length: 6154.199572340316
+Computation-to-communication ratio: 1.0362086391189187
+--------------------------------------------------------
+
+HEFT makespan: 6632.403755989799
+SLR: 1.0777037172792938
+Speedup: 8.773078730438266
+
+PEFT makespan: 6749.556406116807
+Reduction vs HEFT (%) : -1.7663678876788254
+
+HSM-LB makespan: 6901.967327022329
+Reduction vs HEFT (%) : -4.064341993490444
+
+HSM-M makespan: 6945.021731421921
+Reduction vs HEFT (%) : -4.713494336797467
+
+HSM-WM makespan: 6945.021731421921
+Reduction vs HEFT (%) : -4.713494336797467
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0149
+Number of tasks: 102
+Number of edges: 954
+Edge density: 0.18520675596971461
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 6338.851681154029
+Optimal critical path length: 385.8080309282748
+Computation-to-communication ratio: 1.0286615653498064
+--------------------------------------------------------
+
+HEFT makespan: 400.73942820075763
+SLR: 1.038701623801239
+Speedup: 15.81788872039431
+
+PEFT makespan: 395.9102099431698
+Reduction vs HEFT (%) : 1.2050768947967327
+
+HSM-LB makespan: 393.9184220985941
+Reduction vs HEFT (%) : 1.7021050643278386
+
+HSM-M makespan: 407.62887145774516
+Reduction vs HEFT (%) : -1.7191827836656302
+
+HSM-WM makespan: 410.7810899148046
+Reduction vs HEFT (%) : -2.505783311398176
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0073
+Number of tasks: 102
+Number of edges: 308
+Edge density: 0.059794214715589204
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 370785.75459798414
+Optimal critical path length: 26892.59067818183
+Computation-to-communication ratio: 0.986922005612458
+--------------------------------------------------------
+
+HEFT makespan: 34921.00439036594
+SLR: 1.298536270017958
+Speedup: 10.61784336020636
+
+PEFT makespan: 32820.40933392879
+Reduction vs HEFT (%) : 6.015276745638701
+
+HSM-LB makespan: 29077.896189206895
+Reduction vs HEFT (%) : 16.732360088620624
+
+HSM-M makespan: 30192.355924049858
+Reduction vs HEFT (%) : 13.540986431709356
+
+HSM-WM makespan: 29528.89438012738
+Reduction vs HEFT (%) : 15.440878933385264
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0175
+Number of tasks: 102
+Number of edges: 799
+Edge density: 0.1551155115511551
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 304817.733293943
+Optimal critical path length: 31683.298889779453
+Computation-to-communication ratio: 0.9934411656508417
+--------------------------------------------------------
+
+HEFT makespan: 35589.555188399936
+SLR: 1.1232907063184818
+Speedup: 8.56480873897787
+
+PEFT makespan: 35224.29136651098
+Reduction vs HEFT (%) : 1.0263230882076613
+
+HSM-LB makespan: 36189.27336029711
+Reduction vs HEFT (%) : -1.6850960028088338
+
+HSM-M makespan: 34124.150930386495
+Reduction vs HEFT (%) : 4.11751214719051
+
+HSM-WM makespan: 34124.150930386495
+Reduction vs HEFT (%) : 4.11751214719051
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0160
+Number of tasks: 102
+Number of edges: 1517
+Edge density: 0.29450592118035335
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 186290.0553117016
+Optimal critical path length: 27996.264156184003
+Computation-to-communication ratio: 1.0016637301024498
+--------------------------------------------------------
+
+HEFT makespan: 29338.25265139843
+SLR: 1.047934556115338
+Speedup: 6.349732464480019
+
+PEFT makespan: 28519.531153140222
+Reduction vs HEFT (%) : 2.790628017238731
+
+HSM-LB makespan: 28893.079492762063
+Reduction vs HEFT (%) : 1.5173812971276135
+
+HSM-M makespan: 29917.445996054477
+Reduction vs HEFT (%) : -1.9741916859811397
+
+HSM-WM makespan: 29767.28859426782
+Reduction vs HEFT (%) : -1.4623772859524422
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0167
+Number of tasks: 102
+Number of edges: 1413
+Edge density: 0.2743156668608037
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 6570.53908157228
+Optimal critical path length: 425.7583238647156
+Computation-to-communication ratio: 1.0304020010391963
+--------------------------------------------------------
+
+HEFT makespan: 470.76746957370233
+SLR: 1.105715245448233
+Speedup: 13.957079675709435
+
+PEFT makespan: 482.84967051156497
+Reduction vs HEFT (%) : -2.5664901928766426
+
+HSM-LB makespan: 480.39388553073684
+Reduction vs HEFT (%) : -2.044834568911824
+
+HSM-M makespan: 469.3646541095488
+Reduction vs HEFT (%) : 0.29798479181746984
+
+HSM-WM makespan: 469.3646541095488
+Reduction vs HEFT (%) : 0.29798479181746984
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0158
+Number of tasks: 102
+Number of edges: 698
+Edge density: 0.13550766841390022
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 306122.00546408014
+Optimal critical path length: 27259.13994124163
+Computation-to-communication ratio: 1.0258640864701067
+--------------------------------------------------------
+
+HEFT makespan: 29048.566454816562
+SLR: 1.0656450099831516
+Speedup: 10.538282704595284
+
+PEFT makespan: 28041.296677041155
+Reduction vs HEFT (%) : 3.4675369586384335
+
+HSM-LB makespan: 28165.043604520826
+Reduction vs HEFT (%) : 3.0415368402774874
+
+HSM-M makespan: 28720.507337433497
+Reduction vs HEFT (%) : 1.129347012333099
+
+HSM-WM makespan: 28720.507337433497
+Reduction vs HEFT (%) : 1.129347012333099
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0011
+Number of tasks: 102
+Number of edges: 435
+Edge density: 0.0844496214327315
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 48583.182281672205
+Optimal critical path length: 6886.222104735016
+Computation-to-communication ratio: 0.9705148418093075
+--------------------------------------------------------
+
+HEFT makespan: 7630.575319291409
+SLR: 1.1080931174213173
+Speedup: 6.366909472585317
+
+PEFT makespan: 7366.7241491364875
+Reduction vs HEFT (%) : 3.4578148974935203
+
+HSM-LB makespan: 7466.591141738234
+Reduction vs HEFT (%) : 2.1490408087394712
+
+HSM-M makespan: 7470.265009488043
+Reduction vs HEFT (%) : 2.1008941409447033
+
+HSM-WM makespan: 7470.265009488043
+Reduction vs HEFT (%) : 2.1008941409447033
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0140
+Number of tasks: 102
+Number of edges: 647
+Edge density: 0.1256066783148903
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 103574.1268629229
+Optimal critical path length: 6688.305486019664
+Computation-to-communication ratio: 1.0334847056908165
+--------------------------------------------------------
+
+HEFT makespan: 8072.547978976737
+SLR: 1.206964603493442
+Speedup: 12.830413288674166
+
+PEFT makespan: 7399.070612777625
+Reduction vs HEFT (%) : 8.342810323989937
+
+HSM-LB makespan: 7139.786939921618
+Reduction vs HEFT (%) : 11.554728958989159
+
+HSM-M makespan: 7835.076002002885
+Reduction vs HEFT (%) : 2.941722707530488
+
+HSM-WM makespan: 7506.4921900958325
+Reduction vs HEFT (%) : 7.0121080773391355
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0152
+Number of tasks: 102
+Number of edges: 243
+Edge density: 0.04717530576587071
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 560085.4880257564
+Optimal critical path length: 28049.023782733904
+Computation-to-communication ratio: 1.0654421171757962
+--------------------------------------------------------
+
+HEFT makespan: 40482.46542977029
+SLR: 1.4432753789702306
+Speedup: 13.835261318197205
+
+PEFT makespan: 39154.873580548054
+Reduction vs HEFT (%) : 3.279424400486093
+
+HSM-LB makespan: 38070.35565309749
+Reduction vs HEFT (%) : 5.9584063150930575
+
+HSM-M makespan: 43340.76979546273
+Reduction vs HEFT (%) : -7.06059854642767
+
+HSM-WM makespan: 40770.49107813644
+Reduction vs HEFT (%) : -0.7114824784222264
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0084
+Number of tasks: 102
+Number of edges: 1833
+Edge density: 0.35585323238206173
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 36986.82813257472
+Optimal critical path length: 6744.926077321449
+Computation-to-communication ratio: 1.0227284718191945
+--------------------------------------------------------
+
+HEFT makespan: 6844.785611518565
+SLR: 1.0148051339706858
+Speedup: 5.403650345210583
+
+PEFT makespan: 6856.876155368053
+Reduction vs HEFT (%) : -0.17663875153579056
+
+HSM-LB makespan: 6772.120231693439
+Reduction vs HEFT (%) : 1.0616165932625137
+
+HSM-M makespan: 6863.379092794225
+Reduction vs HEFT (%) : -0.2716444653046608
+
+HSM-WM makespan: 6857.775992414335
+Reduction vs HEFT (%) : -0.18978506607876966
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0136
+Number of tasks: 102
+Number of edges: 732
+Edge density: 0.14210832847990681
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 122990.90518813499
+Optimal critical path length: 7087.829847734454
+Computation-to-communication ratio: 1.0268547111708235
+--------------------------------------------------------
+
+HEFT makespan: 7946.103949337117
+SLR: 1.1210912394965296
+Speedup: 15.478139472161724
+
+PEFT makespan: 9150.604500111018
+Reduction vs HEFT (%) : -15.158378979856948
+
+HSM-LB makespan: 7986.169359456249
+Reduction vs HEFT (%) : -0.504214522923192
+
+HSM-M makespan: 9599.959239746417
+Reduction vs HEFT (%) : -20.813411213268452
+
+HSM-WM makespan: 7998.403724544285
+Reduction vs HEFT (%) : -0.658181362094183
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0153
+Number of tasks: 102
+Number of edges: 1563
+Edge density: 0.3034362259755387
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 54793.70294192526
+Optimal critical path length: 8101.405963689964
+Computation-to-communication ratio: 1.048640738063488
+--------------------------------------------------------
+
+HEFT makespan: 8423.153100749641
+SLR: 1.0397149752156267
+Speedup: 6.505129645221425
+
+PEFT makespan: 8378.878472426126
+Reduction vs HEFT (%) : 0.5256301030498349
+
+HSM-LB makespan: 8278.583907479457
+Reduction vs HEFT (%) : 1.7163310644005492
+
+HSM-M makespan: 8581.978628353932
+Reduction vs HEFT (%) : -1.8855828180323044
+
+HSM-WM makespan: 8561.095152584572
+Reduction vs HEFT (%) : -1.6376533844867822
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0046
+Number of tasks: 102
+Number of edges: 266
+Edge density: 0.0516404581634634
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 496043.7706207371
+Optimal critical path length: 27174.97730698367
+Computation-to-communication ratio: 1.0524667255518179
+--------------------------------------------------------
+
+HEFT makespan: 32649.584881430168
+SLR: 1.201457668670788
+Speedup: 15.192957963237927
+
+PEFT makespan: 36947.73464375894
+Reduction vs HEFT (%) : -13.16448517779898
+
+HSM-LB makespan: 34325.932360516636
+Reduction vs HEFT (%) : -5.134360774185254
+
+HSM-M makespan: 34998.47322246304
+Reduction vs HEFT (%) : -7.194236464454491
+
+HSM-WM makespan: 32328.467784040244
+Reduction vs HEFT (%) : 0.9835258198720993
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0147
+Number of tasks: 102
+Number of edges: 596
+Edge density: 0.11570568821588041
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 69525.3370794846
+Optimal critical path length: 3941.6761769333357
+Computation-to-communication ratio: 1.0144549544349721
+--------------------------------------------------------
+
+HEFT makespan: 4190.169890311454
+SLR: 1.0630426504420383
+Speedup: 16.592486438376085
+
+PEFT makespan: 4121.418230060811
+Reduction vs HEFT (%) : 1.6407845517102118
+
+HSM-LB makespan: 4016.2100450238927
+Reduction vs HEFT (%) : 4.15161794966339
+
+HSM-M makespan: 4510.539475728521
+Reduction vs HEFT (%) : -7.645742148971777
+
+HSM-WM makespan: 4190.169890311454
+Reduction vs HEFT (%) : 0.0
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0076
+Number of tasks: 102
+Number of edges: 521
+Edge density: 0.10114540865851292
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 534720.3996761728
+Optimal critical path length: 31109.932803514424
+Computation-to-communication ratio: 1.0762052533469009
+--------------------------------------------------------
+
+HEFT makespan: 38534.02673750837
+SLR: 1.2386406290519298
+Speedup: 13.876577273344884
+
+PEFT makespan: 34459.84442299709
+Reduction vs HEFT (%) : 10.572947235087526
+
+HSM-LB makespan: 35173.07902693364
+Reduction vs HEFT (%) : 8.722025687762454
+
+HSM-M makespan: 40742.6260836043
+Reduction vs HEFT (%) : -5.731556063789498
+
+HSM-WM makespan: 38975.11327756748
+Reduction vs HEFT (%) : -1.1446676545479306
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0166
+Number of tasks: 102
+Number of edges: 192
+Edge density: 0.037274315666860805
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 3514.4969630714945
+Optimal critical path length: 146.5177952675762
+Computation-to-communication ratio: 1.0435372212968554
+--------------------------------------------------------
+
+HEFT makespan: 227.8199834879935
+SLR: 1.5548963391917021
+Speedup: 15.42664040820069
+
+PEFT makespan: 249.13702713198435
+Reduction vs HEFT (%) : -9.35696830349137
+
+HSM-LB makespan: 242.06562630154423
+Reduction vs HEFT (%) : -6.2530260056407485
+
+HSM-M makespan: 216.89392597134244
+Reduction vs HEFT (%) : 4.79591708741691
+
+HSM-WM makespan: 213.5610978391804
+Reduction vs HEFT (%) : 6.258838856234306
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0123
+Number of tasks: 102
+Number of edges: 708
+Edge density: 0.1374490390215492
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 287256.00981822057
+Optimal critical path length: 27871.149820486025
+Computation-to-communication ratio: 1.0092193014265918
+--------------------------------------------------------
+
+HEFT makespan: 33115.29012411782
+SLR: 1.188156582609922
+Speedup: 8.67442226058024
+
+PEFT makespan: 32526.627921726624
+Reduction vs HEFT (%) : 1.7776145103511283
+
+HSM-LB makespan: 30563.682302915597
+Reduction vs HEFT (%) : 7.705225627311933
+
+HSM-M makespan: 32222.70586326485
+Reduction vs HEFT (%) : 2.6953840884604006
+
+HSM-WM makespan: 32222.70586326485
+Reduction vs HEFT (%) : 2.6953840884604006
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0095
+Number of tasks: 102
+Number of edges: 1394
+Edge density: 0.2706270627062706
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 290547.16477594123
+Optimal critical path length: 14308.732346014396
+Computation-to-communication ratio: 1.0230141229865397
+--------------------------------------------------------
+
+HEFT makespan: 16438.800693185396
+SLR: 1.1488649235768476
+Speedup: 17.67447456774543
+
+PEFT makespan: 14766.553867937982
+Reduction vs HEFT (%) : 10.172559765510343
+
+HSM-LB makespan: 15633.806990038986
+Reduction vs HEFT (%) : 4.896912604336862
+
+HSM-M makespan: 15811.673385385824
+Reduction vs HEFT (%) : 3.8149212920352795
+
+HSM-WM makespan: 15581.131439035698
+Reduction vs HEFT (%) : 5.217346874369241
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0156
+Number of tasks: 102
+Number of edges: 1836
+Edge density: 0.3564356435643564
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 136164.63935968603
+Optimal critical path length: 25900.13014624076
+Computation-to-communication ratio: 1.0262476639849551
+--------------------------------------------------------
+
+HEFT makespan: 26733.203846741755
+SLR: 1.0321648461145632
+Speedup: 5.093465045951901
+
+PEFT makespan: 26372.11266215178
+Reduction vs HEFT (%) : 1.3507216967336433
+
+HSM-LB makespan: 26542.080464745322
+Reduction vs HEFT (%) : 0.7149288319204743
+
+HSM-M makespan: 26692.595883875343
+Reduction vs HEFT (%) : 0.15190084622558686
+
+HSM-WM makespan: 26692.595883875343
+Reduction vs HEFT (%) : 0.15190084622558686
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0040
+Number of tasks: 102
+Number of edges: 769
+Edge density: 0.14929139972820812
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 8174.606723140248
+Optimal critical path length: 527.0909905682067
+Computation-to-communication ratio: 1.0537339539460453
+--------------------------------------------------------
+
+HEFT makespan: 603.6660254510948
+SLR: 1.145278588048602
+Speedup: 13.541604759074689
+
+PEFT makespan: 607.1676983031674
+Reduction vs HEFT (%) : -0.5800679025220745
+
+HSM-LB makespan: 576.9226106794885
+Reduction vs HEFT (%) : 4.430167285233935
+
+HSM-M makespan: 589.7508949733566
+Reduction vs HEFT (%) : 2.305104128949452
+
+HSM-WM makespan: 579.51468659496
+Reduction vs HEFT (%) : 4.00077821806974
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0056
+Number of tasks: 102
+Number of edges: 297
+Edge density: 0.05765870704717531
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 147491.92026372105
+Optimal critical path length: 8752.325312956857
+Computation-to-communication ratio: 1.0752075244869304
+--------------------------------------------------------
+
+HEFT makespan: 11109.899807905496
+SLR: 1.2693655012409684
+Speedup: 13.275720106743888
+
+PEFT makespan: 10685.659948912966
+Reduction vs HEFT (%) : 3.818575021627595
+
+HSM-LB makespan: 10780.696107367861
+Reduction vs HEFT (%) : 2.963156340108327
+
+HSM-M makespan: 11671.537711264504
+Reduction vs HEFT (%) : -5.05529224448415
+
+HSM-WM makespan: 10631.207850939067
+Reduction vs HEFT (%) : 4.308697335198346
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0078
+Number of tasks: 102
+Number of edges: 1303
+Edge density: 0.2529605901766647
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 167264.44934387167
+Optimal critical path length: 25113.06432124039
+Computation-to-communication ratio: 1.0062861111063566
+--------------------------------------------------------
+
+HEFT makespan: 26964.205502350564
+SLR: 1.0737122780968031
+Speedup: 6.203203329291147
+
+PEFT makespan: 26160.276085965303
+Reduction vs HEFT (%) : 2.981468956373206
+
+HSM-LB makespan: 25962.418613321333
+Reduction vs HEFT (%) : 3.715247196665601
+
+HSM-M makespan: 26154.530026546432
+Reduction vs HEFT (%) : 3.0027789090004973
+
+HSM-WM makespan: 26176.422680469463
+Reduction vs HEFT (%) : 2.921587368158967
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0118
+Number of tasks: 102
+Number of edges: 1924
+Edge density: 0.37351970491166764
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 35104.63553910527
+Optimal critical path length: 2258.6701897438697
+Computation-to-communication ratio: 1.0382247777395834
+--------------------------------------------------------
+
+HEFT makespan: 2652.154729647015
+SLR: 1.1742107111033178
+Speedup: 13.23626979477833
+
+PEFT makespan: 2691.2583857265035
+Reduction vs HEFT (%) : -1.474410811796531
+
+HSM-LB makespan: 2540.236015504244
+Reduction vs HEFT (%) : 4.219916466097999
+
+HSM-M makespan: 2616.403851717638
+Reduction vs HEFT (%) : 1.3479936720786583
+
+HSM-WM makespan: 2625.7809881072017
+Reduction vs HEFT (%) : 0.9944269557501855
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0142
+Number of tasks: 102
+Number of edges: 262
+Edge density: 0.05086390992040381
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 230376.21439905022
+Optimal critical path length: 13890.671004774409
+Computation-to-communication ratio: 0.9589109402047474
+--------------------------------------------------------
+
+HEFT makespan: 17295.97387628781
+SLR: 1.2451503509328639
+Speedup: 13.319643984597372
+
+PEFT makespan: 18072.103335230186
+Reduction vs HEFT (%) : -4.487341762272322
+
+HSM-LB makespan: 18068.488505257064
+Reduction vs HEFT (%) : -4.466441927438055
+
+HSM-M makespan: 16310.227978926987
+Reduction vs HEFT (%) : 5.69927952257288
+
+HSM-WM makespan: 17511.821540174868
+Reduction vs HEFT (%) : -1.2479647889788907
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0028
+Number of tasks: 102
+Number of edges: 491
+Edge density: 0.09532129683556591
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 76552.0206173351
+Optimal critical path length: 7396.995298418526
+Computation-to-communication ratio: 1.0193848180499938
+--------------------------------------------------------
+
+HEFT makespan: 7537.705795502826
+SLR: 1.019022656012014
+Speedup: 10.155878021003135
+
+PEFT makespan: 7497.159550552859
+Reduction vs HEFT (%) : 0.5379122779527563
+
+HSM-LB makespan: 7434.534169394892
+Reduction vs HEFT (%) : 1.3687404219131025
+
+HSM-M makespan: 7577.731878937177
+Reduction vs HEFT (%) : -0.5310114843992864
+
+HSM-WM makespan: 7577.731878937177
+Reduction vs HEFT (%) : -0.5310114843992864
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0036
+Number of tasks: 102
+Number of edges: 827
+Edge density: 0.1605513492525723
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 237129.23358778527
+Optimal critical path length: 15875.903326383957
+Computation-to-communication ratio: 0.9875750184423309
+--------------------------------------------------------
+
+HEFT makespan: 17899.22935385272
+SLR: 1.1274463560197059
+Speedup: 13.248013582034156
+
+PEFT makespan: 18230.838038438626
+Reduction vs HEFT (%) : -1.8526422452625297
+
+HSM-LB makespan: 17304.96008999747
+Reduction vs HEFT (%) : 3.32008296059594
+
+HSM-M makespan: 17771.61811174288
+Reduction vs HEFT (%) : 0.7129426613128089
+
+HSM-WM makespan: 17771.61811174288
+Reduction vs HEFT (%) : 0.7129426613128089
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0131
+Number of tasks: 102
+Number of edges: 420
+Edge density: 0.081537565521258
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 231173.2689459301
+Optimal critical path length: 14429.363290256942
+Computation-to-communication ratio: 0.965531746503651
+--------------------------------------------------------
+
+HEFT makespan: 17477.064788600892
+SLR: 1.2112152447088107
+Speedup: 13.227236480619377
+
+PEFT makespan: 15704.864117596544
+Reduction vs HEFT (%) : 10.140150491175348
+
+HSM-LB makespan: 16612.56452332381
+Reduction vs HEFT (%) : 4.946484296613335
+
+HSM-M makespan: 16652.346420662907
+Reduction vs HEFT (%) : 4.718860849425326
+
+HSM-WM makespan: 16995.893816287527
+Reduction vs HEFT (%) : 2.753156654927551
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0020
+Number of tasks: 102
+Number of edges: 715
+Edge density: 0.1388079984469035
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 103087.52831048043
+Optimal critical path length: 13393.32156414191
+Computation-to-communication ratio: 1.0139389249749375
+--------------------------------------------------------
+
+HEFT makespan: 15003.685571454573
+SLR: 1.1202363431356794
+Speedup: 6.870813695710256
+
+PEFT makespan: 14502.721776751087
+Reduction vs HEFT (%) : 3.338938238325923
+
+HSM-LB makespan: 14002.822488759279
+Reduction vs HEFT (%) : 6.670781508508128
+
+HSM-M makespan: 14757.054100520332
+Reduction vs HEFT (%) : 1.6438059152843891
+
+HSM-WM makespan: 14757.054100520332
+Reduction vs HEFT (%) : 1.6438059152843891
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0150
+Number of tasks: 102
+Number of edges: 1408
+Edge density: 0.2733449815569792
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 309866.49195861974
+Optimal critical path length: 44911.05247787197
+Computation-to-communication ratio: 0.9975972969862743
+--------------------------------------------------------
+
+HEFT makespan: 46303.1436760576
+SLR: 1.030996628254738
+Speedup: 6.692126438033737
+
+PEFT makespan: 45230.767661015736
+Reduction vs HEFT (%) : 2.315989649740274
+
+HSM-LB makespan: 45105.30110689408
+Reduction vs HEFT (%) : 2.586957329601148
+
+HSM-M makespan: 45990.6940414689
+Reduction vs HEFT (%) : 0.6747914067663316
+
+HSM-WM makespan: 45990.6940414689
+Reduction vs HEFT (%) : 0.6747914067663316
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0027
+Number of tasks: 102
+Number of edges: 688
+Edge density: 0.1335662978062512
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 39253.24629597064
+Optimal critical path length: 2218.8169596044095
+Computation-to-communication ratio: 1.0173921070873888
+--------------------------------------------------------
+
+HEFT makespan: 2584.70563782518
+SLR: 1.1649025966909883
+Speedup: 15.186737600417453
+
+PEFT makespan: 2469.126912655246
+Reduction vs HEFT (%) : 4.471639767350226
+
+HSM-LB makespan: 2401.7190233534902
+Reduction vs HEFT (%) : 7.079592035310384
+
+HSM-M makespan: 2585.0031990216726
+Reduction vs HEFT (%) : -0.011512382382662167
+
+HSM-WM makespan: 2526.4299524277512
+Reduction vs HEFT (%) : 2.2546352878489984
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0018
+Number of tasks: 102
+Number of edges: 422
+Edge density: 0.08192583964278781
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 92620.62578199194
+Optimal critical path length: 10153.724101135069
+Computation-to-communication ratio: 1.0145904477591272
+--------------------------------------------------------
+
+HEFT makespan: 10472.545569384347
+SLR: 1.0313994614265358
+Speedup: 8.844136811661242
+
+PEFT makespan: 10251.032779217654
+Reduction vs HEFT (%) : 2.1151761880537236
+
+HSM-LB makespan: 10166.274374169572
+Reduction vs HEFT (%) : 2.9245152784069433
+
+HSM-M makespan: 10928.567852421224
+Reduction vs HEFT (%) : -4.354454989148209
+
+HSM-WM makespan: 10928.567852421224
+Reduction vs HEFT (%) : -4.354454989148209
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0111
+Number of tasks: 102
+Number of edges: 195
+Edge density: 0.0378567268491555
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 41223.299469063895
+Optimal critical path length: 3782.4728153670526
+Computation-to-communication ratio: 0.9787514058353459
+--------------------------------------------------------
+
+HEFT makespan: 4198.297167670344
+SLR: 1.1099345250054202
+Speedup: 9.81905230208821
+
+PEFT makespan: 3782.4728153670526
+Reduction vs HEFT (%) : 9.90459549898975
+
+HSM-LB makespan: 3782.4728153670526
+Reduction vs HEFT (%) : 9.90459549898975
+
+HSM-M makespan: 4399.208383665429
+Reduction vs HEFT (%) : -4.785540612566308
+
+HSM-WM makespan: 4399.208383665429
+Reduction vs HEFT (%) : -4.785540612566308
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0094
+Number of tasks: 102
+Number of edges: 1913
+Edge density: 0.3713841972432537
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 477734.31897855434
+Optimal critical path length: 36240.36087687569
+Computation-to-communication ratio: 0.9997355141326414
+--------------------------------------------------------
+
+HEFT makespan: 39061.740003168044
+SLR: 1.0778518496512166
+Speedup: 12.230236516340756
+
+PEFT makespan: 40003.714475937515
+Reduction vs HEFT (%) : -2.4115015682687755
+
+HSM-LB makespan: 38613.349607913726
+Reduction vs HEFT (%) : 1.147901745334309
+
+HSM-M makespan: 39325.27233683966
+Reduction vs HEFT (%) : -0.6746559002498174
+
+HSM-WM makespan: 40581.995756081895
+Reduction vs HEFT (%) : -3.8919304485426096
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0114
+Number of tasks: 102
+Number of edges: 355
+Edge density: 0.0689186565715395
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 22741.228659497825
+Optimal critical path length: 1137.6648103410275
+Computation-to-communication ratio: 1.029785214082218
+--------------------------------------------------------
+
+HEFT makespan: 1516.089352861413
+SLR: 1.332632721941139
+Speedup: 14.999926367517086
+
+PEFT makespan: 1454.0883920487581
+Reduction vs HEFT (%) : 4.089532104135984
+
+HSM-LB makespan: 1456.9396368402806
+Reduction vs HEFT (%) : 3.9014663554951596
+
+HSM-M makespan: 1476.278233025467
+Reduction vs HEFT (%) : 2.6259085429765747
+
+HSM-WM makespan: 1482.0141414923307
+Reduction vs HEFT (%) : 2.2475727637536664
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0025
+Number of tasks: 102
+Number of edges: 386
+Edge density: 0.0749369054552514
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 331320.7553510406
+Optimal critical path length: 20116.236432428293
+Computation-to-communication ratio: 1.0732734362514678
+--------------------------------------------------------
+
+HEFT makespan: 22806.6570111332
+SLR: 1.1337437342090404
+Speedup: 14.527370459831289
+
+PEFT makespan: 22205.49842119569
+Reduction vs HEFT (%) : 2.635890870126431
+
+HSM-LB makespan: 21076.082628183307
+Reduction vs HEFT (%) : 7.588023014969281
+
+HSM-M makespan: 22757.304005535458
+Reduction vs HEFT (%) : 0.21639736842470825
+
+HSM-WM makespan: 22757.304005535458
+Reduction vs HEFT (%) : 0.21639736842470825
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0135
+Number of tasks: 102
+Number of edges: 324
+Edge density: 0.0629004076878276
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 96302.85085692206
+Optimal critical path length: 6031.355123118356
+Computation-to-communication ratio: 1.0540694528220087
+--------------------------------------------------------
+
+HEFT makespan: 7254.248728360813
+SLR: 1.2027560275061688
+Speedup: 13.275372056160924
+
+PEFT makespan: 6595.510507046609
+Reduction vs HEFT (%) : 9.08072284230947
+
+HSM-LB makespan: 6303.1490247376005
+Reduction vs HEFT (%) : 13.110933181886168
+
+HSM-M makespan: 6991.2238678091
+Reduction vs HEFT (%) : 3.625804275546912
+
+HSM-WM makespan: 6991.2238678091
+Reduction vs HEFT (%) : 3.625804275546912
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0026
+Number of tasks: 102
+Number of edges: 858
+Edge density: 0.16656959813628422
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 239755.2421977886
+Optimal critical path length: 27329.680808113422
+Computation-to-communication ratio: 1.0164122027717202
+--------------------------------------------------------
+
+HEFT makespan: 29988.990914472553
+SLR: 1.0973048359046205
+Speedup: 7.994775245407934
+
+PEFT makespan: 30108.247203444622
+Reduction vs HEFT (%) : -0.3976668948687916
+
+HSM-LB makespan: 29195.447137526597
+Reduction vs HEFT (%) : 2.646116967420184
+
+HSM-M makespan: 30678.713257486914
+Reduction vs HEFT (%) : -2.299918476688404
+
+HSM-WM makespan: 30678.713257486914
+Reduction vs HEFT (%) : -2.299918476688404
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0090
+Number of tasks: 102
+Number of edges: 368
+Edge density: 0.0714424383614832
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 101327.63396648815
+Optimal critical path length: 6062.975865637864
+Computation-to-communication ratio: 0.9905347302677698
+--------------------------------------------------------
+
+HEFT makespan: 7460.5718845904985
+SLR: 1.2305132083526111
+Speedup: 13.581751578022613
+
+PEFT makespan: 7466.530575699731
+Reduction vs HEFT (%) : -0.07986909316616675
+
+HSM-LB makespan: 7199.907898089454
+Reduction vs HEFT (%) : 3.4938874731498117
+
+HSM-M makespan: 7464.253595698625
+Reduction vs HEFT (%) : -0.04934891272519337
+
+HSM-WM makespan: 7375.7162917230635
+Reduction vs HEFT (%) : 1.137387242963257
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0062
+Number of tasks: 102
+Number of edges: 726
+Edge density: 0.14094350611531742
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 50638.56792993902
+Optimal critical path length: 4786.706209918187
+Computation-to-communication ratio: 0.9978486041279047
+--------------------------------------------------------
+
+HEFT makespan: 5207.1304130707795
+SLR: 1.0878316288310033
+Speedup: 9.724851100872687
+
+PEFT makespan: 5508.747868867169
+Reduction vs HEFT (%) : -5.792392966369334
+
+HSM-LB makespan: 5279.593070541191
+Reduction vs HEFT (%) : -1.3916044293516876
+
+HSM-M makespan: 5062.417283416134
+Reduction vs HEFT (%) : 2.7791339600673552
+
+HSM-WM makespan: 5062.417283416134
+Reduction vs HEFT (%) : 2.7791339600673552
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0010
+Number of tasks: 102
+Number of edges: 664
+Edge density: 0.12890700834789362
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 422559.4358907904
+Optimal critical path length: 56656.262714601995
+Computation-to-communication ratio: 1.0562929887474037
+--------------------------------------------------------
+
+HEFT makespan: 62621.16278733789
+SLR: 1.1052822721961604
+Speedup: 6.74786952337194
+
+PEFT makespan: 59734.841334171506
+Reduction vs HEFT (%) : 4.609178949564324
+
+HSM-LB makespan: 58828.70885730971
+Reduction vs HEFT (%) : 6.056185738529621
+
+HSM-M makespan: 62824.12092457316
+Reduction vs HEFT (%) : -0.32410470869810126
+
+HSM-WM makespan: 60164.73943167733
+Reduction vs HEFT (%) : 3.9226728574213894
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0055
+Number of tasks: 102
+Number of edges: 522
+Edge density: 0.10133954571927781
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 79165.51979917324
+Optimal critical path length: 4790.189150930771
+Computation-to-communication ratio: 1.0450076664237256
+--------------------------------------------------------
+
+HEFT makespan: 6154.142252124915
+SLR: 1.2847388815385543
+Speedup: 12.863778014204792
+
+PEFT makespan: 5234.927155156012
+Reduction vs HEFT (%) : 14.93652664027249
+
+HSM-LB makespan: 5232.646623624235
+Reduction vs HEFT (%) : 14.973583494637353
+
+HSM-M makespan: 5451.599572161977
+Reduction vs HEFT (%) : 11.415769268582679
+
+HSM-WM makespan: 5287.436398545624
+Reduction vs HEFT (%) : 14.083292489380355
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0122
+Number of tasks: 102
+Number of edges: 838
+Edge density: 0.16268685692098622
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 3662.0059320458795
+Optimal critical path length: 369.8752026908231
+Computation-to-communication ratio: 1.0414741270226295
+--------------------------------------------------------
+
+HEFT makespan: 428.553957825783
+SLR: 1.1586447393825674
+Speedup: 8.545028846833258
+
+PEFT makespan: 391.49136592649495
+Reduction vs HEFT (%) : 8.648290658035378
+
+HSM-LB makespan: 382.006676790915
+Reduction vs HEFT (%) : 10.861475010292764
+
+HSM-M makespan: 405.5561084683346
+Reduction vs HEFT (%) : 5.366383611091877
+
+HSM-WM makespan: 405.5561084683346
+Reduction vs HEFT (%) : 5.366383611091877
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0072
+Number of tasks: 102
+Number of edges: 825
+Edge density: 0.16016307513104253
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 5379.304096108086
+Optimal critical path length: 696.5158437844941
+Computation-to-communication ratio: 0.9996887782846154
+--------------------------------------------------------
+
+HEFT makespan: 766.9650169134364
+SLR: 1.1011451121429763
+Speedup: 7.013754183673832
+
+PEFT makespan: 789.3470542090564
+Reduction vs HEFT (%) : -2.9182605206289622
+
+HSM-LB makespan: 777.2984981621597
+Reduction vs HEFT (%) : -1.3473210669124427
+
+HSM-M makespan: 791.232466051584
+Reduction vs HEFT (%) : -3.1640881400052763
+
+HSM-WM makespan: 791.232466051584
+Reduction vs HEFT (%) : -3.1640881400052763
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0128
+Number of tasks: 102
+Number of edges: 377
+Edge density: 0.07318967190836731
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 46497.52886786864
+Optimal critical path length: 3728.1992614579294
+Computation-to-communication ratio: 0.9989345277134208
+--------------------------------------------------------
+
+HEFT makespan: 4730.277200866834
+SLR: 1.2687833640675734
+Speedup: 9.82976829758473
+
+PEFT makespan: 4613.5498157140355
+Reduction vs HEFT (%) : 2.4676647941775656
+
+HSM-LB makespan: 4120.831736742645
+Reduction vs HEFT (%) : 12.883927056378582
+
+HSM-M makespan: 4551.927036880862
+Reduction vs HEFT (%) : 3.770395611345762
+
+HSM-WM makespan: 4659.216863606351
+Reduction vs HEFT (%) : 1.5022446728378185
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0151
+Number of tasks: 102
+Number of edges: 820
+Edge density: 0.159192389827218
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 97577.65133372032
+Optimal critical path length: 9727.95786023004
+Computation-to-communication ratio: 1.0308071789646542
+--------------------------------------------------------
+
+HEFT makespan: 10793.856849768365
+SLR: 1.1095706832670345
+Speedup: 9.040109822821519
+
+PEFT makespan: 10195.312567487494
+Reduction vs HEFT (%) : 5.545230871703794
+
+HSM-LB makespan: 10805.976183649758
+Reduction vs HEFT (%) : -0.11227992042208257
+
+HSM-M makespan: 10871.6015013945
+Reduction vs HEFT (%) : -0.7202675809787422
+
+HSM-WM makespan: 10793.856849768365
+Reduction vs HEFT (%) : 0.0
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0168
+Number of tasks: 102
+Number of edges: 968
+Edge density: 0.18792467482042322
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 71995.80578131996
+Optimal critical path length: 4613.854873701983
+Computation-to-communication ratio: 1.001231126209971
+--------------------------------------------------------
+
+HEFT makespan: 4883.365862306542
+SLR: 1.0584134083065153
+Speedup: 14.743070212501843
+
+PEFT makespan: 5055.340489285716
+Reduction vs HEFT (%) : -3.521641257858704
+
+HSM-LB makespan: 4824.498724839621
+Reduction vs HEFT (%) : 1.205462361960258
+
+HSM-M makespan: 5113.950093055169
+Reduction vs HEFT (%) : -4.721829927354989
+
+HSM-WM makespan: 4970.769629930248
+Reduction vs HEFT (%) : -1.7898263224214617
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0063
+Number of tasks: 102
+Number of edges: 180
+Edge density: 0.034944670937682006
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 104100.87765033355
+Optimal critical path length: 6701.031490780633
+Computation-to-communication ratio: 1.045036443414008
+--------------------------------------------------------
+
+HEFT makespan: 9361.977719242777
+SLR: 1.397095019195643
+Speedup: 11.119539137159315
+
+PEFT makespan: 8454.125479323566
+Reduction vs HEFT (%) : 9.697227093941876
+
+HSM-LB makespan: 8928.148303081593
+Reduction vs HEFT (%) : 4.633950530233406
+
+HSM-M makespan: 8709.411695159197
+Reduction vs HEFT (%) : 6.970386425319987
+
+HSM-WM makespan: 9361.977719242777
+Reduction vs HEFT (%) : 0.0
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0069
+Number of tasks: 102
+Number of edges: 611
+Edge density: 0.11861774412735392
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 140972.63429541013
+Optimal critical path length: 13964.989297474503
+Computation-to-communication ratio: 1.0020268204148541
+--------------------------------------------------------
+
+HEFT makespan: 16748.685925726986
+SLR: 1.199333960732494
+Speedup: 8.416937001539189
+
+PEFT makespan: 17815.47165541497
+Reduction vs HEFT (%) : -6.369369719025769
+
+HSM-LB makespan: 17534.79971397954
+Reduction vs HEFT (%) : -4.693584868321139
+
+HSM-M makespan: 17039.31382642909
+Reduction vs HEFT (%) : -1.7352280769423345
+
+HSM-WM makespan: 17039.31382642909
+Reduction vs HEFT (%) : -1.7352280769423345
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0059
+Number of tasks: 102
+Number of edges: 402
+Edge density: 0.07804309842748981
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 461610.02456025506
+Optimal critical path length: 25511.52416448577
+Computation-to-communication ratio: 0.9655312270021538
+--------------------------------------------------------
+
+HEFT makespan: 31503.539871889865
+SLR: 1.2348748616025653
+Speedup: 14.652639875944313
+
+PEFT makespan: 29268.902436428645
+Reduction vs HEFT (%) : 7.093289974867716
+
+HSM-LB makespan: 29620.626390987436
+Reduction vs HEFT (%) : 5.976831456272393
+
+HSM-M makespan: 30363.090479862414
+Reduction vs HEFT (%) : 3.6200674484998245
+
+HSM-WM makespan: 29423.619370434244
+Reduction vs HEFT (%) : 6.602180294384965
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0176
+Number of tasks: 102
+Number of edges: 278
+Edge density: 0.0539701028926422
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 30789.555328481758
+Optimal critical path length: 1856.6805940353183
+Computation-to-communication ratio: 1.041321923126847
+--------------------------------------------------------
+
+HEFT makespan: 2578.0409710426784
+SLR: 1.3885215256327703
+Speedup: 11.943004659087729
+
+PEFT makespan: 2509.5509847084677
+Reduction vs HEFT (%) : 2.6566678770240912
+
+HSM-LB makespan: 2333.9161630811222
+Reduction vs HEFT (%) : 9.469392096698172
+
+HSM-M makespan: 2188.7538241472653
+Reduction vs HEFT (%) : 15.10011482625768
+
+HSM-WM makespan: 2454.2003445013447
+Reduction vs HEFT (%) : 4.803671777615193
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0053
+Number of tasks: 102
+Number of edges: 869
+Edge density: 0.1687051058046981
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 16865.333591075934
+Optimal critical path length: 1033.0056504714128
+Computation-to-communication ratio: 1.03788683704959
+--------------------------------------------------------
+
+HEFT makespan: 1191.5417343069773
+SLR: 1.1534706840792366
+Speedup: 14.15421139309495
+
+PEFT makespan: 1151.1745081261531
+Reduction vs HEFT (%) : 3.387814712533128
+
+HSM-LB makespan: 1079.7870661789436
+Reduction vs HEFT (%) : 9.378997387198723
+
+HSM-M makespan: 1160.483293661782
+Reduction vs HEFT (%) : 2.6065759805937034
+
+HSM-WM makespan: 1100.662718825802
+Reduction vs HEFT (%) : 7.627010692498516
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0164
+Number of tasks: 102
+Number of edges: 1171
+Edge density: 0.22733449815569792
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 251563.89865917907
+Optimal critical path length: 36263.71059465799
+Computation-to-communication ratio: 1.0122336753072643
+--------------------------------------------------------
+
+HEFT makespan: 39163.93551599786
+SLR: 1.0799759559565618
+Speedup: 6.4233559611602145
+
+PEFT makespan: 36874.56742792728
+Reduction vs HEFT (%) : 5.845602741163262
+
+HSM-LB makespan: 37164.96287817166
+Reduction vs HEFT (%) : 5.104115844051606
+
+HSM-M makespan: 40154.00514424965
+Reduction vs HEFT (%) : -2.5280136309267647
+
+HSM-WM makespan: 40192.73997648542
+Reduction vs HEFT (%) : -2.6269179716816353
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0077
+Number of tasks: 102
+Number of edges: 1929
+Edge density: 0.37449039021549213
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 56509.15992455806
+Optimal critical path length: 8678.914005634722
+Computation-to-communication ratio: 1.0240323822181288
+--------------------------------------------------------
+
+HEFT makespan: 8973.331699173792
+SLR: 1.0339233334202782
+Speedup: 6.297455818975361
+
+PEFT makespan: 8905.706411128323
+Reduction vs HEFT (%) : 0.7536251897574999
+
+HSM-LB makespan: 8727.999181324762
+Reduction vs HEFT (%) : 2.734018155950025
+
+HSM-M makespan: 8909.130518590784
+Reduction vs HEFT (%) : 0.7154664815178933
+
+HSM-WM makespan: 8909.130518590784
+Reduction vs HEFT (%) : 0.7154664815178933
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0099
+Number of tasks: 102
+Number of edges: 1139
+Edge density: 0.22112211221122113
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 166197.65342607268
+Optimal critical path length: 11780.584650214108
+Computation-to-communication ratio: 1.0125382837477803
+--------------------------------------------------------
+
+HEFT makespan: 13801.966051682442
+SLR: 1.1715858305412368
+Speedup: 12.041592683515795
+
+PEFT makespan: 12807.193848314006
+Reduction vs HEFT (%) : 7.207467397350797
+
+HSM-LB makespan: 12914.343616622782
+Reduction vs HEFT (%) : 6.431130403711293
+
+HSM-M makespan: 13089.668019179731
+Reduction vs HEFT (%) : 5.1608446929623
+
+HSM-WM makespan: 13490.994504228669
+Reduction vs HEFT (%) : 2.253096017547918
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0169
+Number of tasks: 102
+Number of edges: 326
+Edge density: 0.0632886818093574
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 220186.59798170725
+Optimal critical path length: 11380.24016844461
+Computation-to-communication ratio: 1.088695188337201
+--------------------------------------------------------
+
+HEFT makespan: 14531.40925125537
+SLR: 1.2768982935481796
+Speedup: 15.15246003842919
+
+PEFT makespan: 12342.481142493532
+Reduction vs HEFT (%) : 15.063426202608227
+
+HSM-LB makespan: 12752.549615149012
+Reduction vs HEFT (%) : 12.241480542932777
+
+HSM-M makespan: 14564.045368649246
+Reduction vs HEFT (%) : -0.22459017449429552
+
+HSM-WM makespan: 14564.045368649246
+Reduction vs HEFT (%) : -0.22459017449429552
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0130
+Number of tasks: 102
+Number of edges: 669
+Edge density: 0.1298776936517181
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 39796.68030917942
+Optimal critical path length: 3920.2545037994237
+Computation-to-communication ratio: 1.0432178063596789
+--------------------------------------------------------
+
+HEFT makespan: 4695.371878737959
+SLR: 1.197721187281925
+Speedup: 8.475724891864397
+
+PEFT makespan: 4819.196175412512
+Reduction vs HEFT (%) : -2.6371563290921785
+
+HSM-LB makespan: 5004.155327551458
+Reduction vs HEFT (%) : -6.576336375224329
+
+HSM-M makespan: 4882.442574254973
+Reduction vs HEFT (%) : -3.9841507839693264
+
+HSM-WM makespan: 4888.4934202262575
+Reduction vs HEFT (%) : -4.113019085086947
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0050
+Number of tasks: 102
+Number of edges: 796
+Edge density: 0.15453310036886042
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 203760.78049249246
+Optimal critical path length: 16123.717349113822
+Computation-to-communication ratio: 0.9970854521684869
+--------------------------------------------------------
+
+HEFT makespan: 17430.260636347306
+SLR: 1.0810323859531867
+Speedup: 11.69005930224533
+
+PEFT makespan: 19083.867200220535
+Reduction vs HEFT (%) : -9.486987018570247
+
+HSM-LB makespan: 16955.15453879836
+Reduction vs HEFT (%) : 2.725754407585896
+
+HSM-M makespan: 17110.769870170916
+Reduction vs HEFT (%) : 1.8329660860615888
+
+HSM-WM makespan: 17365.34980626555
+Reduction vs HEFT (%) : 0.3724030950311743
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0013
+Number of tasks: 102
+Number of edges: 728
+Edge density: 0.14133178023684723
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 53835.517710072614
+Optimal critical path length: 4593.641646615848
+Computation-to-communication ratio: 0.9880296970857909
+--------------------------------------------------------
+
+HEFT makespan: 5494.819074493128
+SLR: 1.196179305484393
+Speedup: 9.797505064357136
+
+PEFT makespan: 5408.1375445167005
+Reduction vs HEFT (%) : 1.5775138144002199
+
+HSM-LB makespan: 4874.947539423804
+Reduction vs HEFT (%) : 11.281018112984981
+
+HSM-M makespan: 5324.208336310819
+Reduction vs HEFT (%) : 3.1049382312564546
+
+HSM-WM makespan: 5362.873644889619
+Reduction vs HEFT (%) : 2.4012697745772584
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0045
+Number of tasks: 102
+Number of edges: 465
+Edge density: 0.09027373325567851
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 411099.3604437948
+Optimal critical path length: 30265.771426662555
+Computation-to-communication ratio: 1.0253446551379888
+--------------------------------------------------------
+
+HEFT makespan: 33483.833963629
+SLR: 1.1063267970804636
+Speedup: 12.277547454402669
+
+PEFT makespan: 33553.06194890563
+Reduction vs HEFT (%) : -0.20675047353249454
+
+HSM-LB makespan: 32990.85417051065
+Reduction vs HEFT (%) : 1.4722919533463141
+
+HSM-M makespan: 34024.291769404925
+Reduction vs HEFT (%) : -1.6140857894677936
+
+HSM-WM makespan: 34020.879943250475
+Reduction vs HEFT (%) : -1.6038963166668196
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0096
+Number of tasks: 102
+Number of edges: 788
+Edge density: 0.15298000388274122
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 64777.64228085505
+Optimal critical path length: 2587.8498393370905
+Computation-to-communication ratio: 1.024537830679874
+--------------------------------------------------------
+
+HEFT makespan: 3008.8106963559853
+SLR: 1.162668192960813
+Speedup: 21.52931799907126
+
+PEFT makespan: 3064.4990186011105
+Reduction vs HEFT (%) : -1.8508416735080857
+
+HSM-LB makespan: 3025.3033809821072
+Reduction vs HEFT (%) : -0.5481463039896965
+
+HSM-M makespan: 3065.7444139017557
+Reduction vs HEFT (%) : -1.8922332872162428
+
+HSM-WM makespan: 3060.336114375712
+Reduction vs HEFT (%) : -1.712484540224807
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0154
+Number of tasks: 102
+Number of edges: 1001
+Edge density: 0.1943311978256649
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 160244.64469254552
+Optimal critical path length: 26867.67326809321
+Computation-to-communication ratio: 0.9616500221224648
+--------------------------------------------------------
+
+HEFT makespan: 28351.469459590524
+SLR: 1.0552260769546948
+Speedup: 5.652075456651125
+
+PEFT makespan: 29400.42439392267
+Reduction vs HEFT (%) : -3.6998256327673857
+
+HSM-LB makespan: 29910.345241974872
+Reduction vs HEFT (%) : -5.4983950112576
+
+HSM-M makespan: 29454.69619530139
+Reduction vs HEFT (%) : -3.8912506361735524
+
+HSM-WM makespan: 29522.650965911598
+Reduction vs HEFT (%) : -4.130937579762374
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0120
+Number of tasks: 102
+Number of edges: 597
+Edge density: 0.11589982527664532
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 133073.59155036564
+Optimal critical path length: 14931.15723426573
+Computation-to-communication ratio: 1.004509627076417
+--------------------------------------------------------
+
+HEFT makespan: 16581.47441245691
+SLR: 1.1105284173422167
+Speedup: 8.025437801260512
+
+PEFT makespan: 17031.639654835097
+Reduction vs HEFT (%) : -2.714868600828396
+
+HSM-LB makespan: 16612.583196245494
+Reduction vs HEFT (%) : -0.18761168648073578
+
+HSM-M makespan: 16625.444217384113
+Reduction vs HEFT (%) : -0.2651742772293346
+
+HSM-WM makespan: 16407.611495437493
+Reduction vs HEFT (%) : 1.0485371366541614
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0146
+Number of tasks: 102
+Number of edges: 843
+Edge density: 0.16365754222481071
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 108276.20511357099
+Optimal critical path length: 5259.89400578455
+Computation-to-communication ratio: 1.0049308010271787
+--------------------------------------------------------
+
+HEFT makespan: 6080.320899255742
+SLR: 1.1559778376843584
+Speedup: 17.807646488991143
+
+PEFT makespan: 6771.727026501173
+Reduction vs HEFT (%) : -11.37121113673561
+
+HSM-LB makespan: 6185.337667766402
+Reduction vs HEFT (%) : -1.72715832356009
+
+HSM-M makespan: 6294.361324833638
+Reduction vs HEFT (%) : -3.520215941301629
+
+HSM-WM makespan: 6402.722163803476
+Reduction vs HEFT (%) : -5.3023725209503
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0019
+Number of tasks: 102
+Number of edges: 898
+Edge density: 0.1743350805668802
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 525716.9691699621
+Optimal critical path length: 66275.208514008
+Computation-to-communication ratio: 0.9950150079281705
+--------------------------------------------------------
+
+HEFT makespan: 68353.19790152222
+SLR: 1.0313539471863753
+Speedup: 7.691183226385001
+
+PEFT makespan: 66880.31691382691
+Reduction vs HEFT (%) : 2.1548091865684285
+
+HSM-LB makespan: 66275.208514008
+Reduction vs HEFT (%) : 3.0400763260674495
+
+HSM-M makespan: 69141.50751524758
+Reduction vs HEFT (%) : -1.153288562827882
+
+HSM-WM makespan: 69207.7441513505
+Reduction vs HEFT (%) : -1.250192055475523
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0024
+Number of tasks: 102
+Number of edges: 573
+Edge density: 0.11124053581828772
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 242095.7779165053
+Optimal critical path length: 17590.844976418306
+Computation-to-communication ratio: 1.0273349991725202
+--------------------------------------------------------
+
+HEFT makespan: 20288.95683950274
+SLR: 1.1533815951821207
+Speedup: 11.93239158777957
+
+PEFT makespan: 21296.75740112281
+Reduction vs HEFT (%) : -4.967236953542482
+
+HSM-LB makespan: 18749.885665941656
+Reduction vs HEFT (%) : 7.585758034461904
+
+HSM-M makespan: 22736.11447236766
+Reduction vs HEFT (%) : -12.061525154907343
+
+HSM-WM makespan: 22736.11447236766
+Reduction vs HEFT (%) : -12.061525154907343
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0044
+Number of tasks: 102
+Number of edges: 618
+Edge density: 0.11997670355270822
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 236500.34192926425
+Optimal critical path length: 15036.779282996897
+Computation-to-communication ratio: 1.0061467648358018
+--------------------------------------------------------
+
+HEFT makespan: 17155.266894690514
+SLR: 1.1408870591117297
+Speedup: 13.785873655073251
+
+PEFT makespan: 15869.01666200423
+Reduction vs HEFT (%) : 7.497698756784558
+
+HSM-LB makespan: 16052.9932199489
+Reduction vs HEFT (%) : 6.4252784961495735
+
+HSM-M makespan: 18297.36444078815
+Reduction vs HEFT (%) : -6.65741636727968
+
+HSM-WM makespan: 17059.68413022004
+Reduction vs HEFT (%) : 0.5571627947103366
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0092
+Number of tasks: 102
+Number of edges: 1126
+Edge density: 0.2185983304212774
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 203247.19230364254
+Optimal critical path length: 9383.443923045585
+Computation-to-communication ratio: 1.0138761660982882
+--------------------------------------------------------
+
+HEFT makespan: 10773.576687652208
+SLR: 1.14814739407058
+Speedup: 18.865340471060815
+
+PEFT makespan: 11163.413882450306
+Reduction vs HEFT (%) : -3.618456582249948
+
+HSM-LB makespan: 10128.626338348617
+Reduction vs HEFT (%) : 5.986408859397457
+
+HSM-M makespan: 10646.146858083894
+Reduction vs HEFT (%) : 1.182799670552896
+
+HSM-WM makespan: 11026.561621546774
+Reduction vs HEFT (%) : -2.348198200366596
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0171
+Number of tasks: 102
+Number of edges: 1138
+Edge density: 0.22092797515045623
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 139030.90026963272
+Optimal critical path length: 8553.544350471937
+Computation-to-communication ratio: 0.9978623104338917
+--------------------------------------------------------
+
+HEFT makespan: 9939.385021140903
+SLR: 1.1620194639655435
+Speedup: 13.987877516960694
+
+PEFT makespan: 9508.12777869005
+Reduction vs HEFT (%) : 4.338872490939579
+
+HSM-LB makespan: 9552.327957244492
+Reduction vs HEFT (%) : 3.894175173545918
+
+HSM-M makespan: 9955.998206899158
+Reduction vs HEFT (%) : -0.1671450066872211
+
+HSM-WM makespan: 9950.497536197068
+Reduction vs HEFT (%) : -0.11180284325971002
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0101
+Number of tasks: 102
+Number of edges: 1807
+Edge density: 0.35080566880217434
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 210502.65324098177
+Optimal critical path length: 10571.364515582629
+Computation-to-communication ratio: 0.9929213805477531
+--------------------------------------------------------
+
+HEFT makespan: 12163.600386809701
+SLR: 1.1506178193817884
+Speedup: 17.305949434942995
+
+PEFT makespan: 11731.83197775084
+Reduction vs HEFT (%) : 3.549676044332017
+
+HSM-LB makespan: 12244.90493256005
+Reduction vs HEFT (%) : -0.6684249988886108
+
+HSM-M makespan: 11822.140673116124
+Reduction vs HEFT (%) : 2.8072256801847715
+
+HSM-WM makespan: 12063.121250869399
+Reduction vs HEFT (%) : 0.8260640989921342
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0179
+Number of tasks: 102
+Number of edges: 518
+Edge density: 0.1005629974762182
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 57165.807552345424
+Optimal critical path length: 3408.7595932807835
+Computation-to-communication ratio: 1.001887762079576
+--------------------------------------------------------
+
+HEFT makespan: 3908.827770117836
+SLR: 1.1467009224771285
+Speedup: 14.624795696900735
+
+PEFT makespan: 3758.153611596155
+Reduction vs HEFT (%) : 3.854714696655421
+
+HSM-LB makespan: 4035.8108266348554
+Reduction vs HEFT (%) : -3.248622451154759
+
+HSM-M makespan: 3970.8131755108598
+Reduction vs HEFT (%) : -1.5857799073903749
+
+HSM-WM makespan: 4092.219705480242
+Reduction vs HEFT (%) : -4.691737424820786
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0144
+Number of tasks: 102
+Number of edges: 563
+Edge density: 0.1092991652106387
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 53891.55053896462
+Optimal critical path length: 3738.3606180933025
+Computation-to-communication ratio: 1.008666558108245
+--------------------------------------------------------
+
+HEFT makespan: 4456.140484064348
+SLR: 1.1920039127571216
+Speedup: 12.09377279098062
+
+PEFT makespan: 4807.234984663621
+Reduction vs HEFT (%) : -7.878892100794971
+
+HSM-LB makespan: 3985.3525532988074
+Reduction vs HEFT (%) : 10.564925689599107
+
+HSM-M makespan: 4412.232180056908
+Reduction vs HEFT (%) : 0.9853438006378212
+
+HSM-WM makespan: 4412.232180056908
+Reduction vs HEFT (%) : 0.9853438006378212
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0108
+Number of tasks: 102
+Number of edges: 1829
+Edge density: 0.3550766841390021
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 57951.849385319896
+Optimal critical path length: 3032.17856491786
+Computation-to-communication ratio: 1.014521503881836
+--------------------------------------------------------
+
+HEFT makespan: 3564.0789078766984
+SLR: 1.1754185420057037
+Speedup: 16.25997933357899
+
+PEFT makespan: 3709.0626200177603
+Reduction vs HEFT (%) : -4.067915326471706
+
+HSM-LB makespan: 3529.4747047965675
+Reduction vs HEFT (%) : 0.9709157393697012
+
+HSM-M makespan: 3547.0376475509256
+Reduction vs HEFT (%) : 0.47813925466439855
+
+HSM-WM makespan: 3535.7131318839347
+Reduction vs HEFT (%) : 0.795879572982372
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0159
+Number of tasks: 102
+Number of edges: 250
+Edge density: 0.04853426519122501
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 24029.310186907165
+Optimal critical path length: 1503.0162347611501
+Computation-to-communication ratio: 0.986328007687699
+--------------------------------------------------------
+
+HEFT makespan: 1885.5905836695717
+SLR: 1.2545377355615974
+Speedup: 12.743651986288253
+
+PEFT makespan: 1987.235119582579
+Reduction vs HEFT (%) : -5.390594161495827
+
+HSM-LB makespan: 1966.2166302024498
+Reduction vs HEFT (%) : -4.275904177245664
+
+HSM-M makespan: 1891.558672472147
+Reduction vs HEFT (%) : -0.3165103206530091
+
+HSM-WM makespan: 1779.2608092811156
+Reduction vs HEFT (%) : 5.639070077531173
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0058
+Number of tasks: 102
+Number of edges: 590
+Edge density: 0.11454086585129102
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 30780.346304663137
+Optimal critical path length: 1657.8689486959147
+Computation-to-communication ratio: 0.9747304538483846
+--------------------------------------------------------
+
+HEFT makespan: 1937.301675516205
+SLR: 1.16854934585758
+Speedup: 15.888256689016458
+
+PEFT makespan: 2017.432892624712
+Reduction vs HEFT (%) : -4.136228142535174
+
+HSM-LB makespan: 1961.4797220602443
+Reduction vs HEFT (%) : -1.2480269257805219
+
+HSM-M makespan: 1987.3574299899117
+Reduction vs HEFT (%) : -2.583787290658762
+
+HSM-WM makespan: 1933.914341418318
+Reduction vs HEFT (%) : 0.1748480446126024
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0066
+Number of tasks: 102
+Number of edges: 433
+Edge density: 0.08406134731120171
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 168856.94117984705
+Optimal critical path length: 16701.476234981066
+Computation-to-communication ratio: 1.022626121475903
+--------------------------------------------------------
+
+HEFT makespan: 17885.646459111562
+SLR: 1.0709021290974425
+Speedup: 9.440919094865903
+
+PEFT makespan: 17411.241650983917
+Reduction vs HEFT (%) : 2.6524331072526905
+
+HSM-LB makespan: 16943.617882171762
+Reduction vs HEFT (%) : 5.266952911617565
+
+HSM-M makespan: 17885.646459111562
+Reduction vs HEFT (%) : 0.0
+
+HSM-WM makespan: 17885.646459111562
+Reduction vs HEFT (%) : 0.0
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0117
+Number of tasks: 102
+Number of edges: 625
+Edge density: 0.12133566297806252
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 86608.01076211626
+Optimal critical path length: 6479.615709165736
+Computation-to-communication ratio: 1.0381887580011553
+--------------------------------------------------------
+
+HEFT makespan: 6931.437135018435
+SLR: 1.0697296639388003
+Speedup: 12.494957261397124
+
+PEFT makespan: 6984.432168250278
+Reduction vs HEFT (%) : -0.7645605406143829
+
+HSM-LB makespan: 6860.106724917554
+Reduction vs HEFT (%) : 1.0290854365613598
+
+HSM-M makespan: 7449.539405356834
+Reduction vs HEFT (%) : -7.474673148529121
+
+HSM-WM makespan: 6933.459033059372
+Reduction vs HEFT (%) : -0.029169968673926405
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0157
+Number of tasks: 102
+Number of edges: 1326
+Edge density: 0.25742574257425743
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 129260.64203749498
+Optimal critical path length: 17727.074658116475
+Computation-to-communication ratio: 1.0191000961953989
+--------------------------------------------------------
+
+HEFT makespan: 18989.52512945924
+SLR: 1.0712159504989023
+Speedup: 6.8069444157383145
+
+PEFT makespan: 17874.365966432055
+Reduction vs HEFT (%) : 5.8724963127023955
+
+HSM-LB makespan: 18244.523667015677
+Reduction vs HEFT (%) : 3.9232232368349855
+
+HSM-M makespan: 18968.832744787367
+Reduction vs HEFT (%) : 0.10896736243168448
+
+HSM-WM makespan: 18968.832744787367
+Reduction vs HEFT (%) : 0.10896736243168448
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0143
+Number of tasks: 102
+Number of edges: 703
+Edge density: 0.1364783537177247
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 18196.85644009464
+Optimal critical path length: 1201.2236043407522
+Computation-to-communication ratio: 1.0161229426819571
+--------------------------------------------------------
+
+HEFT makespan: 1380.0957761432194
+SLR: 1.1489083057942693
+Speedup: 13.185212761788978
+
+PEFT makespan: 1418.786169162503
+Reduction vs HEFT (%) : -2.8034570997243975
+
+HSM-LB makespan: 1378.3873896003674
+Reduction vs HEFT (%) : 0.12378753506703788
+
+HSM-M makespan: 1391.2728387363147
+Reduction vs HEFT (%) : -0.8098758641469317
+
+HSM-WM makespan: 1415.109582603953
+Reduction vs HEFT (%) : -2.5370562729046355
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0097
+Number of tasks: 102
+Number of edges: 318
+Edge density: 0.06173558532323821
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 9240.827799293484
+Optimal critical path length: 568.6666641736866
+Computation-to-communication ratio: 1.0080772349134732
+--------------------------------------------------------
+
+HEFT makespan: 659.5173775038093
+SLR: 1.1597609268377551
+Speedup: 14.011500097645433
+
+PEFT makespan: 647.5207788672983
+Reduction vs HEFT (%) : 1.818996594436456
+
+HSM-LB makespan: 703.5766681828311
+Reduction vs HEFT (%) : -6.6805352189173135
+
+HSM-M makespan: 613.9134334498832
+Reduction vs HEFT (%) : 6.914744873976076
+
+HSM-WM makespan: 623.7898109247174
+Reduction vs HEFT (%) : 5.417228991647832
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0049
+Number of tasks: 102
+Number of edges: 346
+Edge density: 0.06717142302465541
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 231399.55216153106
+Optimal critical path length: 16724.770001838355
+Computation-to-communication ratio: 0.9874866014309405
+--------------------------------------------------------
+
+HEFT makespan: 19942.3213836418
+SLR: 1.1923823993663158
+Speedup: 11.60344112954385
+
+PEFT makespan: 18540.14637859509
+Reduction vs HEFT (%) : 7.031152382274215
+
+HSM-LB makespan: 18423.8056573667
+Reduction vs HEFT (%) : 7.614538433427811
+
+HSM-M makespan: 22360.925161194056
+Reduction vs HEFT (%) : -12.127995186840067
+
+HSM-WM makespan: 20348.73009347776
+Reduction vs HEFT (%) : -2.037920771697756
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0082
+Number of tasks: 102
+Number of edges: 1028
+Edge density: 0.19957289846631723
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 48615.63535233063
+Optimal critical path length: 7774.180090196331
+Computation-to-communication ratio: 0.996274065383363
+--------------------------------------------------------
+
+HEFT makespan: 8227.839787755689
+SLR: 1.0583546679258753
+Speedup: 5.908675497629194
+
+PEFT makespan: 7814.104717521695
+Reduction vs HEFT (%) : 5.028477472904811
+
+HSM-LB makespan: 7816.338806994037
+Reduction vs HEFT (%) : 5.001324665728532
+
+HSM-M makespan: 8321.04377788255
+Reduction vs HEFT (%) : -1.1327881015082966
+
+HSM-WM makespan: 8321.04377788255
+Reduction vs HEFT (%) : -1.1327881015082966
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0048
+Number of tasks: 102
+Number of edges: 548
+Edge density: 0.10638710929916521
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 51724.16727337717
+Optimal critical path length: 3287.3956778850697
+Computation-to-communication ratio: 1.0295728638540718
+--------------------------------------------------------
+
+HEFT makespan: 3866.1541007707006
+SLR: 1.17605377617883
+Speedup: 13.378713296261571
+
+PEFT makespan: 3780.553450519011
+Reduction vs HEFT (%) : 2.2141034221741336
+
+HSM-LB makespan: 3613.7823408180134
+Reduction vs HEFT (%) : 6.527721176514362
+
+HSM-M makespan: 3915.497700290969
+Reduction vs HEFT (%) : -1.2762967598842607
+
+HSM-WM makespan: 3765.4031223428
+Reduction vs HEFT (%) : 2.6059742007649476
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0103
+Number of tasks: 102
+Number of edges: 702
+Edge density: 0.1362842166569598
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 339455.04671094037
+Optimal critical path length: 16651.085252914774
+Computation-to-communication ratio: 1.003457489932355
+--------------------------------------------------------
+
+HEFT makespan: 22941.728793760532
+SLR: 1.377791804275615
+Speedup: 14.796402213736483
+
+PEFT makespan: 22932.613908126128
+Reduction vs HEFT (%) : 0.03973059622639141
+
+HSM-LB makespan: 20756.85807341082
+Reduction vs HEFT (%) : 9.523566161866285
+
+HSM-M makespan: 22566.159004743957
+Reduction vs HEFT (%) : 1.6370596670932684
+
+HSM-WM makespan: 21725.52282107831
+Reduction vs HEFT (%) : 5.301283018448871
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0060
+Number of tasks: 102
+Number of edges: 1741
+Edge density: 0.33799262279169096
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 180492.36481046333
+Optimal critical path length: 29375.616002204573
+Computation-to-communication ratio: 1.0202976536369162
+--------------------------------------------------------
+
+HEFT makespan: 30720.744705549685
+SLR: 1.0457906551898064
+Speedup: 5.87526007394793
+
+PEFT makespan: 30874.54893178436
+Reduction vs HEFT (%) : -0.5006526622607765
+
+HSM-LB makespan: 30425.176908556223
+Reduction vs HEFT (%) : 0.9621114326049138
+
+HSM-M makespan: 31565.545955385413
+Reduction vs HEFT (%) : -2.7499374052710266
+
+HSM-WM makespan: 31207.296449687663
+Reduction vs HEFT (%) : -1.5837888983533759
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0065
+Number of tasks: 102
+Number of edges: 932
+Edge density: 0.1809357406328868
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 32819.99127099142
+Optimal critical path length: 4484.728544106162
+Computation-to-communication ratio: 1.0118659079763908
+--------------------------------------------------------
+
+HEFT makespan: 5172.921018801247
+SLR: 1.153452425922079
+Speedup: 6.344576140193419
+
+PEFT makespan: 4801.892324974772
+Reduction vs HEFT (%) : 7.172518050787005
+
+HSM-LB makespan: 4827.349654673441
+Reduction vs HEFT (%) : 6.680391269687064
+
+HSM-M makespan: 5173.616851401785
+Reduction vs HEFT (%) : -0.013451444512881494
+
+HSM-WM makespan: 5186.869175364305
+Reduction vs HEFT (%) : -0.2696379185447313
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0041
+Number of tasks: 102
+Number of edges: 539
+Edge density: 0.1046398757522811
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 166547.83048850333
+Optimal critical path length: 11213.656463438812
+Computation-to-communication ratio: 1.0508061976581096
+--------------------------------------------------------
+
+HEFT makespan: 14127.617403019303
+SLR: 1.2598582317089182
+Speedup: 11.788812347997853
+
+PEFT makespan: 13969.89396154609
+Reduction vs HEFT (%) : 1.1164192586324333
+
+HSM-LB makespan: 14255.55287746788
+Reduction vs HEFT (%) : -0.9055700674710749
+
+HSM-M makespan: 14034.43180670925
+Reduction vs HEFT (%) : 0.659598810271703
+
+HSM-WM makespan: 14495.77858725512
+Reduction vs HEFT (%) : -2.605967968506377
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0031
+Number of tasks: 102
+Number of edges: 515
+Edge density: 0.0999805862939235
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 80260.85758321617
+Optimal critical path length: 7170.140698306014
+Computation-to-communication ratio: 1.0703704608482356
+--------------------------------------------------------
+
+HEFT makespan: 9453.226731152208
+SLR: 1.31841579250817
+Speedup: 8.49031339941569
+
+PEFT makespan: 9413.722726090642
+Reduction vs HEFT (%) : 0.41788911008961804
+
+HSM-LB makespan: 9022.79012302451
+Reduction vs HEFT (%) : 4.553329993760073
+
+HSM-M makespan: 8870.507809960756
+Reduction vs HEFT (%) : 6.164232994339997
+
+HSM-WM makespan: 8794.629517836353
+Reduction vs HEFT (%) : 6.966903810161568
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0032
+Number of tasks: 102
+Number of edges: 309
+Edge density: 0.05998835177635411
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 95032.74706501685
+Optimal critical path length: 4707.85413948056
+Computation-to-communication ratio: 0.9731177718127634
+--------------------------------------------------------
+
+HEFT makespan: 6346.780852155554
+SLR: 1.3481260600091203
+Speedup: 14.97337772939504
+
+PEFT makespan: 6384.6550592344065
+Reduction vs HEFT (%) : -0.5967467281620316
+
+HSM-LB makespan: 6370.421632268575
+Reduction vs HEFT (%) : -0.3724845817701663
+
+HSM-M makespan: 6091.2926318938435
+Reduction vs HEFT (%) : 4.0254772649813475
+
+HSM-WM makespan: 6274.040703639784
+Reduction vs HEFT (%) : 1.1460951655683118
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0177
+Number of tasks: 102
+Number of edges: 1652
+Edge density: 0.3207144243836148
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 117216.13619732455
+Optimal critical path length: 11303.279263230066
+Computation-to-communication ratio: 0.9989799781305703
+--------------------------------------------------------
+
+HEFT makespan: 11798.136703174056
+SLR: 1.0437799888350787
+Speedup: 9.935139687421138
+
+PEFT makespan: 11854.04051147194
+Reduction vs HEFT (%) : -0.47383590904523487
+
+HSM-LB makespan: 12338.889772657842
+Reduction vs HEFT (%) : -4.583376876268147
+
+HSM-M makespan: 11880.717642248243
+Reduction vs HEFT (%) : -0.6999489932335763
+
+HSM-WM makespan: 11989.035297066956
+Reduction vs HEFT (%) : -1.618040193088646
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0021
+Number of tasks: 102
+Number of edges: 484
+Edge density: 0.09396233741021161
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 6830.458238132092
+Optimal critical path length: 601.1252528961635
+Computation-to-communication ratio: 1.035855965459536
+--------------------------------------------------------
+
+HEFT makespan: 667.7947356491342
+SLR: 1.1109078057056554
+Speedup: 10.228379880072731
+
+PEFT makespan: 677.2867405430195
+Reduction vs HEFT (%) : -1.421395585674773
+
+HSM-LB makespan: 661.7530227116958
+Reduction vs HEFT (%) : 0.9047260505229104
+
+HSM-M makespan: 657.6249549856732
+Reduction vs HEFT (%) : 1.5228902117018634
+
+HSM-WM makespan: 664.537178177843
+Reduction vs HEFT (%) : 0.4878081987460803
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0080
+Number of tasks: 102
+Number of edges: 245
+Edge density: 0.0475635798874005
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 79123.86039851182
+Optimal critical path length: 5658.681874506067
+Computation-to-communication ratio: 1.0892076023123434
+--------------------------------------------------------
+
+HEFT makespan: 6980.660964051455
+SLR: 1.2336196165225812
+Speedup: 11.334723288522195
+
+PEFT makespan: 6862.974910780987
+Reduction vs HEFT (%) : 1.685886965095719
+
+HSM-LB makespan: 6410.997783278638
+Reduction vs HEFT (%) : 8.16059086247607
+
+HSM-M makespan: 6872.839164357644
+Reduction vs HEFT (%) : 1.5445786616634791
+
+HSM-WM makespan: 6782.820007124651
+Reduction vs HEFT (%) : 2.834129288696758
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0138
+Number of tasks: 102
+Number of edges: 367
+Edge density: 0.07124830130071831
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 15398.85568410859
+Optimal critical path length: 1028.7090677969154
+Computation-to-communication ratio: 1.047458104593916
+--------------------------------------------------------
+
+HEFT makespan: 1257.4523764395517
+SLR: 1.2223595725976375
+Speedup: 12.246074660664371
+
+PEFT makespan: 1145.631737159542
+Reduction vs HEFT (%) : 8.892634136700067
+
+HSM-LB makespan: 1258.992525311886
+Reduction vs HEFT (%) : -0.12248168608144283
+
+HSM-M makespan: 1231.726718541459
+Reduction vs HEFT (%) : 2.0458554439202175
+
+HSM-WM makespan: 1187.6721671928517
+Reduction vs HEFT (%) : 5.549332169881538
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0170
+Number of tasks: 102
+Number of edges: 1679
+Edge density: 0.32595612502426713
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 41240.34897622757
+Optimal critical path length: 3928.274443188511
+Computation-to-communication ratio: 1.020333974252662
+--------------------------------------------------------
+
+HEFT makespan: 4019.3735258790393
+SLR: 1.0231906105360054
+Speedup: 10.260392250359036
+
+PEFT makespan: 4019.3735258790393
+Reduction vs HEFT (%) : 0.0
+
+HSM-LB makespan: 4146.458785621581
+Reduction vs HEFT (%) : -3.161817604765858
+
+HSM-M makespan: 4019.3735258790393
+Reduction vs HEFT (%) : 0.0
+
+HSM-WM makespan: 4019.3735258790393
+Reduction vs HEFT (%) : 0.0
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0173
+Number of tasks: 102
+Number of edges: 1940
+Edge density: 0.37662589788390605
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 41639.87684632542
+Optimal critical path length: 3563.6442865999015
+Computation-to-communication ratio: 1.0193237141688318
+--------------------------------------------------------
+
+HEFT makespan: 4071.9868741962205
+SLR: 1.1426468375386962
+Speedup: 10.225935920912027
+
+PEFT makespan: 4255.032338493944
+Reduction vs HEFT (%) : -4.49523709071029
+
+HSM-LB makespan: 3980.7987273240133
+Reduction vs HEFT (%) : 2.2394017881063775
+
+HSM-M makespan: 4003.9788606733705
+Reduction vs HEFT (%) : 1.6701432402400371
+
+HSM-WM makespan: 3904.599220994907
+Reduction vs HEFT (%) : 4.110712003077239
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0029
+Number of tasks: 102
+Number of edges: 993
+Edge density: 0.19277810133954573
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 309254.87812500086
+Optimal critical path length: 28750.271236473338
+Computation-to-communication ratio: 1.022155108621026
+--------------------------------------------------------
+
+HEFT makespan: 33158.310461854184
+SLR: 1.1533216570071414
+Speedup: 9.326617484952145
+
+PEFT makespan: 29867.01841115987
+Reduction vs HEFT (%) : 9.925994433524181
+
+HSM-LB makespan: 30443.624677721527
+Reduction vs HEFT (%) : 8.187044955911347
+
+HSM-M makespan: 31635.964734078185
+Reduction vs HEFT (%) : 4.591143838668515
+
+HSM-WM makespan: 31635.964734078185
+Reduction vs HEFT (%) : 4.591143838668515
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0121
+Number of tasks: 102
+Number of edges: 367
+Edge density: 0.07124830130071831
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 74296.1040210999
+Optimal critical path length: 5142.240807500057
+Computation-to-communication ratio: 1.0379033259687893
+--------------------------------------------------------
+
+HEFT makespan: 5959.9883303937895
+SLR: 1.1590255208781806
+Speedup: 12.465813673194054
+
+PEFT makespan: 5850.4076998551445
+Reduction vs HEFT (%) : 1.8386047834997186
+
+HSM-LB makespan: 5744.149703326412
+Reduction vs HEFT (%) : 3.621460565059806
+
+HSM-M makespan: 6185.497225964419
+Reduction vs HEFT (%) : -3.7837137099852214
+
+HSM-WM makespan: 6185.497225964419
+Reduction vs HEFT (%) : -3.7837137099852214
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0109
+Number of tasks: 102
+Number of edges: 1213
+Edge density: 0.23548825470782372
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 105182.91948399617
+Optimal critical path length: 9392.370125369118
+Computation-to-communication ratio: 1.015866514368283
+--------------------------------------------------------
+
+HEFT makespan: 9705.047700262274
+SLR: 1.0332905933986356
+Speedup: 10.837960073205375
+
+PEFT makespan: 10726.572019890444
+Reduction vs HEFT (%) : -10.525701173014994
+
+HSM-LB makespan: 9541.441948018466
+Reduction vs HEFT (%) : 1.685779990956533
+
+HSM-M makespan: 9644.960265936037
+Reduction vs HEFT (%) : 0.6191358989880342
+
+HSM-WM makespan: 9540.799310357941
+Reduction vs HEFT (%) : 1.6924016756753701
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0174
+Number of tasks: 102
+Number of edges: 1238
+Edge density: 0.2403416812269462
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 10304.621305228542
+Optimal critical path length: 568.2126314073836
+Computation-to-communication ratio: 1.00739088720525
+--------------------------------------------------------
+
+HEFT makespan: 596.6546889676594
+SLR: 1.0500553067428804
+Speedup: 17.270661734105783
+
+PEFT makespan: 615.0472743404462
+Reduction vs HEFT (%) : -3.082618089302187
+
+HSM-LB makespan: 664.6826621458014
+Reduction vs HEFT (%) : -11.401565165916153
+
+HSM-M makespan: 612.9816569783374
+Reduction vs HEFT (%) : -2.7364182855794184
+
+HSM-WM makespan: 600.9364986327616
+Reduction vs HEFT (%) : -0.7176361376645986
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0125
+Number of tasks: 102
+Number of edges: 992
+Edge density: 0.19258396427878083
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 313017.7313290258
+Optimal critical path length: 29983.573461577143
+Computation-to-communication ratio: 1.0183227141000972
+--------------------------------------------------------
+
+HEFT makespan: 31116.153536905338
+SLR: 1.0377733520248864
+Speedup: 10.059653773007994
+
+PEFT makespan: 32193.007581647485
+Reduction vs HEFT (%) : -3.460755660126651
+
+HSM-LB makespan: 31220.590105143667
+Reduction vs HEFT (%) : -0.33563457036700584
+
+HSM-M makespan: 31564.9746980498
+Reduction vs HEFT (%) : -1.442405664350943
+
+HSM-WM makespan: 31505.4838377875
+Reduction vs HEFT (%) : -1.251216029707507
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0051
+Number of tasks: 102
+Number of edges: 608
+Edge density: 0.11803533294505922
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 128014.1069546306
+Optimal critical path length: 9612.113363691098
+Computation-to-communication ratio: 1.0508997002178109
+--------------------------------------------------------
+
+HEFT makespan: 10259.61836140698
+SLR: 1.0673634374893843
+Speedup: 12.477472596463622
+
+PEFT makespan: 9917.70660062302
+Reduction vs HEFT (%) : 3.332597263755048
+
+HSM-LB makespan: 10313.920467338954
+Reduction vs HEFT (%) : -0.5292799792265157
+
+HSM-M makespan: 10259.61836140698
+Reduction vs HEFT (%) : 0.0
+
+HSM-WM makespan: 10313.920467338954
+Reduction vs HEFT (%) : -0.5292799792265157
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0057
+Number of tasks: 102
+Number of edges: 808
+Edge density: 0.1568627450980392
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 23326.848028251523
+Optimal critical path length: 1742.4915455079615
+Computation-to-communication ratio: 1.0014072442889712
+--------------------------------------------------------
+
+HEFT makespan: 1974.8738141888239
+SLR: 1.1333620638102548
+Speedup: 11.811816968079546
+
+PEFT makespan: 2065.455969955629
+Reduction vs HEFT (%) : -4.586731320046965
+
+HSM-LB makespan: 2088.9287984014595
+Reduction vs HEFT (%) : -5.775304902682279
+
+HSM-M makespan: 2060.2126015263284
+Reduction vs HEFT (%) : -4.321227347508156
+
+HSM-WM makespan: 2086.4635002884706
+Reduction vs HEFT (%) : -5.6504717059850265
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0038
+Number of tasks: 102
+Number of edges: 507
+Edge density: 0.09842748980780432
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 19683.095133800598
+Optimal critical path length: 1054.2216515540108
+Computation-to-communication ratio: 0.9981135130302357
+--------------------------------------------------------
+
+HEFT makespan: 1378.8513224827975
+SLR: 1.3079330332954702
+Speedup: 14.27499456457617
+
+PEFT makespan: 1357.7326858385918
+Reduction vs HEFT (%) : 1.5316108633220153
+
+HSM-LB makespan: 1330.3223735482838
+Reduction vs HEFT (%) : 3.5195200630573424
+
+HSM-M makespan: 1382.7783074286117
+Reduction vs HEFT (%) : -0.28480118790059805
+
+HSM-WM makespan: 1301.7921411402415
+Reduction vs HEFT (%) : 5.5886505010417835
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0047
+Number of tasks: 102
+Number of edges: 747
+Edge density: 0.14502038439138032
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 507472.346817793
+Optimal critical path length: 23149.510080117187
+Computation-to-communication ratio: 1.021285274749901
+--------------------------------------------------------
+
+HEFT makespan: 26047.540676438784
+SLR: 1.1251875562934992
+Speedup: 19.482543596786677
+
+PEFT makespan: 27644.37537828744
+Reduction vs HEFT (%) : -6.130462455878089
+
+HSM-LB makespan: 26596.609619792845
+Reduction vs HEFT (%) : -2.1079492692786914
+
+HSM-M makespan: 26249.01746608345
+Reduction vs HEFT (%) : -0.7734964008594858
+
+HSM-WM makespan: 26396.84930155348
+Reduction vs HEFT (%) : -1.3410426322154194
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0033
+Number of tasks: 102
+Number of edges: 740
+Edge density: 0.14366142496602602
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 13897.419583326184
+Optimal critical path length: 1174.580250190434
+Computation-to-communication ratio: 1.0053219521351682
+--------------------------------------------------------
+
+HEFT makespan: 1291.128206561273
+SLR: 1.099225196704902
+Speedup: 10.76377970266786
+
+PEFT makespan: 1337.925040707197
+Reduction vs HEFT (%) : -3.624491658389246
+
+HSM-LB makespan: 1385.5823399573364
+Reduction vs HEFT (%) : -7.315627752229801
+
+HSM-M makespan: 1244.750602406347
+Reduction vs HEFT (%) : 3.592021607090885
+
+HSM-WM makespan: 1244.750602406347
+Reduction vs HEFT (%) : 3.592021607090885
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0112
+Number of tasks: 102
+Number of edges: 1431
+Edge density: 0.27781013395457194
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 15888.1527723382
+Optimal critical path length: 824.9728652684406
+Computation-to-communication ratio: 1.0299490929754065
+--------------------------------------------------------
+
+HEFT makespan: 988.3767515680701
+SLR: 1.1980718314249754
+Speedup: 16.07499644961446
+
+PEFT makespan: 955.4268952888417
+Reduction vs HEFT (%) : 3.3337344516605754
+
+HSM-LB makespan: 979.1028415649794
+Reduction vs HEFT (%) : 0.9382970601420482
+
+HSM-M makespan: 965.8105737271939
+Reduction vs HEFT (%) : 2.283155467292687
+
+HSM-WM makespan: 965.8105737271939
+Reduction vs HEFT (%) : 2.283155467292687
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0085
+Number of tasks: 102
+Number of edges: 1194
+Edge density: 0.23179965055329063
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 61990.407836040824
+Optimal critical path length: 9228.67914305739
+Computation-to-communication ratio: 1.0283385106652394
+--------------------------------------------------------
+
+HEFT makespan: 10077.572880270121
+SLR: 1.0919843158542728
+Speedup: 6.151323197811418
+
+PEFT makespan: 9737.052489436424
+Reduction vs HEFT (%) : 3.3789920934272573
+
+HSM-LB makespan: 9475.72670518434
+Reduction vs HEFT (%) : 5.972134185842279
+
+HSM-M makespan: 10030.497355391488
+Reduction vs HEFT (%) : 0.4671315746155358
+
+HSM-WM makespan: 9873.388037472985
+Reduction vs HEFT (%) : 2.026131145098333
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0119
+Number of tasks: 102
+Number of edges: 1439
+Edge density: 0.2793632304406911
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 58182.662876546085
+Optimal critical path length: 4551.362098885226
+Computation-to-communication ratio: 1.0172288714596054
+--------------------------------------------------------
+
+HEFT makespan: 4855.7545305929425
+SLR: 1.0668794143586755
+Speedup: 11.982208431248958
+
+PEFT makespan: 5276.903342574086
+Reduction vs HEFT (%) : -8.673189909575527
+
+HSM-LB makespan: 4881.287288763499
+Reduction vs HEFT (%) : -0.5258247304243042
+
+HSM-M makespan: 5134.157761264839
+Reduction vs HEFT (%) : -5.7334700285580595
+
+HSM-WM makespan: 5134.157761264839
+Reduction vs HEFT (%) : -5.7334700285580595
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0035
+Number of tasks: 102
+Number of edges: 375
+Edge density: 0.0728013977868375
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 118641.79507328635
+Optimal critical path length: 7275.170118952382
+Computation-to-communication ratio: 1.0848600081975095
+--------------------------------------------------------
+
+HEFT makespan: 9312.321429995509
+SLR: 1.2800142509020085
+Speedup: 12.740302830520271
+
+PEFT makespan: 8557.489581476828
+Reduction vs HEFT (%) : 8.105732326714204
+
+HSM-LB makespan: 8825.671537916138
+Reduction vs HEFT (%) : 5.2258708608558635
+
+HSM-M makespan: 9247.350033960116
+Reduction vs HEFT (%) : 0.6976927989847468
+
+HSM-WM makespan: 9247.350033960116
+Reduction vs HEFT (%) : 0.6976927989847468
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0141
+Number of tasks: 102
+Number of edges: 447
+Edge density: 0.08677926616191031
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 89447.21497447343
+Optimal critical path length: 5148.8001793039475
+Computation-to-communication ratio: 1.0158583431197017
+--------------------------------------------------------
+
+HEFT makespan: 6673.1457413902535
+SLR: 1.29605840370608
+Speedup: 13.404055364724943
+
+PEFT makespan: 5932.851570090313
+Reduction vs HEFT (%) : 11.093631099771414
+
+HSM-LB makespan: 5904.9121387708465
+Reduction vs HEFT (%) : 11.512315666274603
+
+HSM-M makespan: 6388.12688781015
+Reduction vs HEFT (%) : 4.271131856333838
+
+HSM-WM makespan: 6750.055509821341
+Reduction vs HEFT (%) : -1.1525264307364722
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0155
+Number of tasks: 102
+Number of edges: 533
+Edge density: 0.10347505338769171
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 200816.99214429618
+Optimal critical path length: 18778.072525928637
+Computation-to-communication ratio: 1.051653558333472
+--------------------------------------------------------
+
+HEFT makespan: 23617.736167251885
+SLR: 1.2577295212083495
+Speedup: 8.502804448410554
+
+PEFT makespan: 21712.654180450096
+Reduction vs HEFT (%) : 8.066319198888152
+
+HSM-LB makespan: 22510.519347062975
+Reduction vs HEFT (%) : 4.688073456101037
+
+HSM-M makespan: 24598.895949206842
+Reduction vs HEFT (%) : -4.154334585697612
+
+HSM-WM makespan: 23776.20121518615
+Reduction vs HEFT (%) : -0.670957820902359
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0009
+Number of tasks: 102
+Number of edges: 875
+Edge density: 0.1698699281692875
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 449762.42757949873
+Optimal critical path length: 34845.79483556547
+Computation-to-communication ratio: 1.043078281012187
+--------------------------------------------------------
+
+HEFT makespan: 37705.5499969845
+SLR: 1.0820688744485232
+Speedup: 11.928281847512329
+
+PEFT makespan: 37957.11533234719
+Reduction vs HEFT (%) : -0.6671838373470536
+
+HSM-LB makespan: 37062.80912230124
+Reduction vs HEFT (%) : 1.7046320097032464
+
+HSM-M makespan: 38430.3110680785
+Reduction vs HEFT (%) : -1.9221601890224917
+
+HSM-WM makespan: 38430.3110680785
+Reduction vs HEFT (%) : -1.9221601890224917
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0064
+Number of tasks: 102
+Number of edges: 1494
+Edge density: 0.29004076878276064
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 60267.067048947756
+Optimal critical path length: 8287.298922636279
+Computation-to-communication ratio: 1.0181101382133626
+--------------------------------------------------------
+
+HEFT makespan: 8481.668684625925
+SLR: 1.023453934002397
+Speedup: 7.105567228556012
+
+PEFT makespan: 8324.867514173406
+Reduction vs HEFT (%) : 1.8487066199218702
+
+HSM-LB makespan: 8287.298922636279
+Reduction vs HEFT (%) : 2.2916453025566312
+
+HSM-M makespan: 8470.44258232874
+Reduction vs HEFT (%) : 0.13235723670193522
+
+HSM-WM makespan: 8470.44258232874
+Reduction vs HEFT (%) : 0.13235723670193522
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0115
+Number of tasks: 102
+Number of edges: 1699
+Edge density: 0.32983886623956515
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 285457.45753806684
+Optimal critical path length: 17802.732646781944
+Computation-to-communication ratio: 1.0012928103547276
+--------------------------------------------------------
+
+HEFT makespan: 19821.44755272074
+SLR: 1.1133935416540506
+Speedup: 14.401443526201206
+
+PEFT makespan: 19385.15795015174
+Reduction vs HEFT (%) : 2.2010985898409388
+
+HSM-LB makespan: 19424.846675606677
+Reduction vs HEFT (%) : 2.0008673738847307
+
+HSM-M makespan: 19040.489523051026
+Reduction vs HEFT (%) : 3.9399646650050926
+
+HSM-WM makespan: 19779.90738728799
+Reduction vs HEFT (%) : 0.20957180509779505
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0071
+Number of tasks: 102
+Number of edges: 1444
+Edge density: 0.2803339157445156
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 54622.295932915236
+Optimal critical path length: 9544.090921980398
+Computation-to-communication ratio: 1.008698384646667
+--------------------------------------------------------
+
+HEFT makespan: 9965.724425078291
+SLR: 1.0441774398991586
+Speedup: 5.481016091059143
+
+PEFT makespan: 9665.124532933349
+Reduction vs HEFT (%) : 3.0163375919616726
+
+HSM-LB makespan: 10132.791772629585
+Reduction vs HEFT (%) : -1.6764194997292492
+
+HSM-M makespan: 10044.568755284468
+Reduction vs HEFT (%) : -0.7911550314171762
+
+HSM-WM makespan: 10044.568755284468
+Reduction vs HEFT (%) : -0.7911550314171762
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0093
+Number of tasks: 102
+Number of edges: 637
+Edge density: 0.12366530770724131
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 184274.46108627948
+Optimal critical path length: 10185.715358573152
+Computation-to-communication ratio: 1.0169090241379664
+--------------------------------------------------------
+
+HEFT makespan: 12211.001609544399
+SLR: 1.1988359363750132
+Speedup: 15.09085552345242
+
+PEFT makespan: 11776.545797164084
+Reduction vs HEFT (%) : 3.557904799887453
+
+HSM-LB makespan: 12108.308206313548
+Reduction vs HEFT (%) : 0.8409908254420628
+
+HSM-M makespan: 12348.57206139075
+Reduction vs HEFT (%) : -1.126610709303506
+
+HSM-WM makespan: 12407.091543259283
+Reduction vs HEFT (%) : -1.6058464324631245
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0165
+Number of tasks: 102
+Number of edges: 616
+Edge density: 0.11958842943117841
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 31712.979621829287
+Optimal critical path length: 1731.5164857800967
+Computation-to-communication ratio: 0.9743755122286635
+--------------------------------------------------------
+
+HEFT makespan: 2089.9541211721994
+SLR: 1.2070079253277317
+Speedup: 15.174007553832007
+
+PEFT makespan: 2023.9945266967086
+Reduction vs HEFT (%) : 3.1560307380573533
+
+HSM-LB makespan: 1963.007901607829
+Reduction vs HEFT (%) : 6.074115133836983
+
+HSM-M makespan: 1993.3732603322665
+Reduction vs HEFT (%) : 4.621195262686598
+
+HSM-WM makespan: 1874.278604421191
+Reduction vs HEFT (%) : 10.319629247652657
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0003
+Number of tasks: 102
+Number of edges: 695
+Edge density: 0.1349252572316055
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 418684.3848515808
+Optimal critical path length: 26654.251581948833
+Computation-to-communication ratio: 1.0493401122785524
+--------------------------------------------------------
+
+HEFT makespan: 29036.67198062482
+SLR: 1.0893823783178156
+Speedup: 14.419158818577921
+
+PEFT makespan: 29105.17954908906
+Reduction vs HEFT (%) : -0.23593464330193115
+
+HSM-LB makespan: 28422.70731733138
+Reduction vs HEFT (%) : 2.114445704050098
+
+HSM-M makespan: 28696.61513762137
+Reduction vs HEFT (%) : 1.1711288512345988
+
+HSM-WM makespan: 28874.67409641983
+Reduction vs HEFT (%) : 0.5579078907978356
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0133
+Number of tasks: 102
+Number of edges: 730
+Edge density: 0.141720054358377
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 56230.21350359702
+Optimal critical path length: 5701.743144827324
+Computation-to-communication ratio: 1.032509066692792
+--------------------------------------------------------
+
+HEFT makespan: 6159.251675508949
+SLR: 1.0802401158839787
+Speedup: 9.129390462673475
+
+PEFT makespan: 6263.4115406270585
+Reduction vs HEFT (%) : -1.6911123397064642
+
+HSM-LB makespan: 5932.470162922206
+Reduction vs HEFT (%) : 3.6819653512210664
+
+HSM-M makespan: 6176.271331097322
+Reduction vs HEFT (%) : -0.2763266787108023
+
+HSM-WM makespan: 6000.179912707801
+Reduction vs HEFT (%) : 2.5826475549564805
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0098
+Number of tasks: 102
+Number of edges: 1646
+Edge density: 0.31954960201902544
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 12945.567999498053
+Optimal critical path length: 833.3905419595558
+Computation-to-communication ratio: 1.0010180434405849
+--------------------------------------------------------
+
+HEFT makespan: 877.4427064151871
+SLR: 1.0528589685599878
+Speedup: 14.753747344242539
+
+PEFT makespan: 951.8389016923255
+Reduction vs HEFT (%) : -8.478752485285995
+
+HSM-LB makespan: 891.804052832433
+Reduction vs HEFT (%) : -1.636727539273707
+
+HSM-M makespan: 908.7856089546963
+Reduction vs HEFT (%) : -3.5720739725060042
+
+HSM-WM makespan: 908.7856089546963
+Reduction vs HEFT (%) : -3.5720739725060042
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0004
+Number of tasks: 102
+Number of edges: 515
+Edge density: 0.0999805862939235
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 147010.7844153703
+Optimal critical path length: 12169.141173918792
+Computation-to-communication ratio: 0.9955983891905152
+--------------------------------------------------------
+
+HEFT makespan: 13875.995431666848
+SLR: 1.1402608642100587
+Speedup: 10.594611762401732
+
+PEFT makespan: 13304.916234027021
+Reduction vs HEFT (%) : 4.115590845011013
+
+HSM-LB makespan: 13865.752707673892
+Reduction vs HEFT (%) : 0.07381613840533419
+
+HSM-M makespan: 14180.930113698672
+Reduction vs HEFT (%) : -2.197569778207935
+
+HSM-WM makespan: 14180.930113698672
+Reduction vs HEFT (%) : -2.197569778207935
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0081
+Number of tasks: 102
+Number of edges: 1485
+Edge density: 0.28829353523587653
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 136436.94216810164
+Optimal critical path length: 19189.207688092258
+Computation-to-communication ratio: 1.002591189467597
+--------------------------------------------------------
+
+HEFT makespan: 19657.49550432208
+SLR: 1.0244037077424732
+Speedup: 6.940708298170708
+
+PEFT makespan: 19700.827224308323
+Reduction vs HEFT (%) : -0.22043357444347578
+
+HSM-LB makespan: 19755.19020334326
+Reduction vs HEFT (%) : -0.49698446579678546
+
+HSM-M makespan: 19982.20883910266
+Reduction vs HEFT (%) : -1.651855063170089
+
+HSM-WM makespan: 19925.549877461493
+Reduction vs HEFT (%) : -1.3636242372812717
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0022
+Number of tasks: 102
+Number of edges: 290
+Edge density: 0.05629974762182101
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 230498.78962745157
+Optimal critical path length: 14171.734004736249
+Computation-to-communication ratio: 0.9787978081863135
+--------------------------------------------------------
+
+HEFT makespan: 16523.1084627279
+SLR: 1.1659200248329395
+Speedup: 13.950086338015668
+
+PEFT makespan: 16613.031370221255
+Reduction vs HEFT (%) : -0.5442251238391123
+
+HSM-LB makespan: 17298.168423429226
+Reduction vs HEFT (%) : -4.69076362023327
+
+HSM-M makespan: 18701.02451330129
+Reduction vs HEFT (%) : -13.181031011726603
+
+HSM-WM makespan: 17505.311343581583
+Reduction vs HEFT (%) : -5.944419496302956
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0113
+Number of tasks: 102
+Number of edges: 935
+Edge density: 0.18151815181518152
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 39196.82475762294
+Optimal critical path length: 2926.6383152244916
+Computation-to-communication ratio: 1.0378802018081608
+--------------------------------------------------------
+
+HEFT makespan: 3109.0381038190562
+SLR: 1.0623239939304128
+Speedup: 12.607379983369984
+
+PEFT makespan: 3392.6324913247945
+Reduction vs HEFT (%) : -9.12161183091898
+
+HSM-LB makespan: 3102.9251227099535
+Reduction vs HEFT (%) : 0.19661969088103604
+
+HSM-M makespan: 3134.9500324642977
+Reduction vs HEFT (%) : -0.8334387607991118
+
+HSM-WM makespan: 3116.05231744419
+Reduction vs HEFT (%) : -0.22560719395872297
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0074
+Number of tasks: 102
+Number of edges: 1570
+Edge density: 0.304795185400893
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 232218.18612092672
+Optimal critical path length: 34904.35583932171
+Computation-to-communication ratio: 1.0126724575242863
+--------------------------------------------------------
+
+HEFT makespan: 37656.15548931736
+SLR: 1.078838287767385
+Speedup: 6.166805482487571
+
+PEFT makespan: 36618.50839628517
+Reduction vs HEFT (%) : 2.7555842585325934
+
+HSM-LB makespan: 36965.302226102816
+Reduction vs HEFT (%) : 1.8346356770555872
+
+HSM-M makespan: 36992.62998038818
+Reduction vs HEFT (%) : 1.7620638652754081
+
+HSM-WM makespan: 36992.62998038818
+Reduction vs HEFT (%) : 1.7620638652754081
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0034
+Number of tasks: 102
+Number of edges: 580
+Edge density: 0.11259949524364202
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 924.4454232478898
+Optimal critical path length: 59.210490907808015
+Computation-to-communication ratio: 1.0247794660236973
+--------------------------------------------------------
+
+HEFT makespan: 70.94348953559854
+SLR: 1.1981574286566725
+Speedup: 13.030729518654631
+
+PEFT makespan: 74.41156044563726
+Reduction vs HEFT (%) : -4.888497778641792
+
+HSM-LB makespan: 77.54780135723365
+Reduction vs HEFT (%) : -9.309257078933442
+
+HSM-M makespan: 70.51722205893616
+Reduction vs HEFT (%) : 0.6008549613964078
+
+HSM-WM makespan: 69.41461007011283
+Reduction vs HEFT (%) : 2.1550666248501074
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0015
+Number of tasks: 102
+Number of edges: 352
+Edge density: 0.0683362453892448
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 318308.29699283384
+Optimal critical path length: 22529.105440620606
+Computation-to-communication ratio: 0.9960113471297775
+--------------------------------------------------------
+
+HEFT makespan: 30414.671665121004
+SLR: 1.3500168368994583
+Speedup: 10.465616742391601
+
+PEFT makespan: 27932.608882202316
+Reduction vs HEFT (%) : 8.160741665230844
+
+HSM-LB makespan: 26355.765177321267
+Reduction vs HEFT (%) : 13.345225398091074
+
+HSM-M makespan: 28486.40058131779
+Reduction vs HEFT (%) : 6.3399372021316935
+
+HSM-WM makespan: 28486.40058131779
+Reduction vs HEFT (%) : 6.3399372021316935
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0052
+Number of tasks: 102
+Number of edges: 395
+Edge density: 0.07668413900213551
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 254773.52148699528
+Optimal critical path length: 17428.483006664843
+Computation-to-communication ratio: 1.0274256364192682
+--------------------------------------------------------
+
+HEFT makespan: 20513.85605117239
+SLR: 1.1770304990587919
+Speedup: 12.419582200998951
+
+PEFT makespan: 22028.57577804356
+Reduction vs HEFT (%) : -7.38388591151589
+
+HSM-LB makespan: 20501.375407166764
+Reduction vs HEFT (%) : 0.06084006816902843
+
+HSM-M makespan: 20882.578574645686
+Reduction vs HEFT (%) : -1.7974315631030322
+
+HSM-WM makespan: 19650.315262860033
+Reduction vs HEFT (%) : 4.209548834496218
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0104
+Number of tasks: 102
+Number of edges: 258
+Edge density: 0.050087361677344205
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 356354.0436329351
+Optimal critical path length: 20440.629573050992
+Computation-to-communication ratio: 0.9828854780131644
+--------------------------------------------------------
+
+HEFT makespan: 25663.578033262904
+SLR: 1.2555179840007407
+Speedup: 13.885594719920189
+
+PEFT makespan: 23852.676990355183
+Reduction vs HEFT (%) : 7.056307739164765
+
+HSM-LB makespan: 26362.377228002017
+Reduction vs HEFT (%) : -2.722921931748516
+
+HSM-M makespan: 25988.437530871583
+Reduction vs HEFT (%) : -1.265838680746782
+
+HSM-WM makespan: 24151.55573954283
+Reduction vs HEFT (%) : 5.891704935922505
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0100
+Number of tasks: 102
+Number of edges: 517
+Edge density: 0.10036886041545331
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 1533.6680960758697
+Optimal critical path length: 93.6252266596224
+Computation-to-communication ratio: 1.01659725882683
+--------------------------------------------------------
+
+HEFT makespan: 107.4170611032861
+SLR: 1.1473089565251935
+Speedup: 14.27769555714415
+
+PEFT makespan: 105.34443736911896
+Reduction vs HEFT (%) : 1.9295107433392076
+
+HSM-LB makespan: 107.10365750897739
+Reduction vs HEFT (%) : 0.2917633298562805
+
+HSM-M makespan: 107.18426343476611
+Reduction vs HEFT (%) : 0.21672317798393692
+
+HSM-WM makespan: 108.64760755368337
+Reduction vs HEFT (%) : -1.145578214259686
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0014
+Number of tasks: 102
+Number of edges: 511
+Edge density: 0.0992040380508639
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 94990.62450837907
+Optimal critical path length: 7299.284974174103
+Computation-to-communication ratio: 1.0403638701014617
+--------------------------------------------------------
+
+HEFT makespan: 9935.846666578062
+SLR: 1.3612082144665518
+Speedup: 9.560395575336928
+
+PEFT makespan: 8403.228583426497
+Reduction vs HEFT (%) : 15.425138235143507
+
+HSM-LB makespan: 8841.918921076236
+Reduction vs HEFT (%) : 11.00990969578416
+
+HSM-M makespan: 8619.847336567165
+Reduction vs HEFT (%) : 13.244964160302715
+
+HSM-WM makespan: 8384.918312838185
+Reduction vs HEFT (%) : 15.609423190444843
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0178
+Number of tasks: 102
+Number of edges: 1049
+Edge density: 0.20364977674238013
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 19367.073079889906
+Optimal critical path length: 1715.3241254884774
+Computation-to-communication ratio: 1.021239652855513
+--------------------------------------------------------
+
+HEFT makespan: 1850.9534105858302
+SLR: 1.0790691876141654
+Speedup: 10.463295817780844
+
+PEFT makespan: 1862.0053273145504
+Reduction vs HEFT (%) : -0.5970931880571868
+
+HSM-LB makespan: 1874.2435596451633
+Reduction vs HEFT (%) : -1.2582785134479337
+
+HSM-M makespan: 1856.9001469743007
+Reduction vs HEFT (%) : -0.32127963645440616
+
+HSM-WM makespan: 1879.3056667276692
+Reduction vs HEFT (%) : -1.5317649801280169
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0037
+Number of tasks: 102
+Number of edges: 703
+Edge density: 0.1364783537177247
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 75704.04116503293
+Optimal critical path length: 4737.9670783575875
+Computation-to-communication ratio: 1.0387352897178774
+--------------------------------------------------------
+
+HEFT makespan: 5808.621842452028
+SLR: 1.2259734494536805
+Speedup: 13.033046946136801
+
+PEFT makespan: 6344.70187189198
+Reduction vs HEFT (%) : -9.229039933741888
+
+HSM-LB makespan: 5804.134892947105
+Reduction vs HEFT (%) : 0.07724636973490817
+
+HSM-M makespan: 6137.524544908661
+Reduction vs HEFT (%) : -5.662319072879953
+
+HSM-WM makespan: 5810.768448114154
+Reduction vs HEFT (%) : -0.03695550718137497
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0091
+Number of tasks: 102
+Number of edges: 1764
+Edge density: 0.3424577751892836
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 128191.8801985011
+Optimal critical path length: 9056.594059163732
+Computation-to-communication ratio: 1.01230605459903
+--------------------------------------------------------
+
+HEFT makespan: 10603.014878135196
+SLR: 1.1707508152478967
+Speedup: 12.090134897655338
+
+PEFT makespan: 10562.086940947876
+Reduction vs HEFT (%) : 0.3860028270989062
+
+HSM-LB makespan: 10310.803156797463
+Reduction vs HEFT (%) : 2.755930503693932
+
+HSM-M makespan: 10483.553744070958
+Reduction vs HEFT (%) : 1.1266713801428665
+
+HSM-WM makespan: 10454.704177673748
+Reduction vs HEFT (%) : 1.3987597128368208
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0110
+Number of tasks: 102
+Number of edges: 695
+Edge density: 0.1349252572316055
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 71953.32476071171
+Optimal critical path length: 3572.2869930511088
+Computation-to-communication ratio: 1.0509089605489936
+--------------------------------------------------------
+
+HEFT makespan: 4033.21339846272
+SLR: 1.129028380504762
+Speedup: 17.84019779070879
+
+PEFT makespan: 3828.1842374230437
+Reduction vs HEFT (%) : 5.083518792182531
+
+HSM-LB makespan: 3829.0143420685927
+Reduction vs HEFT (%) : 5.062937073251788
+
+HSM-M makespan: 3949.866599836822
+Reduction vs HEFT (%) : 2.0665110023106052
+
+HSM-WM makespan: 3976.618100414868
+Reduction vs HEFT (%) : 1.4032309341584437
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0083
+Number of tasks: 102
+Number of edges: 438
+Edge density: 0.0850320326150262
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 114545.67183954742
+Optimal critical path length: 9376.722361756347
+Computation-to-communication ratio: 1.0454961722419354
+--------------------------------------------------------
+
+HEFT makespan: 10317.506167144871
+SLR: 1.1003318397509112
+Speedup: 11.102069626506001
+
+PEFT makespan: 9838.816094501955
+Reduction vs HEFT (%) : 4.639590855465229
+
+HSM-LB makespan: 9695.445566617782
+Reduction vs HEFT (%) : 6.029175950560443
+
+HSM-M makespan: 10222.813928672891
+Reduction vs HEFT (%) : 0.9177822328182259
+
+HSM-WM makespan: 10138.211415319773
+Reduction vs HEFT (%) : 1.7377721798320351
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0070
+Number of tasks: 102
+Number of edges: 1903
+Edge density: 0.36944282663560474
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 176452.65333811572
+Optimal critical path length: 33796.96505515494
+Computation-to-communication ratio: 1.0114875265859034
+--------------------------------------------------------
+
+HEFT makespan: 35130.05307937585
+SLR: 1.0394440158175557
+Speedup: 5.022840498971735
+
+PEFT makespan: 35132.19490369409
+Reduction vs HEFT (%) : -0.006096843387638273
+
+HSM-LB makespan: 34247.94682162827
+Reduction vs HEFT (%) : 2.5109733132326255
+
+HSM-M makespan: 34892.436679737875
+Reduction vs HEFT (%) : 0.676390664998678
+
+HSM-WM makespan: 34892.436679737875
+Reduction vs HEFT (%) : 0.676390664998678
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0172
+Number of tasks: 102
+Number of edges: 565
+Edge density: 0.10968743933216851
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 41053.74301467418
+Optimal critical path length: 2286.8547739628693
+Computation-to-communication ratio: 0.9971938557979184
+--------------------------------------------------------
+
+HEFT makespan: 2339.7741211456255
+SLR: 1.023140668041221
+Speedup: 17.54602832968039
+
+PEFT makespan: 2529.971399415187
+Reduction vs HEFT (%) : -8.128873490422023
+
+HSM-LB makespan: 2356.316099211863
+Reduction vs HEFT (%) : -0.7069903849580896
+
+HSM-M makespan: 2492.6389924317705
+Reduction vs HEFT (%) : -6.533317464478046
+
+HSM-WM makespan: 2512.419588573261
+Reduction vs HEFT (%) : -7.378723692486318
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0030
+Number of tasks: 102
+Number of edges: 684
+Edge density: 0.13278974956319162
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 25780.301726591566
+Optimal critical path length: 1484.6261529407068
+Computation-to-communication ratio: 0.9910928698649534
+--------------------------------------------------------
+
+HEFT makespan: 1704.168003834202
+SLR: 1.1478768580619658
+Speedup: 15.127793544174372
+
+PEFT makespan: 1705.3678029495525
+Reduction vs HEFT (%) : -0.07040380482740716
+
+HSM-LB makespan: 1676.2048462169248
+Reduction vs HEFT (%) : 1.640868597131444
+
+HSM-M makespan: 1678.8380414731594
+Reduction vs HEFT (%) : 1.4863535933107954
+
+HSM-WM makespan: 1678.8380414731594
+Reduction vs HEFT (%) : 1.4863535933107954
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0054
+Number of tasks: 102
+Number of edges: 685
+Edge density: 0.13298388662395652
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 55757.02428188672
+Optimal critical path length: 3625.998423023045
+Computation-to-communication ratio: 1.0315588063317378
+--------------------------------------------------------
+
+HEFT makespan: 4207.76026191112
+SLR: 1.160441834501145
+Speedup: 13.250998348599468
+
+PEFT makespan: 4134.392852296728
+Reduction vs HEFT (%) : 1.74362142916074
+
+HSM-LB makespan: 3924.8024475873917
+Reduction vs HEFT (%) : 6.724665777303869
+
+HSM-M makespan: 4216.079868720154
+Reduction vs HEFT (%) : -0.197720551818108
+
+HSM-WM makespan: 4216.079868720154
+Reduction vs HEFT (%) : -0.197720551818108
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0005
+Number of tasks: 102
+Number of edges: 999
+Edge density: 0.19394292370413513
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 7692.628053739587
+Optimal critical path length: 938.1406781507872
+Computation-to-communication ratio: 1.0227610562240932
+--------------------------------------------------------
+
+HEFT makespan: 1018.8928823344329
+SLR: 1.0860768603945627
+Speedup: 7.549987037022625
+
+PEFT makespan: 994.6075882484676
+Reduction vs HEFT (%) : 2.3834982564923024
+
+HSM-LB makespan: 976.085179444506
+Reduction vs HEFT (%) : 4.201393849356194
+
+HSM-M makespan: 1022.6127019353278
+Reduction vs HEFT (%) : -0.36508446230109826
+
+HSM-WM makespan: 1022.6127019353278
+Reduction vs HEFT (%) : -0.36508446230109826
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0000
+Number of tasks: 102
+Number of edges: 591
+Edge density: 0.1147350029120559
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 101851.82884980271
+Optimal critical path length: 8465.046776250063
+Computation-to-communication ratio: 1.0255848799705842
+--------------------------------------------------------
+
+HEFT makespan: 9402.14190406881
+SLR: 1.1107017069826366
+Speedup: 10.832832549115853
+
+PEFT makespan: 9124.442509715207
+Reduction vs HEFT (%) : 2.9535758679990636
+
+HSM-LB makespan: 9057.544483957046
+Reduction vs HEFT (%) : 3.6650948648481716
+
+HSM-M makespan: 9919.083484935922
+Reduction vs HEFT (%) : -5.498125705201318
+
+HSM-WM makespan: 9479.614264560461
+Reduction vs HEFT (%) : -0.8239862925077119
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0139
+Number of tasks: 102
+Number of edges: 828
+Edge density: 0.1607454863133372
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 291427.22589276516
+Optimal critical path length: 17123.976348776036
+Computation-to-communication ratio: 0.9879908648031737
+--------------------------------------------------------
+
+HEFT makespan: 20847.30603628743
+SLR: 1.2174337088346614
+Speedup: 13.97913118296908
+
+PEFT makespan: 19969.58251088399
+Reduction vs HEFT (%) : 4.210249151020534
+
+HSM-LB makespan: 19026.513250303902
+Reduction vs HEFT (%) : 8.733947603657782
+
+HSM-M makespan: 21225.998179750073
+Reduction vs HEFT (%) : -1.8165039780366783
+
+HSM-WM makespan: 21247.36911478486
+Reduction vs HEFT (%) : -1.9190157126348453
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0006
+Number of tasks: 102
+Number of edges: 802
+Edge density: 0.15569792273344982
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 297071.55453211756
+Optimal critical path length: 37510.66170592095
+Computation-to-communication ratio: 1.0378476572435489
+--------------------------------------------------------
+
+HEFT makespan: 41370.49806811508
+SLR: 1.1028997140187708
+Speedup: 7.180758472934013
+
+PEFT makespan: 40761.916881682264
+Reduction vs HEFT (%) : 1.4710511471986791
+
+HSM-LB makespan: 40559.60207694948
+Reduction vs HEFT (%) : 1.960082737777256
+
+HSM-M makespan: 40735.88197587094
+Reduction vs HEFT (%) : 1.5339822382589148
+
+HSM-WM makespan: 40365.535467585665
+Reduction vs HEFT (%) : 2.4291769436151753
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0002
+Number of tasks: 102
+Number of edges: 920
+Edge density: 0.17860609590370802
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 113437.00118854598
+Optimal critical path length: 11661.281033673338
+Computation-to-communication ratio: 1.0161195347950283
+--------------------------------------------------------
+
+HEFT makespan: 12955.492291260633
+SLR: 1.110983626400059
+Speedup: 8.755900481301433
+
+PEFT makespan: 12819.693259743448
+Reduction vs HEFT (%) : 1.048196613947212
+
+HSM-LB makespan: 13003.86212624385
+Reduction vs HEFT (%) : -0.37335389420782406
+
+HSM-M makespan: 13425.578158672215
+Reduction vs HEFT (%) : -3.6284678099703456
+
+HSM-WM makespan: 12798.242674050847
+Reduction vs HEFT (%) : 1.213767980981018
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0145
+Number of tasks: 102
+Number of edges: 360
+Edge density: 0.06988934187536401
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 249093.29400699434
+Optimal critical path length: 19397.84618151177
+Computation-to-communication ratio: 0.9834128561389259
+--------------------------------------------------------
+
+HEFT makespan: 24140.017282957113
+SLR: 1.2444689506799544
+Speedup: 10.318687475955311
+
+PEFT makespan: 21223.762237739833
+Reduction vs HEFT (%) : 12.080583916052788
+
+HSM-LB makespan: 20819.312566699773
+Reduction vs HEFT (%) : 13.756016316532467
+
+HSM-M makespan: 24214.850366111372
+Reduction vs HEFT (%) : -0.3099959800239702
+
+HSM-WM makespan: 22564.453094530112
+Reduction vs HEFT (%) : 6.526773241125028
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0089
+Number of tasks: 102
+Number of edges: 897
+Edge density: 0.1741409435061153
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 76273.58395387809
+Optimal critical path length: 10433.118214181957
+Computation-to-communication ratio: 1.0022648089968058
+--------------------------------------------------------
+
+HEFT makespan: 11671.415311774055
+SLR: 1.118689069956943
+Speedup: 6.535075816977718
+
+PEFT makespan: 10791.538767235743
+Reduction vs HEFT (%) : 7.538730488415553
+
+HSM-LB makespan: 10623.382108188547
+Reduction vs HEFT (%) : 8.979486853905868
+
+HSM-M makespan: 11331.734108626522
+Reduction vs HEFT (%) : 2.910368572051965
+
+HSM-WM makespan: 11331.734108626522
+Reduction vs HEFT (%) : 2.910368572051965
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0023
+Number of tasks: 102
+Number of edges: 786
+Edge density: 0.1525917297612114
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 6302.065551382142
+Optimal critical path length: 528.5166804856187
+Computation-to-communication ratio: 0.9998685283382106
+--------------------------------------------------------
+
+HEFT makespan: 558.0781525042204
+SLR: 1.0559329026123443
+Speedup: 11.292442685855693
+
+PEFT makespan: 557.7327965196952
+Reduction vs HEFT (%) : 0.06188308626229855
+
+HSM-LB makespan: 555.7767418991601
+Reduction vs HEFT (%) : 0.41238141911367165
+
+HSM-M makespan: 575.1629014642607
+Reduction vs HEFT (%) : -3.06135419983336
+
+HSM-WM makespan: 575.1629014642607
+Reduction vs HEFT (%) : -3.06135419983336
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0039
+Number of tasks: 102
+Number of edges: 285
+Edge density: 0.0553290623179965
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 413329.1539716002
+Optimal critical path length: 19525.312666716032
+Computation-to-communication ratio: 0.977883782722218
+--------------------------------------------------------
+
+HEFT makespan: 25871.77094680291
+SLR: 1.325037472557631
+Speedup: 15.97606730600238
+
+PEFT makespan: 25296.67141090743
+Reduction vs HEFT (%) : 2.222884305361191
+
+HSM-LB makespan: 25554.383221144013
+Reduction vs HEFT (%) : 1.2267723238254575
+
+HSM-M makespan: 28204.02467365862
+Reduction vs HEFT (%) : -9.014665952521185
+
+HSM-WM makespan: 26717.112395917797
+Reduction vs HEFT (%) : -3.2674278496553626
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0124
+Number of tasks: 102
+Number of edges: 481
+Edge density: 0.09337992622791691
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 128538.18812813173
+Optimal critical path length: 10287.342993186607
+Computation-to-communication ratio: 0.9972037875869489
+--------------------------------------------------------
+
+HEFT makespan: 11645.409034109767
+SLR: 1.1320132945720405
+Speedup: 11.037670531935749
+
+PEFT makespan: 11343.180250814477
+Reduction vs HEFT (%) : 2.5952612090314062
+
+HSM-LB makespan: 11475.13921499777
+Reduction vs HEFT (%) : 1.4621196955235547
+
+HSM-M makespan: 12445.115266615567
+Reduction vs HEFT (%) : -6.867137342822687
+
+HSM-WM makespan: 11638.85680284434
+Reduction vs HEFT (%) : 0.05626450085381407
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0137
+Number of tasks: 102
+Number of edges: 547
+Edge density: 0.10619297223840031
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 53939.2448752286
+Optimal critical path length: 3444.0150128388627
+Computation-to-communication ratio: 1.0288091254677352
+--------------------------------------------------------
+
+HEFT makespan: 3790.820728614745
+SLR: 1.1006980847885486
+Speedup: 14.22890944646155
+
+PEFT makespan: 4317.641053671107
+Reduction vs HEFT (%) : -13.897262961545408
+
+HSM-LB makespan: 3828.9775861585476
+Reduction vs HEFT (%) : -1.0065592723965722
+
+HSM-M makespan: 3857.0193809861275
+Reduction vs HEFT (%) : -1.746288128892175
+
+HSM-WM makespan: 3880.571346456112
+Reduction vs HEFT (%) : -2.367577479037493
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0067
+Number of tasks: 102
+Number of edges: 1740
+Edge density: 0.337798485730926
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 168710.47310219152
+Optimal critical path length: 29955.9749785795
+Computation-to-communication ratio: 0.9981436657257897
+--------------------------------------------------------
+
+HEFT makespan: 32385.72813089623
+SLR: 1.081110801903599
+Speedup: 5.209408058398429
+
+PEFT makespan: 31533.43703908724
+Reduction vs HEFT (%) : 2.6316872925142007
+
+HSM-LB makespan: 31189.702028552583
+Reduction vs HEFT (%) : 3.6930653450481685
+
+HSM-M makespan: 30603.4950900034
+Reduction vs HEFT (%) : 5.503143340453619
+
+HSM-WM makespan: 30603.4950900034
+Reduction vs HEFT (%) : 5.503143340453619
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0008
+Number of tasks: 102
+Number of edges: 352
+Edge density: 0.0683362453892448
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 204649.07065574866
+Optimal critical path length: 19227.890460220595
+Computation-to-communication ratio: 0.9769811399731155
+--------------------------------------------------------
+
+HEFT makespan: 25080.242092842866
+SLR: 1.3043678475665255
+Speedup: 8.15977253720965
+
+PEFT makespan: 22257.72416426811
+Reduction vs HEFT (%) : 11.253950093967461
+
+HSM-LB makespan: 22493.25972842458
+Reduction vs HEFT (%) : 10.314822141037197
+
+HSM-M makespan: 23676.775354263613
+Reduction vs HEFT (%) : 5.595905866394162
+
+HSM-WM makespan: 23676.775354263613
+Reduction vs HEFT (%) : 5.595905866394162
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0106
+Number of tasks: 102
+Number of edges: 1030
+Edge density: 0.199961172587847
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 3038.4427902372367
+Optimal critical path length: 172.06528216350753
+Computation-to-communication ratio: 1.0070897746944507
+--------------------------------------------------------
+
+HEFT makespan: 188.494016604747
+SLR: 1.0954796588519689
+Speedup: 16.119571565014425
+
+PEFT makespan: 185.48877488487892
+Reduction vs HEFT (%) : 1.5943432974691092
+
+HSM-LB makespan: 179.35344686380262
+Reduction vs HEFT (%) : 4.849262541904039
+
+HSM-M makespan: 182.74832582898946
+Reduction vs HEFT (%) : 3.048208574071438
+
+HSM-WM makespan: 182.74832582898946
+Reduction vs HEFT (%) : 3.048208574071438
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0061
+Number of tasks: 102
+Number of edges: 1206
+Edge density: 0.23412929528246942
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 152491.0352577919
+Optimal critical path length: 16794.662814010007
+Computation-to-communication ratio: 0.9797688644760076
+--------------------------------------------------------
+
+HEFT makespan: 17937.412643492473
+SLR: 1.0680424395617631
+Speedup: 8.501283785379952
+
+PEFT makespan: 17693.125325245685
+Reduction vs HEFT (%) : 1.361887152300156
+
+HSM-LB makespan: 17737.314537419
+Reduction vs HEFT (%) : 1.1155349439210767
+
+HSM-M makespan: 18462.28370660875
+Reduction vs HEFT (%) : -2.926124706768647
+
+HSM-WM makespan: 18462.28370660875
+Reduction vs HEFT (%) : -2.926124706768647
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0007
+Number of tasks: 102
+Number of edges: 530
+Edge density: 0.10289264220539701
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 6994.56022329343
+Optimal critical path length: 641.3261834576637
+Computation-to-communication ratio: 1.0429232770961028
+--------------------------------------------------------
+
+HEFT makespan: 794.1404610708743
+SLR: 1.2382785570820194
+Speedup: 8.807711691029416
+
+PEFT makespan: 837.5837215070449
+Reduction vs HEFT (%) : -5.470475635706634
+
+HSM-LB makespan: 839.9916601598068
+Reduction vs HEFT (%) : -5.773688829190689
+
+HSM-M makespan: 742.3763520138873
+Reduction vs HEFT (%) : 6.518256101343155
+
+HSM-WM makespan: 742.3763520138873
+Reduction vs HEFT (%) : 6.518256101343155
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0016
+Number of tasks: 102
+Number of edges: 827
+Edge density: 0.1605513492525723
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 108452.7738352099
+Optimal critical path length: 9157.062399430002
+Computation-to-communication ratio: 1.021539828799571
+--------------------------------------------------------
+
+HEFT makespan: 9606.366735924523
+SLR: 1.0490664272990526
+Speedup: 11.2896766089133
+
+PEFT makespan: 9755.664496022462
+Reduction vs HEFT (%) : -1.5541542833214663
+
+HSM-LB makespan: 9283.589505748303
+Reduction vs HEFT (%) : 3.3600344339254065
+
+HSM-M makespan: 9623.377097183638
+Reduction vs HEFT (%) : -0.17707382745967948
+
+HSM-WM makespan: 9315.991401436046
+Reduction vs HEFT (%) : 3.022738382478906
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0134
+Number of tasks: 102
+Number of edges: 569
+Edge density: 0.11046398757522811
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 146685.65045679588
+Optimal critical path length: 9310.454713427964
+Computation-to-communication ratio: 1.001469819866629
+--------------------------------------------------------
+
+HEFT makespan: 10525.524982529045
+SLR: 1.1305060071178534
+Speedup: 13.936183772331956
+
+PEFT makespan: 10226.162254680767
+Reduction vs HEFT (%) : 2.8441595867681713
+
+HSM-LB makespan: 10106.674453452631
+Reduction vs HEFT (%) : 3.979378983676824
+
+HSM-M makespan: 10323.939389032425
+Reduction vs HEFT (%) : 1.9152070213241217
+
+HSM-WM makespan: 10323.939389032425
+Reduction vs HEFT (%) : 1.9152070213241217
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0105
+Number of tasks: 102
+Number of edges: 1486
+Edge density: 0.2884876722966414
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 79400.74002811762
+Optimal critical path length: 5417.522631222944
+Computation-to-communication ratio: 1.0048507797395714
+--------------------------------------------------------
+
+HEFT makespan: 6067.312212273384
+SLR: 1.119942199651459
+Speedup: 13.086641539148133
+
+PEFT makespan: 6145.99580395875
+Reduction vs HEFT (%) : -1.2968442851218214
+
+HSM-LB makespan: 5944.421205341913
+Reduction vs HEFT (%) : 2.025460411990636
+
+HSM-M makespan: 6052.529785994171
+Reduction vs HEFT (%) : 0.2436404417974387
+
+HSM-WM makespan: 5936.952635589521
+Reduction vs HEFT (%) : 2.1485556062231694
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0068
+Number of tasks: 102
+Number of edges: 1233
+Edge density: 0.23937099592312172
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 9615.801691553532
+Optimal critical path length: 1580.694899331596
+Computation-to-communication ratio: 1.0015195916599016
+--------------------------------------------------------
+
+HEFT makespan: 1675.3198069376983
+SLR: 1.059862853765211
+Speedup: 5.73968125472722
+
+PEFT makespan: 1621.373375448411
+Reduction vs HEFT (%) : 3.2200676710135383
+
+HSM-LB makespan: 1599.5508961503992
+Reduction vs HEFT (%) : 4.5226535538785555
+
+HSM-M makespan: 1658.2078566417454
+Reduction vs HEFT (%) : 1.0214139548216536
+
+HSM-WM makespan: 1637.3672237634846
+Reduction vs HEFT (%) : 2.26539333069708
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0132
+Number of tasks: 102
+Number of edges: 968
+Edge density: 0.18792467482042322
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 72439.21897004503
+Optimal critical path length: 8383.888114842843
+Computation-to-communication ratio: 1.0034066768657477
+--------------------------------------------------------
+
+HEFT makespan: 8812.305017159424
+SLR: 1.0511000261988364
+Speedup: 8.22023509501663
+
+PEFT makespan: 8806.99091597302
+Reduction vs HEFT (%) : 0.060303191685449065
+
+HSM-LB makespan: 8709.772660319477
+Reduction vs HEFT (%) : 1.1635134807555403
+
+HSM-M makespan: 8812.305017159424
+Reduction vs HEFT (%) : 0.0
+
+HSM-WM makespan: 8812.305017159424
+Reduction vs HEFT (%) : 0.0
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0116
+Number of tasks: 102
+Number of edges: 1122
+Edge density: 0.21782178217821782
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 102677.44832193956
+Optimal critical path length: 5724.900311214952
+Computation-to-communication ratio: 0.9935142097932103
+--------------------------------------------------------
+
+HEFT makespan: 6429.728192803213
+SLR: 1.1231161842604522
+Speedup: 15.969174005965963
+
+PEFT makespan: 6154.509798510354
+Reduction vs HEFT (%) : 4.280404801573269
+
+HSM-LB makespan: 6448.541494986277
+Reduction vs HEFT (%) : -0.2925987167563733
+
+HSM-M makespan: 6590.430106497773
+Reduction vs HEFT (%) : -2.499357809159548
+
+HSM-WM makespan: 6590.430106497773
+Reduction vs HEFT (%) : -2.499357809159548
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0148
+Number of tasks: 102
+Number of edges: 404
+Edge density: 0.0784313725490196
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 115654.52163376179
+Optimal critical path length: 5125.77410493531
+Computation-to-communication ratio: 1.0124835864746697
+--------------------------------------------------------
+
+HEFT makespan: 6908.16513411455
+SLR: 1.3477310924535435
+Speedup: 16.741713521384394
+
+PEFT makespan: 6205.846831323287
+Reduction vs HEFT (%) : 10.166495576705444
+
+HSM-LB makespan: 6240.510888492744
+Reduction vs HEFT (%) : 9.664711723880671
+
+HSM-M makespan: 6241.670664161715
+Reduction vs HEFT (%) : 9.647923247542096
+
+HSM-WM makespan: 6254.062266725226
+Reduction vs HEFT (%) : 9.468547069889382
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0087
+Number of tasks: 102
+Number of edges: 199
+Edge density: 0.038633275092215105
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 52675.65602765523
+Optimal critical path length: 3504.193215033819
+Computation-to-communication ratio: 0.994900571060597
+--------------------------------------------------------
+
+HEFT makespan: 4880.282237107159
+SLR: 1.3926978159108327
+Speedup: 10.793567557863069
+
+PEFT makespan: 5144.124702891345
+Reduction vs HEFT (%) : -5.40629522977305
+
+HSM-LB makespan: 5185.711991328004
+Reduction vs HEFT (%) : -6.258444478856461
+
+HSM-M makespan: 4530.7326267042245
+Reduction vs HEFT (%) : 7.162487606662154
+
+HSM-WM makespan: 4318.789695225436
+Reduction vs HEFT (%) : 11.505329294531819
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0017
+Number of tasks: 102
+Number of edges: 610
+Edge density: 0.11842360706658901
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 68139.2326466964
+Optimal critical path length: 5042.306550533884
+Computation-to-communication ratio: 1.005894242730737
+--------------------------------------------------------
+
+HEFT makespan: 5374.570371931137
+SLR: 1.065895204519462
+Speedup: 12.678079908034267
+
+PEFT makespan: 5400.073024971374
+Reduction vs HEFT (%) : -0.474505891176463
+
+HSM-LB makespan: 5337.27294007913
+Reduction vs HEFT (%) : 0.693961177749074
+
+HSM-M makespan: 5425.447286187649
+Reduction vs HEFT (%) : -0.9466229063111626
+
+HSM-WM makespan: 5425.447286187649
+Reduction vs HEFT (%) : -0.9466229063111626
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0088
+Number of tasks: 102
+Number of edges: 1518
+Edge density: 0.2947000582411182
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 38818.03502176604
+Optimal critical path length: 6498.10621567762
+Computation-to-communication ratio: 1.0035147046594959
+--------------------------------------------------------
+
+HEFT makespan: 6687.402433789352
+SLR: 1.0291309824476287
+Speedup: 5.804650670584838
+
+PEFT makespan: 6646.704213453265
+Reduction vs HEFT (%) : 0.6085803978305648
+
+HSM-LB makespan: 6527.653307732921
+Reduction vs HEFT (%) : 2.3888068295287184
+
+HSM-M makespan: 6694.263588347435
+Reduction vs HEFT (%) : -0.10259820051230406
+
+HSM-WM makespan: 6780.5457224426345
+Reduction vs HEFT (%) : -1.3928171599582413
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0127
+Number of tasks: 102
+Number of edges: 563
+Edge density: 0.1092991652106387
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 4673.567271346101
+Optimal critical path length: 569.3393058439628
+Computation-to-communication ratio: 1.071010024330769
+--------------------------------------------------------
+
+HEFT makespan: 702.6218760298466
+SLR: 1.2341004192364897
+Speedup: 6.651610817690472
+
+PEFT makespan: 700.9313904955529
+Reduction vs HEFT (%) : 0.24059676932431273
+
+HSM-LB makespan: 726.8434688348715
+Reduction vs HEFT (%) : -3.4473154951975857
+
+HSM-M makespan: 696.0724020320947
+Reduction vs HEFT (%) : 0.9321477484816683
+
+HSM-WM makespan: 679.2482150332887
+Reduction vs HEFT (%) : 3.326634395249741
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0042
+Number of tasks: 102
+Number of edges: 341
+Edge density: 0.0662007377208309
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 163086.23371274758
+Optimal critical path length: 8760.81789783738
+Computation-to-communication ratio: 0.988736237241804
+--------------------------------------------------------
+
+HEFT makespan: 10619.041603443498
+SLR: 1.2121061900013723
+Speedup: 15.35790514841402
+
+PEFT makespan: 11640.42877549497
+Reduction vs HEFT (%) : -9.618449669886033
+
+HSM-LB makespan: 11287.03229144265
+Reduction vs HEFT (%) : -6.290498831669879
+
+HSM-M makespan: 11064.482584105956
+Reduction vs HEFT (%) : -4.194738068622044
+
+HSM-WM makespan: 10732.353489084622
+Reduction vs HEFT (%) : -1.0670632046905268
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0086
+Number of tasks: 102
+Number of edges: 696
+Edge density: 0.1351193942923704
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 296269.53157238796
+Optimal critical path length: 31948.59809817038
+Computation-to-communication ratio: 1.0391357016358505
+--------------------------------------------------------
+
+HEFT makespan: 34054.08657126851
+SLR: 1.0659023743899019
+Speedup: 8.69997000073263
+
+PEFT makespan: 33811.48562343242
+Reduction vs HEFT (%) : 0.7123989284762615
+
+HSM-LB makespan: 32034.026017018652
+Reduction vs HEFT (%) : 5.931918185567156
+
+HSM-M makespan: 33551.3382382583
+Reduction vs HEFT (%) : 1.476323060253165
+
+HSM-WM makespan: 33551.3382382583
+Reduction vs HEFT (%) : 1.476323060253165
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0001
+Number of tasks: 102
+Number of edges: 392
+Edge density: 0.07610172781984081
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 135744.06937837624
+Optimal critical path length: 8885.50227750721
+Computation-to-communication ratio: 1.047656600255105
+--------------------------------------------------------
+
+HEFT makespan: 10985.964398078102
+SLR: 1.23639205246596
+Speedup: 12.356135925774844
+
+PEFT makespan: 11512.274040822203
+Reduction vs HEFT (%) : -4.790745934295714
+
+HSM-LB makespan: 10212.163344077775
+Reduction vs HEFT (%) : 7.0435423414961775
+
+HSM-M makespan: 11263.804083327947
+Reduction vs HEFT (%) : -2.5290422868879006
+
+HSM-WM makespan: 11263.804083327947
+Reduction vs HEFT (%) : -2.5290422868879006
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0079
+Number of tasks: 102
+Number of edges: 723
+Edge density: 0.1403610949330227
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 28950.126929589038
+Optimal critical path length: 3874.898765179517
+Computation-to-communication ratio: 1.003769840836349
+--------------------------------------------------------
+
+HEFT makespan: 4407.4526855616505
+SLR: 1.1374368603298108
+Speedup: 6.568448715156171
+
+PEFT makespan: 4392.5005937808155
+Reduction vs HEFT (%) : 0.33924565610917057
+
+HSM-LB makespan: 4517.854399064597
+Reduction vs HEFT (%) : -2.504887094185065
+
+HSM-M makespan: 4631.780641696407
+Reduction vs HEFT (%) : -5.089741674814377
+
+HSM-WM makespan: 4626.456084391136
+Reduction vs HEFT (%) : -4.968933632501987
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0126
+Number of tasks: 102
+Number of edges: 793
+Edge density: 0.1539506891865657
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 119398.3524717191
+Optimal critical path length: 9319.989905290438
+Computation-to-communication ratio: 1.0017484344138732
+--------------------------------------------------------
+
+HEFT makespan: 10343.861204224193
+SLR: 1.1098575544971954
+Speedup: 11.542919042935301
+
+PEFT makespan: 10935.553783835632
+Reduction vs HEFT (%) : -5.720229302475616
+
+HSM-LB makespan: 10201.476482026768
+Reduction vs HEFT (%) : 1.3765142376357318
+
+HSM-M makespan: 10567.21753959734
+Reduction vs HEFT (%) : -2.159312958317102
+
+HSM-WM makespan: 10450.478624995872
+Reduction vs HEFT (%) : -1.0307313552132769
+--------------------------------------------------------
+
+--------------------------------------------------------
+DAG INFO
+--------------------------------------------------------
+Name: rand0102
+Number of tasks: 102
+Number of edges: 1316
+Edge density: 0.25548437196660845
+--------------------------------------------------------
+Target platform: 8P
+Minimal serial time: 110295.06472313375
+Optimal critical path length: 9353.302421445082
+Computation-to-communication ratio: 1.0182889941600948
+--------------------------------------------------------
+
+HEFT makespan: 9982.458728383477
+SLR: 1.0672656863415297
+Speedup: 11.048887626204545
+
+PEFT makespan: 10905.26066336688
+Reduction vs HEFT (%) : -9.24423491338429
+
+HSM-LB makespan: 9915.24439562726
+Reduction vs HEFT (%) : 0.6733244242233098
+
+HSM-M makespan: 10096.0156153076
+Reduction vs HEFT (%) : -1.137564301680925
+
+HSM-WM makespan: 9860.525917705323
+Reduction vs HEFT (%) : 1.2214707217517287
+--------------------------------------------------------
+
+
+
+
+
+
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+FINAL SUMMARY
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+DAGs considered: 180
+Number of HEFT failures: 0
+
+HEURISTC: PEFT
+Number of failures: 0
+Mean reduction (%): 1.1025210609780953
+Best reduction (%): 15.425138235143507
+Worst reduction (%): -15.158378979856948
+Number of times better: 109/180
+Number of times worse: 70/180
+
+HEURISTC: HSM-LB
+Number of failures: 0
+Mean reduction (%): 2.7203551233459957
+Best reduction (%): 16.732360088620624
+Worst reduction (%): -11.401565165916153
+Number of times better: 131/180
+Number of times worse: 49/180
+
+HEURISTC: HSM-M
+Number of failures: 0
+Mean reduction (%): -0.05284870598284223
+Best reduction (%): 15.10011482625768
+Worst reduction (%): -20.813411213268452
+Number of times better: 84/180
+Number of times worse: 89/180
+
+HEURISTC: HSM-WM
+Number of failures: 0
+Mean reduction (%): 0.871336168242109
+Best reduction (%): 15.609423190444843
+Worst reduction (%): -12.061525154907343
+Number of times better: 97/180
+Number of times worse: 75/180
