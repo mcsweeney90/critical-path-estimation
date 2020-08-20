@@ -110,7 +110,8 @@ plt.ioff() # Don't show plots.
 #                 makespans[nw][ccr][h][m]["MST"] = []
 #                 makespans[nw][ccr][h][m]["CP"] = []                
 #                 for ccp in ccps:
-#                     makespans[nw][ccr][h][m][ccp] = []                
+#                     makespans[nw][ccr][h][m][ccp] = [] 
+#                     makespans[nw][ccr][h][m]["{}-R".format(ccp)] = []
 
 # for nw in n_workers:
 #     print("\nStarting {} workers...".format(nw))
@@ -175,14 +176,21 @@ plt.ioff() # Don't show plots.
 #                         print("Reduction vs HEFT (%) : {}".format(r), file=dest)
                         
 #                         for ccp in ccps: 
-#                             mkspan = HSM(dag, platform, cp_type=ccp) 
+#                             CCP = dag.conditional_critical_paths(cp_type=ccp, lookahead=True)
+#                             priority_list = dag.conditional_critical_path_priorities(platform, CCP=CCP, cp_type=ccp)
+#                             mkspan = HSM(dag, platform, cp_type=ccp, CCP=CCP, priority_list=priority_list) 
 #                             print("\nHSM-{} makespan: {}".format(ccp, mkspan), file=dest)
 #                             if mkspan > mst:
 #                                 failures[ccp] += 1
 #                             makespans[nw][ccr][h][m][ccp].append(mkspan)
 #                             r = 100 - (mkspan/heft_mkspan)*100
 #                             reductions[ccp].append(r)
-#                             print("Reduction vs HEFT (%) : {}".format(r), file=dest)                                                            
+#                             print("Reduction vs HEFT (%) : {}".format(r), file=dest)     
+#                             # Without processor selection phase.
+#                             nops_mkspan = HEFT(dag, platform, priority_list=priority_list)
+#                             print("Makespan w/o processor selection: {}".format(nops_mkspan), file=dest)
+#                             makespans[nw][ccr][h][m]["{}-R".format(ccp)].append(nops_mkspan)
+                                                                                   
                         
 #                         print("--------------------------------------------------------\n", file=dest) 
 #                     print("\n\n\n\n\n", file=dest)
@@ -214,9 +222,9 @@ plt.ioff() # Don't show plots.
 # Plots.
 # =============================================================================
 
-print(plt.rcParams['axes.prop_cycle'].by_key()['color'])
+# print(plt.rcParams['axes.prop_cycle'].by_key()['color'])
 
-# TODO: What's the best way to visualize this data? 
+# # TODO: What's the best way to visualize this data? 
 sz = 100
 results_path = 'results/processor_selection/stg/{}'.format(sz)
 with open('{}/makespans.dill'.format(results_path), 'rb') as file:
@@ -227,47 +235,93 @@ ccrs = [0.1, 1, 10]
 het_factors = [1.0, 2.0]
 methods = ["R", "UR"]
 
+# Average percentage degradation.
+
+# length, width = 3, 0.16
+# x = np.arange(length)
+# xlabels = [0.1, 1.0, 10]
+
+# ccps = ["HEFT", "PEFT", "LB", "M", "WM"]
+# colors = {"HEFT" : '#988ED5', "PEFT" : '#348ABD', "LB" : '#E24A33', "M" : '#FBC15E', "WM" : '#8EBA42'}
+
+# fig = plt.figure(dpi=400) 
+# ax = fig.add_subplot(111, frameon=False)
+# # hide tick and tick label of the big axes
+# plt.tick_params(labelcolor='none', top=False, bottom=False, left=False, right=False)
+# ax.set_xlabel("COMPUTATION-TO-COMMUNICATION RATIO", labelpad=5)
+# ax.set_ylabel("AVG. PERCENTAGE DEGREDATION", labelpad=10)
+
+# for i, nw in enumerate(n_workers):
+#     ax1 = fig.add_subplot(311 + i)
+    
+#     apds = {ccp : [0.0, 0.0, 0.0] for ccp in ccps}
+#     for h, m in [(1.0, "R"), (1.0, "UR"), (2.0, "R"), (2.0, "UR")]:
+#         for k, ccr in enumerate(ccrs):
+#             ndags = len(makespans[nw][ccr][h][m]["HEFT"])
+#             for j in range(ndags):
+#                 best = min(makespans[nw][ccr][h][m][ccp][j] for ccp in ccps) 
+#                 for ccp in ccps:
+#                     mkspan = makespans[nw][ccr][h][m][ccp][j]
+#                     pd = 25 - best/mkspan * 25
+#                     apds[ccp][k] += (pd/ndags)  
+    
+#     j = 0
+#     for ccp in ccps:
+#         ax1.bar(x + j * width, apds[ccp], width, color=colors[ccp], edgecolor='white', label=ccp)
+#         j += 1   
+#     ax1.set_xticks(x + (4/2) * width)
+#     if i < 2:
+#         ax1.set_xticklabels([]) 
+#         if i == 0:
+#             ax1.legend(handlelength=3, handletextpad=0.4, ncol=3, loc='best', fancybox=True, facecolor='white')                
+#     else:
+#         ax1.set_xticklabels(xlabels)
+#     # plt.axhline(y=50,linewidth=1, color='k')
+#     ax1.set_title("{} PROCESSORS".format(nw), color="black", family='serif')
+    
+# plt.savefig('{}/{}tasks_apd'.format(results_path, sz), bbox_inches='tight') 
+# plt.close(fig) 
+
+# Reduction vs ranking alone.
+
 length, width = 3, 0.16
 x = np.arange(length)
 xlabels = [0.1, 1.0, 10]
 
-ccps = ["HEFT", "PEFT", "LB", "M", "WM"]
-colors = {"HEFT" : '#988ED5', "PEFT" : '#348ABD', "LB" : '#E24A33', "M" : '#FBC15E', "WM" : '#8EBA42'}
+ccps = ["LB", "M", "WM"]
+colors = {"LB" : '#E24A33', "M" : '#FBC15E', "WM" : '#8EBA42'}
 
 fig = plt.figure(dpi=400) 
 ax = fig.add_subplot(111, frameon=False)
 # hide tick and tick label of the big axes
 plt.tick_params(labelcolor='none', top=False, bottom=False, left=False, right=False)
 ax.set_xlabel("COMPUTATION-TO-COMMUNICATION RATIO", labelpad=5)
-ax.set_ylabel("AVG. PERCENTAGE DEGREDATION", labelpad=10)
+ax.set_ylabel("AVG. REDUCTION (%)", labelpad=10)
 
 for i, nw in enumerate(n_workers):
     ax1 = fig.add_subplot(311 + i)
     
-    apds = {ccp : [0.0, 0.0, 0.0] for ccp in ccps}
-    for h, m in [(1.0, "R"), (1.0, "UR"), (2.0, "R"), (2.0, "UR")]:
-        for k, ccr in enumerate(ccrs):
-            ndags = len(makespans[nw][ccr][h][m]["HEFT"])
-            for j in range(ndags):
-                best = min(makespans[nw][ccr][h][m][ccp][j] for ccp in ccps) 
-                for ccp in ccps:
-                    mkspan = makespans[nw][ccr][h][m][ccp][j]
-                    pd = 25 - best/mkspan * 25
-                    apds[ccp][k] += (pd/ndags)  
+    avg_reductions = {ccp : [0.0, 0.0, 0.0] for ccp in ccps}
+    for ccp in ccps:
+        for h, m in [(1.0, "R"), (1.0, "UR"), (2.0, "R"), (2.0, "UR")]:
+            for k, ccr in enumerate(ccrs):
+                reductions = list(100 - (m1/m2) * 100 for m1, m2 in zip(makespans[nw][ccr][h][m][ccp], makespans[nw][ccr][h][m][ccp + "-R"]))
+                avg_reductions[ccp][k] += np.mean(reductions)/4   
+    
+    # print(avg_reductions)
     
     j = 0
     for ccp in ccps:
-        ax1.bar(x + j * width, apds[ccp], width, color=colors[ccp], edgecolor='white', label=ccp)
+        ax1.bar(x + j * width, avg_reductions[ccp], width, color=colors[ccp], edgecolor='white', label=ccp)
         j += 1   
-    ax1.set_xticks(x + (4/2) * width)
+    ax1.set_xticks(x + (2/2) * width)
     if i < 2:
         ax1.set_xticklabels([]) 
         if i == 0:
             ax1.legend(handlelength=3, handletextpad=0.4, ncol=3, loc='best', fancybox=True, facecolor='white')                
     else:
         ax1.set_xticklabels(xlabels)
-    # plt.axhline(y=50,linewidth=1, color='k')
     ax1.set_title("{} PROCESSORS".format(nw), color="black", family='serif')
     
-plt.savefig('{}/{}tasks_apd'.format(results_path, sz), bbox_inches='tight') 
+plt.savefig('{}/{}tasks_rkreductions'.format(results_path, sz), bbox_inches='tight') 
 plt.close(fig) 

@@ -724,6 +724,34 @@ class DAG:
         if return_ranks:
             return priority_list, task_ranks
         return priority_list  
+    
+    def conditional_critical_path_priorities(self, platform, CCP=None, cp_type="WM", rank_avg="WM", return_ranks=False):
+        """
+        TODO.              
+        """      
+        
+        if CCP is None:  
+            CCP = self.conditional_critical_paths(cp_type=cp_type, lookahead=True)        
+        
+        task_ranks = {}        
+        backward_traversal = list(reversed(self.top_sort)) 
+        for t in backward_traversal:        
+            if rank_avg == "MEAN" or rank_avg == "M":
+                task_ranks[t] = sum(t.comp_costs[w.ID] + CCP[t.ID][w.ID] for w in platform.workers) / platform.n_workers  
+            elif rank_avg == "WEIGHTED MEAN" or rank_avg == "WM":
+                s = sum(1/(t.comp_costs[w.ID] + CCP[t.ID][w.ID]) for w in platform.workers)
+                task_ranks[t] = platform.n_workers / s
+            try:
+                task_ranks[t] += max(task_ranks[s] for s in self.graph.successors(t))
+            except ValueError:
+                pass    
+        # Sort task ranks into priority list.
+        priority_list = list(sorted(task_ranks, key=task_ranks.get, reverse=True))            
+            
+            
+        if return_ranks:
+            return priority_list, task_ranks
+        return priority_list 
                      
     def draw_graph(self, filepath=None):
         """
@@ -1248,7 +1276,7 @@ def PEFT(dag, platform, return_schedule=False, schedule_dest=None):
         return mkspan, pi    
     return mkspan 
 
-def HSM(dag, platform, cp_type="WM", rank_avg="WM", return_schedule=False, schedule_dest=None):
+def HSM(dag, platform, cp_type="WM", rank_avg="WM", CCP=None, priority_list=None, return_schedule=False, schedule_dest=None):
     """
     Work in progress.
     Could be incorporated into PEFT but easier to use separate function.    
@@ -1257,25 +1285,12 @@ def HSM(dag, platform, cp_type="WM", rank_avg="WM", return_schedule=False, sched
     if return_schedule:
         pi = {}
     
-    # Compute all conditional critical paths.  
-    CCP = dag.conditional_critical_paths(cp_type=cp_type, lookahead=True)
+    if CCP is None: 
+        CCP = dag.conditional_critical_paths(cp_type=cp_type, lookahead=True)
     
-    # Compute the task ranks. (This way faster than ready_task set in my implementation...)
-    task_ranks = {}
-    backward_traversal = list(reversed(dag.top_sort)) 
-    for t in backward_traversal:        
-        if rank_avg == "MEAN" or rank_avg == "M":
-            task_ranks[t] = sum(t.comp_costs[w.ID] + CCP[t.ID][w.ID] for w in platform.workers) / platform.n_workers  
-        elif rank_avg == "WEIGHTED MEAN" or rank_avg == "WM":
-            s = sum(1/(t.comp_costs[w.ID] + CCP[t.ID][w.ID]) for w in platform.workers)
-            task_ranks[t] = platform.n_workers / s
-        try:
-            task_ranks[t] += max(task_ranks[s] for s in dag.graph.successors(t))
-        except ValueError:
-            pass    
-    # Sort task ranks into priority list.
-    priority_list = list(sorted(task_ranks, key=task_ranks.get, reverse=True)) 
-     
+    if priority_list is None:
+        priority_list = dag.conditional_critical_path_priorities(platform, CCP=CCP, cp_type=cp_type, rank_avg=rank_avg)
+         
     # Schedule the tasks.
     for t in priority_list:         
         # Compute the finish time on all workers and identify the fastest (with ties broken consistently by np.argmin).   

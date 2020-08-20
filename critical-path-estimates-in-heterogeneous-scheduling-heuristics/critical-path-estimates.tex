@@ -522,7 +522,8 @@ First we want to establish how effective the HEFT task prioritization phase actu
 	\includegraphics[scale=0.8]{100tasks_reductions.png}
 	\caption{Average makespan reduction (\%) for standard HEFT ranking phase vs random topological sort.}	
 	\label{plot.benchmark_reductions_100}
-\end{figure}
+\end{figure} 
+% TODO: is this plot correct? Looks like failures are more common for m = UR but should be other way around!
 
 Clearly the most interesting takeaway from the figure is the negative reduction that we see for one of the DAG sets in the bottom-left corner---i.e., the random sort did better on average for those DAGs with CCR $0.1$ and $h = 2.0$ for which costs were generated using the {\em related} method. Interestingly, the effect appears to become more pronounced as the ratio of tasks to processors decreases: the reduction is always positive for the larger DAG sets ($n = 1000$) with the same parameters, although the raw number of instances for which the random sort outperformed standard HEFT is high for those as well. 
 
@@ -678,7 +679,7 @@ C_i = \frac{q}{\hat{s}_i} + \max_{k \in S_i} C_k, \label{eq.alt_prios}
 where the maximization is taken to be zero if $S_i$ is empty (i.e., for exit tasks) and $\hat{s}$ is as defined in \eqref{eq.s_hat}. All of the results presented in the following section are based on heuristics for which the task priorities are computed in this manner, although it should again be emphasized that others are possible and several were considered in preliminary testing. 
 
 
-\subsection{Results}
+\subsection{Empirical comparison}
 \label{subsect.processor_selection_results}
 
 In order to evaluate the performance of the different choices in the HSM framework that have been described so far, we used the same software simulation environment as in Section \ref{sect.experimental_rankings}. As before, all of the scripts used to generate the results presented here are available at the Github repository\footnote{\href{https://github.com/mcsweeney90/critical-path-estimation}{{\tt \small critical-path-estimation/scripts}}} for this chapter. We consider the following three variants of the HSM framework, defined by how they compute the conditional critical paths since all use the task prioritization given by \eqref{eq.alt_prios}.
@@ -687,7 +688,7 @@ In order to evaluate the performance of the different choices in the HSM framewo
 	\item M, using \eqref{eq.cia_mean}.
 	\item WM, using \eqref{eq.cia_weighted}.
 \end{itemize}
-Figure \ref{plot.selection_apd_100} shows the average percentage degradation of these three heuristics, as well as HEFT and PEFT, for the set of DAGs based on topologies from the STG with 100 tasks (plus single entry and exit tasks). As before, we combine all four of the subsets ($h = 1.0$ or $2.0$, $m = \text{R}$ or UR) so that each CCR and processor number combination represents a larger subset comprising $720$ DAGs. Some comments: PEFT and LB lower the failure rate in some cases, HEFT actually does better than PEFT in most cases,...
+Figure \ref{plot.selection_apd_100} shows the average percentage degradation of these three heuristics, as well as HEFT and PEFT, for the set of DAGs based on topologies from the STG with 100 tasks (plus single entry and exit tasks). As before, we combine all four of the subsets ($h = 1.0$ or $2.0$, $m = \text{R}$ or UR) so that each CCR and processor number combination represents a larger subset comprising $720$ DAGs. The most immediate takeaway from the figure is that, with the exception of the subsets with the smallest CCR, PEFT actually does relatively poorly compared to both HEFT and the HSM variants. On the surface, this might seem to contradict results published elsewhere, but it should be noted that those experiments were typically for much larger and more diverse graph sets, so some local variation is to be expected. Note that when communication predominates (i.e., $\beta = 0.1$), PEFT and HSM-LB are superior to the others for both 4 and 8 processors. This is again related to the problem of listing heuristics failing altogether for DAGs with high communication: PEFT and HSM-LB recorded only around half as many failures as the others for these sets.  
 
 \begin{figure}
 	\centering	
@@ -695,6 +696,18 @@ Figure \ref{plot.selection_apd_100} shows the average percentage degradation of 
 	\caption{Average percentage degradation for HSM variants, HEFT and PEFT, size 100 DAGS from the STG.}	
 	\label{plot.selection_apd_100}
 \end{figure}
+
+One obvious question we have not so far addressed is how useful the PEFT-like processor selection phase actually is compared to the simple HEFT-like earliest finish time alternative. In fact, this was far from clear in our experiments: with a few exceptions, there was usually no statistically significant difference on average between the two. The exceptions were all for the smallest CCR sets, for which the processor selection clearly improved ($\approx 5\%$ average makespan reduction) on the ranking-only version for the LB variant and was even more significantly worse for the M and WM variants ($> 5\%$ average makespan increase).  
+
+
+%\section{Conclusions}
+%\label{sect.conclusions}
+%
+%\begin{itemize}
+%	\item Obviously very messy.
+%	\item Presented a suite of possible heuristics but not clear-cut which is ``best"
+%	\item Scaling up experiments might be useful.
+%\end{itemize}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
