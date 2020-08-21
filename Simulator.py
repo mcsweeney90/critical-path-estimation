@@ -7,6 +7,7 @@ Simulator module used to generate results.
 import numpy as np
 import networkx as nx
 import itertools as it
+import matplotlib.pyplot as plt
 from copy import deepcopy
 from networkx.drawing.nx_agraph import to_agraph
 from statistics import median
@@ -1087,7 +1088,8 @@ class Platform:
             p = schedule[task]
             self.workers[p].schedule_task(task, dag=dag, platform=self)  
         mkspan = dag.makespan() 
-        info["MAKESPAN"] = mkspan
+        info["MAKESPAN"] = mkspan        
+        
         # Reset DAG and platform.
         dag.reset()
         self.reset() 
@@ -1122,7 +1124,8 @@ class Platform:
 # Heuristics.   
 # =============================================================================            
             
-def HEFT(dag, platform, priority_list=None, cp_type="HEFT", avg_type="HEFT", return_schedule=False, schedule_dest=None):
+def HEFT(dag, platform, priority_list=None, cp_type="HEFT", avg_type="HEFT", 
+         return_schedule=False, schedule_dest=None, schedule_img_dest=None):
     """
     Heterogeneous Earliest Finish Time.
     'Performance-effective and low-complexity task scheduling for heterogeneous computing',
@@ -1187,9 +1190,33 @@ def HEFT(dag, platform, priority_list=None, cp_type="HEFT", avg_type="HEFT", ret
             print(t.ID, file=schedule_dest)
         print("\n", file=schedule_dest)
         platform.print_info(print_schedule=True, filepath=schedule_dest)
+    
         
     # Compute makespan.
     mkspan = dag.makespan() 
+    
+    if schedule_img_dest is not None:
+        loads = {}
+        for w in platform.workers:
+            loads[w.ID] = []
+            for t in w.load:
+                loads[w.ID].append((t[1], t[2] - t[1]))
+        
+        fig, ax = plt.subplots(dpi=400)
+        for i, w in enumerate(platform.workers):
+            ax.broken_barh(loads[w.ID], (1*(i + 1) + 5*i, 5), facecolors='#E24A33', edgecolor='white', joinstyle='bevel')
+                
+        ax.set_xlim(0, mkspan)
+        ax.set_xlabel('TIME')
+        
+        ax.set_ylim(0, platform.n_workers * 6 + 1)
+        ax.set_yticks(list(3.5 + 6*i for i in range(platform.n_workers)))
+        ax.set_yticklabels(list(w.ID for w in platform.workers))
+        
+        ax.grid(False)
+        
+        plt.savefig('{}/heft_schedule_{}_{}.png'.format(schedule_img_dest, dag.name, platform.name), bbox_inches='tight') 
+        plt.close(fig) 
     
     # Reset DAG and platform.
     dag.reset()

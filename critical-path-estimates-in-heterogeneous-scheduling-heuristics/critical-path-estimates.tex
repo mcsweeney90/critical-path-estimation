@@ -150,23 +150,44 @@
 \section{Introduction}
 \label{sect.intro}
 
-%Before describing HEFT, we first introduce the concept of the {\em critical path}. The name comes from project management, where it is defined as the longest sequence of activities that must be done in order to complete a project \cite{kel59,kel61}; for a task graph, the critical path is the longest (costliest) path through it. This is useful because, if we assume sufficient parallelism, then the time it takes to execute the tasks on the critical path of a DAG therefore gives a lower bound on the makespan of any schedule. A natural approach in a listing heuristic then is to prioritize all tasks according to the length of the critical path from that task to the end; the idea being that tasks with the greatest downward path length contribute most towards the makespan and should therefore be processed as soon as possible. This approach has a long and successful history in scheduling for homogeneous processors \cite{cof72} but it isn't clear how it should be defined for heterogeneous ones, when all DAG costs can take multiple values and there are many possible critical paths (see Chapter \ref{chap.critical_path_estimation}).
+The {\em critical path} of a project is defined as the longest sequence of its constituent tasks that must be done in order to complete the project \cite{kel59,kel61}. If we express the project in the form of a task graph, then the critical path is simply the longest---i.e., costliest---path through it. This is useful because the time it takes to execute the tasks on the critical path of the graph is therefore a lower bound on the makespan of any possible schedule for the project, no matter how many processors are available. In the context of a listing heuristic for scheduling the task graph on a set of parallel processors, a natural choice then is to prioritize all tasks according to the length of the critical path from that task to the end, the idea being that tasks with the greatest downward path length contribute most heavily to the makespan and should therefore be processed as soon as possible. This approach has a long and successful history in scheduling for homogeneous processors, and is in fact provably optimal for two-processor systems \cite{cof72}. 
 
-Recall from previous chapters that the {\em Heterogeneous Earliest Finish Time} (HEFT) heuristic prioritizes all tasks $t_i$, $i = 1, \dots, n$, by recursively computing a corresponding sequence of numbers $u_i$ which are intended to represent {\em critical path} lengths from each task to the end. As noted previously, however, the concept of the critical path is not clearly defined for heterogeneous target platforms: there are multiple possible values that each of the DAG weights may take so there are also many different ways we could define a {\em longest} (i.e., costliest) path. Consider for example the simple DAG shown in Figure \ref{plot.simple_example}, where the labels represent all the possible weights each task/edge may take on a two-processor target platform; specifically, the labels $(W_i^1, W_i^2)$ near the nodes represent the computation costs on processors $P1$ and $P2$, respectively, while the edge labels $(0 = W_{ik}^{11} = W_{ik}^{22}, W_{ik}^{12}, W_{ik}^{21})$ represent the possible communication costs.  
+Now, in the homogeneous case, all tasks have the same cost on all processors, so that there is only one possible cost each task may take. In particular this means that the node weights in the task graph are {\em fixed} so, disregarding the edge weights for the moment, the longest path through the DAG is also fixed, no matter what schedule we ultimately follow. Therefore, when we refer to the critical path of the task graph it is clear what is meant. Unfortunately, the concept of the critical path is not so clearly defined for heterogeneous processing environments. The problem is, there are now multiple possible costs that each task may take---depending on the schedule---and likewise many different communication costs that may be incurred. In particular this means that the weights of the task DAG are not fixed and we cannot  simply compute a longest path. Consider for example the simple DAG shown in Figure \ref{plot.simple_example}, where the labels represent all the possible weights each task/edge may take on a two-processor heterogeneous target platform; the red labels near the nodes represent the computation costs on processors $P1$ and $P2$ in the form $(W_i^1, W_i^2)$, while the edge labels represent the possible communication costs in the form $(W_{ik}^{11} = W_{ik}^{22} = 0, W_{ik}^{12}, W_{ik}^{21})$. How should the longest path through a graph like that in Figure \ref{plot.simple_example} be defined?
 
 \begin{figure}
 	\centering	
-	\includegraphics[scale=0.7]{simple_graph.png}
+	\includegraphics[scale=0.8]{simple_graph.png}
 	\caption{Simple task graph with costs on a two-processor target platform.}	
 	\label{plot.simple_example}
 \end{figure}
 
-How should the longest path through a graph like that in Figure \ref{plot.simple_example} be defined? The HEFT approach, as described in previous chapters, is to use mean values over all sets of possible costs to fix the DAG weights and then compute the critical path lengths in a standard dynamic programming manner. For the example, this gives
+The HEFT approach, as described in previous chapters, is to use {\em average values} over all sets of possible costs in order to fix the DAG weights and then compute the critical path in a standard dynamic programming manner. In particular, for each $i = 1, \dots, n$, we compute a number $u_i$, called the upward rank, which purportedly represents the critical path length from task $t_i$ to the end and is taken to be the task's priority. For example, for the graph in Figure \ref{plot.simple_example}, HEFT first (implicitly) converts the DAG to the fixed-cost one shown in Figure \ref{plot.example_fixed}, and then calculates the task ranks like so: 
 \begin{align*}
-u_6 &= 2.5, \; u_5 = 7, \; u_4 = 7.75, \; u_3 = 16, \\
-u_2 &= 5.75, \; u_1 = 16.25, \; \text{and} \; u_0 = 24.75,
+u_6 &= 2.5, \\
+u_5 &= 1.5 + 3 + 2.5 \\
+&= 7, \\
+u_4 &= 3 + 2.25 + 2.5 \\
+&= 7.75, \\
+u_2 &= 1.5 + 1.75 + 2.5\\
+&= 5.75, \\
+u_3 &= 4.5 + \max\{ 4 + u_5, \; 3.75 + u_4 \} \\
+&= 4.5 + \max\{ 11, \; 11.5 \}\\
+&= 16, \\
+u_1 &= 5.5 + \max\{ 3 + u_4, \; 1.25 + u_2 \} \\
+&= 5.5 + \max\{ 10.75, \; 7 \}\\
+&= 16.25, \\
+u_0 &= 5.5 + \max\{ 2.5 + u_3, \; 3 + u_1 \} \\
+&= 5.5 + \max\{ 18.25, \; 19.25 \} \\
+&= 24.75.
 \end{align*}
-giving a scheduling priority list of $\{0, 1, 3, 4, 5, 2, 6\}$. The schedule length obtained by HEFT with these priorities is 22, so note in particular that $u_0$, the rank of the single entry task, is not a lower bound on this value, unlike in the homogeneous case. The question then is, what quantity do the $u_i$ values actually represent? The most intuitive interpretation is perhaps that the HEFT ranks are estimates of what the critical paths are {\em likely} to be but there is no robust mathematical justification for believing that such a definition is truly the most useful.  
+These ranks give a scheduling priority list of $\{0, 1, 3, 4, 5, 2, 6\}$. The resulting schedule length obtained by HEFT with these priorities is 22, as shown in Figure Y.... note in particular that $u_0$, the rank of the single entry task, is not a lower bound on this value, unlike in the homogeneous case. The question then is, what quantity do the $u_i$ values actually represent? The most intuitive interpretation is perhaps that the HEFT ranks are estimates of what the critical paths are {\em likely} to be but there is no robust mathematical justification for believing that such a definition is truly the most useful.
+
+\begin{figure}
+	\centering	
+	\includegraphics[scale=0.7]{simple_graph_fixed.png}
+	\caption{Fixed-cost counterpart of task DAG from Figure \ref{plot.simple_example} which is implicitly used in HEFT.}	
+	\label{plot.example_fixed}
+\end{figure}  
 
 Given this ambiguity, alternative ways to define the critical path in HEFT have been considered before, most notably by Zhao and Sakellariou \cite{zhao03}, who empirically compared the performance of HEFT when averages other than the mean (e.g., median, maximum, minimum) are used to compute upward (or downward) ranks. Their conclusions were that using the mean is not clearly superior to other averages, although none of the other options were consistently better. Indeed, perhaps the biggest takeaway from their investigation was that HEFT is very sensitive to how priorities are computed, with significant variation being seen for different graphs and target platforms. In this chapter we undertake a similar investigation with the aim of establishing if there are choices which do consistently outperform the standard HEFT task ranking phase.   
 
@@ -175,6 +196,7 @@ This will be an empirically-driven study, as is common in this area. To facilita
 % TODO: mention that only giving equations etc for u_i but can analagously define d_i. 
 
 % it seems safest to say that critical path here represents some estimate of future schedule costs (which schedule you may ask?)
+% purportedly represent critical path lengths from each task $t_i$ to the end
 
 \section{Optimistic bounds}
 \label{sect.optimistic}
