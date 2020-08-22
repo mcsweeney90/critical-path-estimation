@@ -1189,12 +1189,12 @@ def HEFT(dag, platform, priority_list=None, cp_type="HEFT", avg_type="HEFT",
         for t in priority_list:
             print(t.ID, file=schedule_dest)
         print("\n", file=schedule_dest)
-        platform.print_info(print_schedule=True, filepath=schedule_dest)
-    
+        platform.print_info(print_schedule=True, filepath=schedule_dest)    
         
     # Compute makespan.
     mkspan = dag.makespan() 
     
+    # Save schedule illustration if specified.
     if schedule_img_dest is not None:
         loads = {}
         for w in platform.workers:
@@ -1204,16 +1204,37 @@ def HEFT(dag, platform, priority_list=None, cp_type="HEFT", avg_type="HEFT",
         
         fig, ax = plt.subplots(dpi=400)
         for i, w in enumerate(platform.workers):
-            ax.broken_barh(loads[w.ID], (1*(i + 1) + 5*i, 5), facecolors='#E24A33', edgecolor='white', joinstyle='bevel')
+            ax.broken_barh(loads[w.ID], (5*i, 5), facecolors='#FBC15E', edgecolor='k')
                 
         ax.set_xlim(0, mkspan)
         ax.set_xlabel('TIME')
+        ax.set_ylabel('PROCESSOR')
         
-        ax.set_ylim(0, platform.n_workers * 6 + 1)
-        ax.set_yticks(list(3.5 + 6*i for i in range(platform.n_workers)))
-        ax.set_yticklabels(list(w.ID for w in platform.workers))
+        ax.set_ylim(0, platform.n_workers * 5)
+        ax.set_yticks(list(2.5 + 5*i for i in range(platform.n_workers)))
+        ax.set_yticklabels(list("P{}".format(int(w.ID[-1]) + 1) for w in platform.workers)) # +1 for consistency with examples. 
         
-        ax.grid(False)
+        # Add task IDs.
+        for i, w in enumerate(platform.workers):
+            for t in w.load:
+                ax.annotate(t[0], (t[1] + 0.4 * (t[2] - t[1]), 2.5 + 5*i), color='#348ABD')
+        
+        # Add annotation identifying makespan.
+        yf = 0
+        for i, w in enumerate(platform.workers):
+            if w.load[-1][2] == mkspan:
+                yf = i
+                break
+        ax.annotate('Makespan = {}'.format(mkspan), (mkspan, 5 * (yf + 1)),
+            xytext=(0.85, 0.9), textcoords='axes fraction',
+            bbox=dict(boxstyle="round", fc="w"),
+            arrowprops=dict(facecolor='black', shrink=0.05),
+            fontsize=16,
+            horizontalalignment='right', verticalalignment='top')
+        
+        # ax.set_facecolor('white')  
+        ax.xaxis.grid(False)
+        ax.yaxis.grid(False)
         
         plt.savefig('{}/heft_schedule_{}_{}.png'.format(schedule_img_dest, dag.name, platform.name), bbox_inches='tight') 
         plt.close(fig) 

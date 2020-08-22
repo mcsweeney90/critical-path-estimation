@@ -157,49 +157,49 @@ def convert_from_nx_graph(graph, single_root=True, single_exit=True):
 # Draw multiple cost graph.
 # =============================================================================
     
-nw = 2
-platform = Platform(nw, name="{}P".format(nw))        
-# Load DAG.
-with open('{}/example_dag_with_costs.dill'.format(path), 'rb') as file:
-    dag = dill.load(file)     
+# nw = 2
+# platform = Platform(nw, name="{}P".format(nw))        
+# # Load DAG.
+# with open('{}/example_dag_with_costs.dill'.format(path), 'rb') as file:
+#     dag = dill.load(file)     
 
-info, node_weights, edge_weights = {}, {}, {}
-for t in dag.top_sort:
-    info[t.ID] = list(s.ID for s in dag.graph.successors(t))
-    node_weights[t.ID] = tuple(t.comp_costs[w.ID] for w in platform.workers)
-    for s in dag.graph.successors(t):        
-        costs = [0]
-        for w in platform.workers:
-            for v in platform.workers:
-                if w.ID == v.ID:
-                    continue
-                costs.append(t.comm_costs[s.ID][(w.ID, v.ID)])
-        edge_weights[(t.ID, s.ID)] = tuple(costs)
-D = nx.DiGraph()
-for n, kids in info.items():
-    for c in kids:
-        D.add_edge(n, c)
-plt.clf()
-pos = graphviz_layout(D, prog='dot')    
-nx.draw_networkx_nodes(D, pos, node_color='#E5E5E5', node_size=500, alpha=1.0)
-nx.draw_networkx_edges(D, pos, width=1.0, snap=True)
-nx.draw_networkx_labels(D, pos, font_size=12, font_color='#348ABD', font_weight='bold')
-nx.draw_networkx_edge_labels(D, pos, font_size=9, edge_labels=edge_weights, font_color='#E24A33', font_weight='bold')
-alt_pos = {}
-for p in pos:
-    if p == 0:
-        alt_pos[p] = (pos[p][0], pos[p][1] + 16)
-    elif p == 1 or p == 2:
-        alt_pos[p] = (pos[p][0] + 2, pos[p][1] + 16)
-    elif p == 3 or p == 5:
-        alt_pos[p] = (pos[p][0] - 2, pos[p][1] + 16)
-    elif p == 4:
-        alt_pos[p] = (pos[p][0] + 13, pos[p][1])
-    elif p == 6:        
-        alt_pos[p] = (pos[p][0] + 13, pos[p][1] - 4)            
-nx.draw_networkx_labels(D, alt_pos, node_weights, font_size=9, font_color='#E24A33', font_weight='bold')
-plt.axis("off")     
-plt.savefig('{}/simple_graph.png'.format(path), bbox_inches='tight') 
+# info, node_weights, edge_weights = {}, {}, {}
+# for t in dag.top_sort:
+#     info[t.ID] = list(s.ID for s in dag.graph.successors(t))
+#     node_weights[t.ID] = tuple(t.comp_costs[w.ID] for w in platform.workers)
+#     for s in dag.graph.successors(t):        
+#         costs = [0]
+#         for w in platform.workers:
+#             for v in platform.workers:
+#                 if w.ID == v.ID:
+#                     continue
+#                 costs.append(t.comm_costs[s.ID][(w.ID, v.ID)])
+#         edge_weights[(t.ID, s.ID)] = tuple(costs)
+# D = nx.DiGraph()
+# for n, kids in info.items():
+#     for c in kids:
+#         D.add_edge(n, c)
+# plt.clf()
+# pos = graphviz_layout(D, prog='dot')    
+# nx.draw_networkx_nodes(D, pos, node_color='#E5E5E5', node_size=500, alpha=1.0)
+# nx.draw_networkx_edges(D, pos, width=1.0, snap=True)
+# nx.draw_networkx_labels(D, pos, font_size=12, font_color='#348ABD', font_weight='bold')
+# nx.draw_networkx_edge_labels(D, pos, font_size=9, edge_labels=edge_weights, font_color='#E24A33', font_weight='bold')
+# alt_pos = {}
+# for p in pos:
+#     if p == 0:
+#         alt_pos[p] = (pos[p][0], pos[p][1] + 16)
+#     elif p == 1 or p == 2:
+#         alt_pos[p] = (pos[p][0] + 2, pos[p][1] + 16)
+#     elif p == 3 or p == 5:
+#         alt_pos[p] = (pos[p][0] - 2, pos[p][1] + 16)
+#     elif p == 4:
+#         alt_pos[p] = (pos[p][0] + 13, pos[p][1])
+#     elif p == 6:        
+#         alt_pos[p] = (pos[p][0] + 13, pos[p][1] - 4)            
+# nx.draw_networkx_labels(D, alt_pos, node_weights, font_size=9, font_color='#E24A33', font_weight='bold')
+# plt.axis("off")     
+# plt.savefig('{}/simple_graph.png'.format(path), bbox_inches='tight') 
 
 # =============================================================================
 # Draw fixed-cost version used in HEFT.
@@ -242,6 +242,19 @@ plt.savefig('{}/simple_graph.png'.format(path), bbox_inches='tight')
 # nx.draw_networkx_labels(D, alt_pos, node_weights, font_size=12, font_color='#E24A33', font_weight='bold')
 # plt.axis("off")     
 # plt.savefig('{}/simple_graph_fixed.png'.format(path), bbox_inches='tight')
+    
+# =============================================================================
+# Draw HEFT schedule for example DAG.
+# =============================================================================
+    
+nw = 2
+platform = Platform(nw, name="{}P".format(nw))        
+# Load DAG.
+with open('{}/example_dag_with_costs.dill'.format(path), 'rb') as file:
+    dag = dill.load(file)
+
+heft_mkspan = HEFT(dag, platform, schedule_img_dest=path)
+print("HEFT makespan: {}".format(heft_mkspan))
 
 # =============================================================================
 # Compute ranks. 
@@ -306,28 +319,3 @@ plt.savefig('{}/simple_graph.png'.format(path), bbox_inches='tight')
 #     peft_mkspan = PEFT(dag, platform, schedule_dest=dest)
 #     print(peft_mkspan)
     
-# =============================================================================
-# Testing.
-# =============================================================================
-    
-# fig, ax = plt.subplots(dpi=400)
-# ax.broken_barh([(110, 30), (150, 10)], (2, 10), facecolors='#E24A33')
-# ax.broken_barh([(10, 50), (100, 20), (130, 10)], (14, 10),
-#                facecolors='#E24A33')
-# ax.set_ylim(0, 27)
-# ax.set_xlim(0, 200)
-# ax.set_xlabel('Time units')
-# ax.set_yticks([15, 25])
-# ax.set_yticklabels(['P1', 'P2'])
-# ax.grid(False)
-
-# plt.show()
-    
-# nw = 2
-# platform = Platform(nw, name="{}P".format(nw))        
-# # Load DAG.
-# with open('{}/example_dag_with_costs.dill'.format(path), 'rb') as file:
-#     dag = dill.load(file)
-
-# heft_mkspan = HEFT(dag, platform, schedule_img_dest=path)
-# print("HEFT makespan: {}".format(heft_mkspan))
