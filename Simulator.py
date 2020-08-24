@@ -1125,7 +1125,7 @@ class Platform:
 # =============================================================================            
             
 def HEFT(dag, platform, priority_list=None, cp_type="HEFT", avg_type="HEFT", 
-         return_schedule=False, schedule_dest=None, schedule_img_dest=None):
+         return_schedule=False, schedule_dest=None, schedule_img_dest=None, img_name=None):
     """
     Heterogeneous Earliest Finish Time.
     'Performance-effective and low-complexity task scheduling for heterogeneous computing',
@@ -1232,11 +1232,12 @@ def HEFT(dag, platform, priority_list=None, cp_type="HEFT", avg_type="HEFT",
             fontsize=16,
             horizontalalignment='right', verticalalignment='top')
         
+        # Tend to play around with these...
         # ax.set_facecolor('white')  
         ax.xaxis.grid(False)
         ax.yaxis.grid(False)
         
-        plt.savefig('{}/heft_schedule_{}_{}.png'.format(schedule_img_dest, dag.name, platform.name), bbox_inches='tight') 
+        plt.savefig('{}/heft_schedule_{}_{}_{}.png'.format(schedule_img_dest, dag.name, platform.name, img_name), bbox_inches='tight') 
         plt.close(fig) 
     
     # Reset DAG and platform.

@@ -244,17 +244,20 @@ def convert_from_nx_graph(graph, single_root=True, single_exit=True):
 # plt.savefig('{}/simple_graph_fixed.png'.format(path), bbox_inches='tight')
     
 # =============================================================================
-# Draw HEFT schedule for example DAG.
+# Draw HEFT schedules for example DAG.
 # =============================================================================
     
-nw = 2
-platform = Platform(nw, name="{}P".format(nw))        
-# Load DAG.
-with open('{}/example_dag_with_costs.dill'.format(path), 'rb') as file:
-    dag = dill.load(file)
+# nw = 2
+# platform = Platform(nw, name="{}P".format(nw))        
+# # Load DAG.
+# with open('{}/example_dag_with_costs.dill'.format(path), 'rb') as file:
+#     dag = dill.load(file)
 
-heft_mkspan = HEFT(dag, platform, schedule_img_dest=path)
-print("HEFT makespan: {}".format(heft_mkspan))
+# heft_mkspan = HEFT(dag, platform, schedule_img_dest=path, img_name="orig")
+# print("HEFT makespan: {}".format(heft_mkspan))
+
+# lb_mkspan = HEFT(dag, platform, cp_type="F", schedule_img_dest=path, img_name="LB")
+# print("HEFT-LB makespan: {}".format(lb_mkspan))
 
 # =============================================================================
 # Compute ranks. 
@@ -281,9 +284,8 @@ print("HEFT makespan: {}".format(heft_mkspan))
 # fulk_mkspan = HEFT(dag, platform, priority_list=fulk_list)
 # print("Fulk makespan: {}".format(fulk_mkspan))
 
-
 # =============================================================================
-# Monte Carlo ranks.
+# Monte Carlo ranks. TODO: need to take a look at this...
 # =============================================================================
 
 # nw = 2
@@ -299,6 +301,40 @@ print("HEFT makespan: {}".format(heft_mkspan))
 #     print("\nMC{} task ranks: {}".format(ns, {k.ID:v for k, v in ranks.items()}))
 #     # mkspan = HEFT(dag, platform, priority_list=p_list)
 #     # print("MC{} makespan: {}".format(ns, mkspan))
+    
+    
+# =============================================================================
+# Draw edge-weight only version of graph.
+# =============================================================================
+    
+nw = 2
+platform = Platform(nw, name="{}P".format(nw))        
+# Load DAG.
+with open('{}/example_dag_with_costs.dill'.format(path), 'rb') as file:
+    dag = dill.load(file)     
+
+info, edge_weights = {}, {}
+for t in dag.top_sort:
+    info[t.ID] = list(s.ID for s in dag.graph.successors(t))
+    for s in dag.graph.successors(t):        
+        costs = []
+        for w in platform.workers:
+            for v in platform.workers:
+                d = t.comp_costs[w.ID] + s.comp_costs[v.ID] if s.exit else t.comp_costs[w.ID]
+                costs.append(d + t.comm_costs[s.ID][(w.ID, v.ID)])
+        edge_weights[(t.ID, s.ID)] = tuple(costs)
+D = nx.DiGraph()
+for n, kids in info.items():
+    for c in kids:
+        D.add_edge(n, c)
+plt.clf()
+pos = graphviz_layout(D, prog='dot')    
+nx.draw_networkx_nodes(D, pos, node_color='#E5E5E5', node_size=500, alpha=1.0)
+nx.draw_networkx_edges(D, pos, width=1.0, snap=True)
+nx.draw_networkx_labels(D, pos, font_size=12, font_color='#348ABD', font_weight='bold')
+nx.draw_networkx_edge_labels(D, pos, font_size=7, edge_labels=edge_weights, font_color='#E24A33', font_weight='bold')
+plt.axis("off")     
+plt.savefig('{}/simple_graph_edge_only.png'.format(path), bbox_inches='tight') 
     
 # =============================================================================
 # PEFT.

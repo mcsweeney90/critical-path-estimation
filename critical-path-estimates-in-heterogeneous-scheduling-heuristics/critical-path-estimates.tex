@@ -150,7 +150,7 @@
 \section{Introduction}
 \label{sect.intro}
 
-The {\em critical path} of a project is defined as the longest sequence of its constituent tasks that must be done in order to complete the project \cite{kel59,kel61}. If we express the project in the form of a task graph, then the critical path is simply the longest---i.e., costliest---path through it. This is useful because the time it takes to execute the tasks on the critical path of the graph is therefore a lower bound on the makespan of any possible schedule for the project, no matter how many processors are available. In the context of a listing heuristic for scheduling the task graph on a set of parallel processors, a natural choice then is to prioritize all tasks according to the length of the critical path from that task to the end, the idea being that tasks with the greatest downward path length contribute most heavily to the makespan and should therefore be processed as soon as possible. This approach has a long and successful history in scheduling for homogeneous processors, and is in fact provably optimal for two-processor systems \cite{cof72}. 
+The {\em critical path} of a project is defined as the longest sequence of constituent tasks that must be done in order to complete it \cite{kel59,kel61}. If we express the project in the form of a task graph, then the critical path is simply the longest---i.e., costliest---path through it. This is useful because the time it takes to execute the tasks on the critical path of the graph is therefore a lower bound on the makespan of any possible schedule for the project, no matter how many processors are available. In the context of a listing heuristic for scheduling the task graph on a set of parallel processors, a natural choice then is to prioritize all tasks according to the length of the critical path from that task to the end, the idea being that tasks with the greatest downward path length contribute most heavily to the makespan and should therefore be processed as soon as possible. This approach has a long and successful history in scheduling for homogeneous processors, and is in fact provably optimal for two-processor systems \cite{cof72}. 
 
 Now, in the homogeneous case, all tasks have the same cost on all processors, so that there is only one possible cost each task may take. In particular this means that the node weights in the task graph are {\em fixed} so, disregarding the edge weights for the moment, the longest path through the DAG is also fixed, no matter what schedule we ultimately follow. Therefore, when we refer to the critical path of the task graph it is clear what is meant. Unfortunately, the concept of the critical path is not so clearly defined for heterogeneous processing environments. The problem is, there are now multiple possible costs that each task may take---depending on the schedule---and likewise many different communication costs that may be incurred. In particular this means that the weights of the task DAG are not fixed and we cannot  simply compute a longest path. Consider for example the simple DAG shown in Figure \ref{plot.simple_example}, where the labels represent all the possible weights each task/edge may take on a two-processor heterogeneous target platform; the red labels near the nodes represent the computation costs on processors $P1$ and $P2$ in the form $(W_i^1, W_i^2)$, while the edge labels represent the possible communication costs in the form $(W_{ik}^{11} = W_{ik}^{22} = 0, W_{ik}^{12}, W_{ik}^{21})$. How should the longest path through a graph like that in Figure \ref{plot.simple_example} be defined?
 
@@ -206,18 +206,20 @@ This will be an empirically-driven study, as is common in this area. To facilita
 \section{A universal lower bound}
 \label{sect.optimistic}
 
-Functionally, the critical path is used in HEFT as a lower bound on the makespan, so that minimizing the critical path gives us the most scope to minimize the makespan, assuming we make good use of our parallel resources. With this in mind, there are many different ways we can define the critical path so that it gives a lower bound on the makespan of any possible schedule. The most straightforward approach would be to just set all weights to their minimal values but a tighter bound can be computed in the following manner. First, define $\ell_i^a$ for all tasks $t_i$ and processors $p_a$ to be the critical path length from $t_i$ to the end (inclusive), assuming that it is scheduled on processor $p_a$. These values can easily be computed recursively by setting $\ell_i^a = W_i^a$, $a = 1, \dots, q$, for all exit tasks then moving up the DAG and setting 
+Functionally, the critical path is used in HEFT as a lower bound on the makespan, so that minimizing the critical path gives us the most scope to minimize the makespan, assuming we make good use of our parallel resources. With this in mind, there are many different ways we can define the critical path so that it gives a lower bound on the makespan of any possible schedule. The most straightforward approach would be to just set all weights to their minimal values but a tighter bound can be computed in the following manner. First, define $\ell_i^a$ for all tasks $t_i$ and processors $p_a$ to be the critical path length from $t_i$ to the end (inclusive), assuming that it is scheduled on processor $p_a$. These values can easily be computed recursively by setting $\ell_i^a = W_i^a$, $a = 1, \dots, q$, for all exit tasks then moving up the DAG and calculating 
 \begin{align}
-\ell_i^a &= W_i^a + \max_{k \in S_i} \bigg( \min_{b = 1, \dots, q} \big( \ell_k^b + W_{ik}^{ab} \big)  \bigg) \quad \forall a \label{eq.opt_uia} 
+\ell_i^a &= W_i^a + \max_{k \in S_i} \bigg( \min_{b = 1, \dots, q} \big( \ell_k^b + W_{ik}^{ab} \big)  \bigg), \quad a = 1, \dots, q, \label{eq.opt_uia} 
 \end{align}
-for all other tasks. Then for each $i = 1, \dots, n$,
+for all other tasks. Then, for each $i = 1, \dots, n$,
 \begin{align}
 \ell_i &= \min_{a = 1, \dots, q}\ell_i^a \label{eq.opt_ui} 
 \end{align}
-gives a true lower bound on the remaining cost of any schedule once the execution of task $t_i$ begins. These $\ell_i$ values could be useful as alternative task priorities in HEFT, especially since the cost of computing all of the $\ell_i^a$ in this manner is only $O((m + n)q) \approx O(n^2q)$ so in particular is the same order as the usual HEFT prioritization phase. For example, for the simple DAG shown in Figure \ref{plot.simple_example}, we find that the $\ell_i$ values are as given in Table \ref{tb.opt_example} (with the $u_i$ included for comparison). Interestingly, we see that tasks 1 and 3 have the same lower bound (8 units) and the performance of the alternative ranks relative to the standard $u_i$ sequence in HEFT depends on which is chosen to be scheduled first; if task 1, the priority list does not change so the schedule makespan is 22 units, but if task 3 is selected instead, the final schedule makespan is 20 units---i.e., smaller than the original. Of course, this is only one example: there is no mathematically valid reason to suppose that using the $\ell_i$ sequence instead of $u_i$ as the task ranks in HEFT will actually lead to superior performance in general. Still, it seems worthwhile to investigate this empirically, which we do in Section \ref{sect.experimental_rankings}.
+gives a true lower bound on the remaining cost of any schedule once the execution of task $t_i$ begins. These $\ell_i$ values could be useful as alternative task priorities in HEFT, especially since the cost of computing all of the $\ell_i^a$ in this manner is only $O((m + n)q) \approx O(n^2q)$ so in particular is the same order as the usual HEFT prioritization phase. 
+
+For example, for the simple DAG shown in Figure \ref{plot.simple_example}, we find that the $\ell_i$ values are as given in Table \ref{tb.opt_example} (with the $u_i$ included for comparison). Interestingly, we see that tasks 1 and 3 have the same lower bound (8 units) and the performance of the alternative ranks relative to the standard $u_i$ sequence in HEFT depends on which is chosen to be scheduled first: if task 1, the priority list does not change so the schedule makespan is 22 units, but if task 3 is selected instead, the final schedule makespan is 20 units---i.e., smaller than the original---as illustrated in Figure \ref{plot.heft_schedule_example_LB}. Of course, this is only one example: there is no mathematically valid reason to suppose that using the $\ell_i$ sequence instead of $u_i$ as the task ranks in HEFT will actually lead to superior performance in general. Still, it seems worthwhile to investigate this empirically, which we do in Section \ref{sect.experimental_rankings}.
 
 \begin{table}
-	\caption{Upward ranks and lower bounds for the DAG in Figure \ref{plot.simple_example}.} 
+	\caption{Upward ranks $u_i$ and lower bounds $\ell_i$ for the DAG in Figure \ref{plot.simple_example}.} 
 	\begin{center}	
 		\begin{tabular}{c c c c c c c c}
 			\cmidrule{1-8}
@@ -231,6 +233,13 @@ gives a true lower bound on the remaining cost of any schedule once the executio
 	\end{center}	
 \end{table}
 
+\begin{figure}
+	\centering	
+	\includegraphics[scale=0.8]{heft_schedule_example_LB.png}
+	\caption{Alternative HEFT schedule for DAG in Figure \ref{plot.simple_example}.}	
+	\label{plot.heft_schedule_example_LB}
+\end{figure}
+
 (Note that the lower bound on the critical path as defined here is very similar to the optimistic cost used in PEFT; this will be discussed further in Section \ref{sect.processor_selection}.)
 
 %Although taking the minimum over the set of processors as in \eqref{eq.opt_ui} is the only choice that gives a true lower bound, we could use any other average over the set of processors, such as the mean or maximum, in order to compute task priorities. Since we also consider those two alternatives in Section \ref{sect.experimental_rankings}, we refer to the ranking phase defined by using the minimum, maximum and mean as OPT-MIN, OPT-MAX and OPT-MEAN respectively. 
@@ -239,7 +248,7 @@ gives a true lower bound on the remaining cost of any schedule once the executio
 \section{A stochastic interpretation}
 \label{sect.alt_rankings}
 
-In this section we propose a family of alternative task ranking phases in HEFT based on one possible interpretation of the standard ranking phase. First, note that by using average values over all sets of possible task and edge costs, HEFT is implicitly assuming that any member of any set is just as likely to be incurred as any other; conceptually, HEFT is attempting to account for the uncertainty of the processor selection phase by assuming that for any given task all processors are equally likely to ultimately be chosen. So, effectively, at the prioritization phase HEFT views the node and edge weights as independent discrete random variables (RVs) with associated probability mass functions (pmfs) given by the aforementioned assumption. More precisely, let $m_i$ be the pmf corresponding to the task weight variable $w_i$ and $m_{ik}$ that for the edge weight $w_{ik}$, then  
+In this section we propose a family of alternative task ranking phases in HEFT based on the following interpretation of the standard ranking. Given the complex interplay between the ranking and processor selection phases, it is impossible to predict exactly which values all DAG weights will take at runtime, at least without modifying the latter. Now, by using average values over all sets of possible costs, HEFT in some sense implicitly assumes that all members of each set are equally likely to be incurred. Conceptually, we can view this as an attempt to {\em model} the processor selection phase in order to predict which values the weights will assume. This model takes the form of a {\em stochastic graph}---i.e., all weights are assumed to be independent (discrete) random variables with associated probability mass functions (pmfs) given by the assumption of equal likelihood. More precisely, let $m_i$ be the pmf corresponding to the task weight variable $w_i$ and $m_{ik}$ that for the edge weight $w_{ik}$, then  
 \begin{align*}
 m_i(W_i^a) \coloneqq \P[w_i = W_i^a] = \frac{1}{q}, \quad a = 1, \dots, q,
 \end{align*}
@@ -248,20 +257,22 @@ and
 m_{ik}(W_{ik}^{ab}) &= m_i(W_i^a) \cdot m_k(W_k^b) \\
 &= \frac{1}{q^2}, \quad \forall a, b.
 \end{align*}
-Note that the expected values of the node and edge weights are therefore given by
+It is important to note here that the model defined by these pmfs is clearly not accurate. In particular, all of the node and edge weight variables are independent of one another. This is induced by the averaging but does not reflect, for example, the fact that edge weights are fully determined once the node weights are realized. Still, as the saying goes, all models are wrong, some are just more useful than others; we attempt to establish exactly how useful this one is later in this chapter.     
+
+Note also that the expected values of the node and edge weight variables are given by
 \begin{align}
-\E[w_i] &= \sum_{\ell \in L_i} \ell m_i(\ell) = \frac{1}{q} \sum_{a} W_i^a \label{eq.expected_node}\\
-\E[w_{ik}] &= \sum_{\ell \in L_{ik}} \ell m_{ik}(\ell) = \frac{1}{q^2} \sum_{a, b} W_{ik}^{ab} \label{eq.expected_edge}.
+\E[w_i] &= \sum_{a = 1}^{q} W_i^a m_i(W_i^a) = \frac{1}{q} \sum_{a = 1}^{q} W_i^a, \label{eq.expected_node}\\
+\E[w_{ik}] &= \sum_{a = 1}^{q} \sum_{b = 1}^{q}  W_{ik}^{ab} m_{ik}(W_{ik}^{ab}) = \frac{1}{q^2} \sum_{a, b} W_{ik}^{ab} \label{eq.expected_edge}.
 \end{align}
-In particular, this means that $\E[w_i] = \overline{w_i}$ and $\E[w_{ik}] = \overline{w_{ik}}$. So the computation of the upward ranks $u_i$ in HEFT can instead be done by setting $u_i = \E[w_i]$ for all exit tasks, then moving up the DAG and recursively computing
+This means that $\E[w_i] = \overline{w_i}$ and $\E[w_{ik}] = \overline{w_{ik}}$. So the computation of the upward ranks $u_i$ in HEFT can instead be done by setting $u_i = \E[w_i]$ for all exit tasks, then moving up the DAG and recursively computing
 \begin{align}
 u_i = \E[w_i] + \max_{k \in S_i} \big( u_k + \E[w_{ik}] \big) \label{eq.ur_expectation}
 \end{align}
-for all other tasks.
+for all other tasks. 
 
-In summary, since all possible node and edge weights are known but their actual values at runtime aren't (at least without restricting the processor selection phase), HEFT estimates critical path lengths from all tasks in a task graph $G$ through a two-step process:
+In summary, since all possible node and edge weights of a task graph $G$ are known but their actual values at runtime aren't, one possible interpretation of the standard HEFT task prioritization phase is that critical path lengths in $G$ are estimated through a two-step process:
 \begin{enumerate}
-	\item An associated graph $G_s$---referred to as {\em stochastic} because all of its weights are RVs---is implicitly constructed with node and edge pmfs $m_i$ and $m_{ik}$ as defined above.   
+	\item An associated stochastic graph $G_s$ is implicitly constructed with node and edge pmfs $m_i$ and $m_{ik}$ as defined above.   
 	\item The numbers $u_i$ are recursively computed for all tasks in $G_s$ using \eqref{eq.ur_expectation}, and taken as the critical path lengths from the corresponding tasks in $G$.      
 \end{enumerate}
 In the following two sections, we propose modifications of both steps so as to obtain different critical path estimates that may be used as task ranks in HEFT. The performance of these will then be evaluated through extensive numerical simulations in Section \ref{sect.experimental_rankings}.
@@ -269,18 +280,18 @@ In the following two sections, we propose modifications of both steps so as to o
 \subsection{The critical path of $G_s$}
 \label{subsect.sharper_bounds}
 
-A natural question arises from the interpretation outlined in the previous section: what is the relationship between the sequence of numbers $u_i$ as defined by \eqref{eq.ur_expectation} and the critical path of the stochastic graph $G_s$? (Of course, since all of the weights are RVs, the critical path of $G_s$ is itself stochastic.) In fact, it has long been known in the context of {\em Program Evaluation and Review Technique} (PERT) network analysis that the numbers $u_i$ are {\em lower bounds} on the expected value of the critical path lengths of the stochastic DAG. This result dates back at least as far as Fulkerson \cite{fulk62}, who referred to it as already being widely-known and gave a simple proof. This prompts another question: does using the actual expected values of the critical path lengths as the task priories in HEFT lead to superior performance?
+Now, since all of its weights are RVs, the critical path of the stochastic graph $G_s$ is clearly itself a random variable. But a natural question arises from the interpretation outlined in the previous section: what is the relationship between the sequence of numbers $u_i$ as defined by \eqref{eq.ur_expectation} and the critical path of $G_s$? In fact, it has long been known in the context of {\em Program Evaluation and Review Technique} (PERT) network analysis that the numbers $u_i$ are {\em lower bounds on the expected value} of the critical path lengths of the stochastic DAG. This result dates back at least as far as Fulkerson \cite{fulk62}, who referred to it as already being widely-known and gave a simple proof. This prompts another question: does using the actual expected values lead to superior performance in HEFT?
 
 Unfortunately, computing the moments of the critical path length of a graph whose weights are discrete RVs was shown to be a $\#P$-complete problem by Hagstrom \cite{hagstrom88}. This means that it is generally impractical to compute the true expected values. However, efficient methods which yield better approximations than the $u_i$ numbers are known; we discuss examples in the following two sections.  
 
 \subsubsection{Monte Carlo sampling}
 \label{subsubsect.monte_carlo}
 
-Monte Carlo (MC) methods have a long history as a means of approximating the longest path distribution for PERT networks, dating back to at least the early 1960s \cite{van1963letter}. The idea is to simulate the realization of all RVs (according to their pmfs) and then evaluate the critical path of the resulting deterministic graph. This is done repeatedly, giving a set of critical path instances whose empirical distribution function is guaranteed to converge to the true distribution by the Glivenko-Cantelli Theorem \cite{canon2016correlation}. Furthermore, analytical results allow us to quantify the approximation error for any given the number of realizations---and therefore the number of realizations needed to reach a desired accuracy.  
+Monte Carlo (MC) methods have a long history as a means of approximating the critical path distribution for PERT networks, dating back to at least the early 1960s \cite{van1963letter}. The idea is to simulate the realization of all RVs (according to their pmfs) and then evaluate the critical path of the resulting deterministic graph. This is done repeatedly, giving a set of critical path instances whose empirical distribution function is guaranteed to converge to the true distribution by the Glivenko-Cantelli Theorem \cite{canon2016correlation}. Furthermore, analytical results allow us to quantify the approximation error for any given the number of realizations---and therefore the number of realizations needed to reach a desired accuracy.  
 
-Table \ref{tb.mc_example} illustrates how our estimate of the expected critical path lengths of the stochastic graph in Figure \ref{plot.simple_example} evolve as the number of realizations increases; the corresponding $u_i$ numbers are included as well to show that they do indeed appear to be a lower bound on the values that the Monte Carlo method appear to be converging toward. Note that the critical path length estimate for task 3 eventually exceeds that of task 1 so it has a higher priority if these estimates are taken as task ranks in HEFT; as noted in the previous section, interchanging these two tasks---and keeping the same ordering for all others---leads to a smaller schedule makespan (20 units) compared to the standard ranking (22 units). Of course, this is only one example, but it does serve to illustrate that in some cases a tighter bound on the critical path of $G_s$ can be useful.  
+Table \ref{tb.mc_example} illustrates how our estimates of the expected critical path lengths evolve as the number of realizations increases for the stochastic graph corresponding to that in Figure \ref{plot.simple_example}. The relevant $u_i$ numbers are also included to show that they do indeed appear to be a lower bound on the values the Monte Carlo method appears to be converging toward. Note that the critical path length estimate for task 3 eventually exceeds that of task 1 so it has a higher priority if these estimates are taken as task ranks in HEFT; as noted in the previous section, interchanging these two tasks---and keeping the same ordering for all others---leads to a smaller schedule makespan (20 units) compared to the standard ranking (22 units). Of course, this is only one example, but it does serve to illustrate that in some cases a tighter bound on the critical path of $G_s$ can be useful.  
 
-\begin{table}
+\begin{table} %TODO.
 	\caption{Monte Carlo estimates of critical path lengths for example graph.} 
 	\begin{center}	
 		\begin{tabular}{c c c c c c}
@@ -300,48 +311,68 @@ Table \ref{tb.mc_example} illustrates how our estimate of the expected critical 
 	\end{center}	
 \end{table} 
 
-The downside of Monte Carlo sampling is its cost. While modern architectures are well-suited to this approach because of their parallelism, this approach still may be impractical in the context of a scheduling heuristic; we often found this to be the case in the examples discussed in Section \ref{sect.experimental_rankings}. Hence in this report we typically only use the Monte Carlo method as a means of obtaining a reference solution; see, for example, the following section. 
+The downside of Monte Carlo sampling is its cost. While modern architectures are well-suited to this approach because of their parallelism, it still may be impractical in the context of a scheduling heuristic, especially when the DAG is large; we often found this to be the case for the examples discussed in Section \ref{sect.experimental_rankings}. Hence in this report we typically only use the Monte Carlo method as a means of obtaining a reference solution; see, for example, the following section. 
 
 \subsubsection{Fulkerson's bound}
 \label{subsubsect.fulkerson}
 
-For all $i = 1, \dots, n$, let $c_i$ be the critical path length from task $t_i$ to the end and let $e_i = \E[c_i]$ be its expected value. In addition to proving that the $u_i$ sequence defines lower bounds on the critical path lengths, i.e., $u_i \leq e_i \; \forall i$, Fulkerson also showed how an alternative sequence of numbers which give tighter bounds can easily be constructed.
-
-First we assume that $G_s$ is expressed in an equivalent formulation without node weights. The most straightforward way to do this is to simply redefine the edge weights so that they also include the computation cost of the parent task and, if the child task is an exit, the computation cost of the child as well. More precisely, we define a new set of possible edge weights $\tilde{L}_{ik}$ by 
+Before introducing the alternative bounds on the critical path lengths proposed by Fulkerson, we first describe how the stochastic graph $G_s$ can be expressed in an equivalent formulation with only edge weights. This step is not mathematically necessary but simply makes the elucidation much cleaner; it should be emphasized that all of the following still holds, with only minor adjustments, if this is not done. The most straightforward approach is to simply redefine the edge weights so that they also include the computation cost of the parent task and, if the child task is an exit, the computation cost of the child as well. More precisely, we define a new set of edge weight variables $\tilde{w}_{ik}$ which take values 
 \begin{align*}
-\tilde{L}_{ik} = \{ \tilde{W}_{ik}^{ab} \coloneqq W_i^a + \delta_k W_k^b + W_{ik}^{ab} \}_{a, b = 1, \dots, q}, 
+\tilde{W}_{ik}^{ab} \coloneqq W_i^a + W_{ik}^{ab} + \delta_k W_k^b,  \quad \forall a, b, i, k, 
 \end{align*}
-where $\delta_k = 1$ if $t_k$ is an exit task and zero otherwise. We also define a new edge weight variable $\tilde{w}_{ik} \in \tilde{L}_{ik}$ and new edge pmfs $\tilde{m}_{ik}$ for which $\tilde{m}(\tilde{W}_{ik}^{ab}) \equiv m(W_{ik}^{ab})$. Note that removing the node weights is not strictly necessary but simply makes the elucidation cleaner so we should emphasize that all of the following still holds, with only minor adjustments, if this is not done.
+where $\delta_k = 1$ if $t_k$ is an exit task and zero otherwise. Figure \ref{plot.example_edge_only} illustrates how the graph in Figure \ref{plot.simple_example} would be transformed in this manner, where the edge labels are in the form $(\tilde{W}_{ik}^{11}, \tilde{W}_{ik}^{12}, \tilde{W}_{ik}^{22}, \tilde{W}_{ik}^{21})$.
 
-Now, for $i = 1, \dots, n$, define $Z_i$ to be the set of all weight RVs corresponding to edges downward of $t_i$ (i.e., the remainder of the graph). Let $R_i$ be the set of all possible {\em realizations} of the RVs in $Z_i$. Given a realization $z_i \in R_i$, let $\ell(z_i)$ be the critical path length from task $t_i$ to the end. Then by the definition of the expected value we have
+\begin{figure}
+	\centering	
+	\includegraphics[scale=0.8]{simple_graph_edge_only.png}
+	\caption{Edge weight-only equivalent of task DAG from Figure \ref{plot.simple_example}.}	
+	\label{plot.example_edge_only}
+\end{figure} 
+
+
+Note that $\P[w_{ik} = W_{ik}^{ab}] = \P[\tilde{w}_{ik} = \tilde{W}_{ik}^{ab}]$ for all $a, b, i$ and $k$, so that $m_{ik}(\tilde{W}_{ik}^{ab}) \equiv m_{ik}(W_{ik}^{ab})$. However, we do have to make a minor adjustment to how the $u_i$ numbers are computed since the expected value of the node weights no longer has any meaning. In particular, we set $u_i = 0$ for all exit tasks then recursively compute       
+\begin{align}
+u_i = \max_{k \in S_i} \big( u_k + \E[\tilde{w}_{ik}] \big) \label{eq.ur_edge_only}
+\end{align}
+for all others. It can readily be verified that this sequence is identical to that defined by \eqref{eq.ur_expectation} with the exception of the exit tasks, for which the corresponding numbers are now zero. (Technically we should perhaps rename this number sequence but given the fact that it is essentially identical we felt this was unnecessary.) 
+
+Now, for all $i = 1, \dots, n$, let $c_i$ be the critical path length from task $t_i$ to the end and let $e_i = \E[c_i]$ be its expected value. Define $Z_i$ to be the set of all weight RVs corresponding to edges downward of $t_i$ (i.e., the remainder of the graph). Let $R_i$ be the set of all possible {\em realizations} of the RVs in $Z_i$. Given a realization $z_i \in R_i$, let $\ell(z_i)$ be the critical path length from task $t_i$ to the end (which is a scalar because all weights have been realized). Then by the definition of the expected value we have
 \begin{align}
 e_i &= \sum_{z_i \in R_i} \P[Z_i = z_i] \ell(z_i). \label{eq.expected_cp}
 \end{align}
-Let $C_i \coloneqq \{ w_{ik} \}_{k \in S_i}$ be the set of all the weight RVs corresponding to edges which connect task $t_i$ to its children. Note that 
-\begin{align*}
-Z_i = C_i \cup_{k \in S_i} Z_k 
-\end{align*}
-and any realization $z_i \in R_i$ can therefore be expressed as $z_i = c_i \cup_{k \in S_i} z_k^i$, where $z_k^i \in R_k$ and $c_i = \{ z_{ik}^i\}_{k \in S_i}$ is the set of realizations of the edge weight RVs in $C_i$. In particular, this means that we can write
-\begin{align*}
-\ell(z_i) = \max_{k \in S_i} \{ \ell(z_{k}^i) + z_{ik}^i \}.
-\end{align*}
-Furthermore, by the independence assumptions made, we have that
-\begin{align*}
-\P[Z_i = z_i] = \P[C_i = c_i] \prod_{k \in S_i} \P[Z_k = z_i^k]. 
-\end{align*} 
-This means that we can rewrite equation \eqref{eq.expected_cp} as
+Suppose we define a sequence of numbers by $f_i = 0$, if $t_i$ is an exit task, and
 \begin{align}
-e_i &= \sum_{z_i \in R_i} \P[Z_i = z_i] \ell(z_i) \nonumber \\
-&= \sum_{c_i} \sum_{\substack{z_k \in R_k, \\ k \in S_i}} \P[C_i = c_i] \P[Z_{k} = z_{k}] \max_{k \in S_i} \{ \ell(z_{k}) + z_{ik} \}, \label{eq.orig_fulk} 
+f_i &= \sum_{z_i \in R_i} \P[Z_i = z_i] \max_{k \in S_i} \{ f_k + z_{ik} \} \label{eq.f_fulkerson}
 \end{align}
-where $z_{ik}$ is the realization of the edge weight RV $w_{ik}$ defined by the set of realizations $z_k$.
+for all other tasks, where $z_{ik}$ is the realization of the edge weight RV $w_{ik}$ under the realization $z_k$. Then Fulkerson showed that $u_i \leq f_i \leq e_i$ holds for all $i$---i.e, the $f_i$ give a tighter bound on the expected values of the critical path lengths.
 
-It is relatively straightforward to show that the identity $u_i \leq e_i$ holds by manipulating equation \eqref{eq.orig_fulk}; the reader is directed to Fulkerson's original paper for details \cite{fulk62}. Moreover, suppose we define a sequence of numbers by $f_i = 0$, if $t_i$ is an exit task, and
-\begin{align}
-f_i &= \sum_{z_i \in R_i} \P[Z_i = z_i] \max_{k \in S_i} \{ f_k + z_{ik} \} \nonumber \\
-&= \sum_{c_i} \sum_{\substack{z_k \in R_k, \\ k \in S_i}} \P[C_i = c_i] \P[Z_{k} = z_{k}] \max_{k \in S_i} \{ f_k + z_{ik} \}, \label{eq.f_fulkerson}
-\end{align}
-for all other tasks, then Fulkerson showed that $u_i \leq f_i \leq e_i$ also holds---i.e, the $f_i$ give a tighter bound on the expected values of the critical path lengths.
+\paragraph{Proof of bound}
+\label{para.fulkerson_proof}
+
+% &= \sum_{c_i} \sum_{\substack{z_k \in R_k, \\ k \in S_i}} \P[C_i = c_i] \P[Z_{k} = z_{k}] \max_{k \in S_i} \{ f_k + z_{ik} \}, \label{eq.f_fulkerson}
+
+
+%Let $C_i \coloneqq \{ w_{ik} \}_{k \in S_i}$ be the set of all the weight RVs corresponding to edges which connect task $t_i$ to its children. Note that 
+%\begin{align*}
+%Z_i = C_i \cup_{k \in S_i} Z_k 
+%\end{align*}
+%and any realization $z_i \in R_i$ can therefore be expressed as $z_i = c_i \cup_{k \in S_i} z_k^i$, where $z_k^i \in R_k$ and $c_i = \{ z_{ik}^i\}_{k \in S_i}$ is the set of realizations of the edge weight RVs in $C_i$. In particular, this means that we can write
+%\begin{align*}
+%\ell(z_i) = \max_{k \in S_i} \{ \ell(z_{k}^i) + z_{ik}^i \}.
+%\end{align*}
+%Furthermore, by the independence assumptions made, we have that
+%\begin{align*}
+%\P[Z_i = z_i] = \P[C_i = c_i] \prod_{k \in S_i} \P[Z_k = z_i^k]. 
+%\end{align*} 
+%This means that we can rewrite equation \eqref{eq.expected_cp} as
+%\begin{align}
+%e_i &= \sum_{z_i \in R_i} \P[Z_i = z_i] \ell(z_i) \nonumber \\
+%&= \sum_{c_i} \sum_{\substack{z_k \in R_k, \\ k \in S_i}} \P[C_i = c_i] \P[Z_{k} = z_{k}] \max_{k \in S_i} \{ \ell(z_{k}) + z_{ik} \}, \label{eq.orig_fulk} 
+%\end{align}
+%where $z_{ik}$ is the realization of the edge weight RV $w_{ik}$ defined by the set of realizations $z_k$.
+
+\paragraph{Computing the Fulkerson numbers}
+\label{para.fulkerson_computing}
 
 To compute each of the $f_i$ using \eqref{eq.f_fulkerson} we need to do an awful lot of work: suppose $t_i$ has $K$ children, then for any one of them $t_k$ we need to do $O(|\tilde{L}_{ik}|)$ operations, i.e., $O(|\tilde{L}_{ik}|^K)$ in total. In general, $|\tilde{L}_{ik}|$ can be $O(p^2)$ and $K$ can be $O(n^2)$ so computing the $f_i$ in this manner is not always practical. Fortunately, a more efficient method was given by Clingen \cite{cling64} in the context of extending Fulkerson's method to the case where edge weights are modeled as continuous random variables, although here we follow the slightly more compact notation of Elmaghraby \cite{elmaghraby67}. 
 
