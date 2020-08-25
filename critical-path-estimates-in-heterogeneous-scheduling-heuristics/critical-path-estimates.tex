@@ -336,55 +336,77 @@ u_i = \max_{k \in S_i} \big( u_k + \E[\tilde{w}_{ik}] \big) \label{eq.ur_edge_on
 \end{align}
 for all others. It can readily be verified that this sequence is identical to that defined by \eqref{eq.ur_expectation} with the exception of the exit tasks, for which the corresponding numbers are now zero. (Technically we should perhaps rename this number sequence but given the fact that it is essentially identical we felt this was unnecessary.) 
 
-Now, for all $i = 1, \dots, n$, let $c_i$ be the critical path length from task $t_i$ to the end and let $e_i = \E[c_i]$ be its expected value. Define $Z_i$ to be the set of all weight RVs corresponding to edges downward of $t_i$ (i.e., the remainder of the graph). Let $R_i$ be the set of all possible {\em realizations} of the RVs in $Z_i$. Given a realization $z_i \in R_i$, let $\ell(z_i)$ be the critical path length from task $t_i$ to the end (which is a scalar because all weights have been realized). Then by the definition of the expected value we have
+Now, for all $i = 1, \dots, n$, let $c_i$ be the critical path length from task $t_i$ to the end and let $e_i = \E[c_i]$ be its expected value. Define $Z_i$ to be the set of all weight RVs corresponding to edges downward of $t_i$ (i.e., the remainder of the graph). Let $R(Z_i)$ be the set of all possible {\em realizations} of the RVs in $Z_i$. Given a realization $z_i \in R(Z_i)$, let $\ell(z_i)$ be the critical path length from task $t_i$ to the end (which is a scalar because all weights have been realized). Then by the definition of the expected value we have
 \begin{align}
-e_i &= \sum_{z_i \in R_i} \P[Z_i = z_i] \ell(z_i). \label{eq.expected_cp}
+e_i &= \sum_{z_i \in R(Z_i)} \P[Z_i = z_i] \ell(z_i). \label{eq.ei}
 \end{align}
-Suppose we define a sequence of numbers by $f_i = 0$, if $t_i$ is an exit task, and
+Let $B_i$ be the set of all the weight RVs corresponding to edges which connect task $t_i$ to its immediate children---i.e., $B_i \coloneqq \{ \tilde{w}_{ik} \}_{k \in S_i}$. Further, let $R(B_i)$ be the set of all possible realizations of the RVs in $B_i$ and let $b_i \in R(B_i)$ be any such realization. Suppose we define a sequence of numbers by $f_i = 0$, if $t_i$ is an exit task, and
 \begin{align}
-f_i &= \sum_{z_i \in R_i} \P[Z_i = z_i] \max_{k \in S_i} \{ f_k + z_{ik} \} \label{eq.f_fulkerson}
+f_i &= \sum_{b_i \in R(B_i)} \P[B_i = b_i] \max_{k \in S_i} \{ f_k + b_{ik} \} \label{eq.f_fulkerson}
 \end{align}
-for all other tasks, where $z_{ik}$ is the realization of the edge weight RV $w_{ik}$ under the realization $z_k$. Then Fulkerson showed that $u_i \leq f_i \leq e_i$ holds for all $i$---i.e, the $f_i$ give a tighter bound on the expected values of the critical path lengths.
+for all other tasks, where $b_{ik}$ is the realization of the edge weight RV $\tilde{w}_{ik}$ under the set of realizations $b_i$. Then Fulkerson showed that $u_i \leq f_i \leq e_i$ holds for all $i$---i.e, the $f_i$ give a tighter bound on the expected values of the critical path lengths than the $u_i$.
 
-\paragraph{Proof of bound}
+\paragraph{Proof of inequalities}
 \label{para.fulkerson_proof}
 
-% &= \sum_{c_i} \sum_{\substack{z_k \in R_k, \\ k \in S_i}} \P[C_i = c_i] \P[Z_{k} = z_{k}] \max_{k \in S_i} \{ f_k + z_{ik} \}, \label{eq.f_fulkerson}
+The proof proceeds by induction. Without loss of generality, we assume that the DAG has single entry and exit tasks (artificial zero-cost tasks can be added if necessary) so that in particular $n$ is the index of the exit task. Clearly, since $u_n = f_n = e_n = 0$ by definition, the inequality holds in that case. Now for a generic task $t_i$ we assume that the inequalities $u_k \leq f_k \leq e_k$ hold for all $k \in S_i$ (i.e., all of $t_i$'s child tasks) and show that the inequality $u_i \leq f_i \leq e_i$ therefore holds as well. 
 
+First, we prove the left-hand inequality. By bringing the probability into the maximization we can rewrite \eqref{eq.f_fulkerson} as    
+\begin{align*}
+f_i &= \sum_{b_i \in R(B_i)} \max_{k \in S_i} \{ \P[B_i = b_i] (f_k + b_{ik} ) \}.
+\end{align*}
+Interchanging the summation and maximization, we get the inequality
+\begin{align*}
+f_i \geq \max_{k \in S_i} \bigg\{ \sum_{b_i \in R(B_i)} \P[B_i = b_i] (f_k + b_{ik} ) \bigg\}.
+\end{align*}
+By expanding out the term in the maximization and making use of the facts that the $f_k$ are independent of $b_i$ and the weight RVs corresponding to distinct edges are also independent, we see that
+\begin{align*}
+\sum_{b_i \in R(B_i)} \P[B_i = b_i] (f_k + b_{ik} ) &=  \sum_{b_i \in R(B_i)} \P[B_i = b_i]f_k + \sum_{b_i \in R(B_i)} \P[B_i = b_i] b_{ik} \\
+&= f_k \sum_{b_i} \P[B_i = b_i] + \sum_{b_i} \P[B_i = b_i] b_{ik} \\
+&= f_k + \sum_{b_i} \P[B_i = b_i] b_{ik} \\
+&= f_k + \E[\tilde{w}_{ik}].
+\end{align*}
+By the induction hypothesis, $f_k \geq u_k$ for all $k \in S_i$, so we have
+\begin{align*}
+f_i &\geq \max_{k \in S_i} \{ f_k + \E[\tilde{w}_{ik}] \} \\
+&\geq \max_{k \in S_i} \{ u_k + \E[\tilde{w}_{ik}] \} = u_i,
+\end{align*}
+as required to establish the first part of the inequality. 
 
-%Let $C_i \coloneqq \{ w_{ik} \}_{k \in S_i}$ be the set of all the weight RVs corresponding to edges which connect task $t_i$ to its children. Note that 
-%\begin{align*}
-%Z_i = C_i \cup_{k \in S_i} Z_k 
-%\end{align*}
-%and any realization $z_i \in R_i$ can therefore be expressed as $z_i = c_i \cup_{k \in S_i} z_k^i$, where $z_k^i \in R_k$ and $c_i = \{ z_{ik}^i\}_{k \in S_i}$ is the set of realizations of the edge weight RVs in $C_i$. In particular, this means that we can write
-%\begin{align*}
-%\ell(z_i) = \max_{k \in S_i} \{ \ell(z_{k}^i) + z_{ik}^i \}.
-%\end{align*}
-%Furthermore, by the independence assumptions made, we have that
-%\begin{align*}
-%\P[Z_i = z_i] = \P[C_i = c_i] \prod_{k \in S_i} \P[Z_k = z_i^k]. 
-%\end{align*} 
-%This means that we can rewrite equation \eqref{eq.expected_cp} as
-%\begin{align}
-%e_i &= \sum_{z_i \in R_i} \P[Z_i = z_i] \ell(z_i) \nonumber \\
-%&= \sum_{c_i} \sum_{\substack{z_k \in R_k, \\ k \in S_i}} \P[C_i = c_i] \P[Z_{k} = z_{k}] \max_{k \in S_i} \{ \ell(z_{k}) + z_{ik} \}, \label{eq.orig_fulk} 
-%\end{align}
-%where $z_{ik}$ is the realization of the edge weight RV $w_{ik}$ defined by the set of realizations $z_k$.
+Now we prove the second part. First, note that we can rewrite equation \eqref{eq.ei} as 
+\begin{align*}
+e_i &= \sum_{z_i \in R(Z_i)} \P[Z_i = z_i] \max_{k \in S_i} \{ \ell(z_{k}) + z_{ik} \},
+\end{align*}
+where $z_{ik}$ is the realization of the edge weight RV $\tilde{w}_{ik}$ under the set of realizations $z_i$. The key now is to divide into two disjoint subsets, $Z_i = B_i \cup Y_i$, where the former is defined as before and the latter contains all of the other elements of the set (i.e., RVs corresponding to edges beyond $t_i's$ child tasks). By the independence of the edge weights, we have
+\begin{align*}
+\P[Z_i = z_i] = \P[B_i = b_i] \P[Y_i = y_i],
+\end{align*}
+where $y_i$ runs over all the possible realizations of the set $Y_i$. This means that 
+\begin{align*}
+e_i &= \sum_{z_i \in R(Z_i)} \P[Z_i = z_i] \max_{k \in S_i} \{ \ell(z_{k}) + z_{ik} \} \\
+&= \sum_{b_i} \P[B_i = b_i] \sum_{y_i} \P[Y_i = y_i]\max_{k \in S_i} \{ (\ell(z_{k}) + b_{ik}) \},
+\end{align*}
+where we change the $z_{ik}$ to $b_{ik}$ to acknowledge that it is now set according to the realization $b_i$. 
+Interchanging the rightmost sum and its inner maximization we get the inequality
+\begin{align*}
+e_i &\geq \sum_{b_i} \P[B_i = b_i] \max_{k \in S_i}  \bigg \{ \sum_{y_i} \P[Y_i = y_i] (\ell(z_{k}) + b_{ik} ) \bigg \} \\
+&= \sum_{b_i} \P[B_i = b_i] \max_{k \in S_i} \bigg \{ b_{ik} + \sum_{y_i} \P[Y_i = y_i] \ell(z_{k}) \bigg \},
+\end{align*}
+since the $b_{ik}$ do not depend on $y_i$. By the independence assumption, for all $k \in S_i$, we have $\P[Y_i = y_i] = \P[Z_k = z_k]$. Therefore 
+\begin{align*}
+e_i &\geq \sum_{b_i} \P[B_i = b_i] \max_{k \in S_i} \bigg \{ b_{ik} + \sum_{z_k} \P[Z_k = z_k] \ell(z_{k}) \bigg \} \\
+&= \sum_{b_i} \P[B_i = b_i] \max_{k \in S_i} \{ b_{ik} + e_k \}.
+\end{align*}
+By the induction assumption, $e_k \geq f_k$ for all $k \in S_i$, so finally we have
+\begin{align*}
+e_i &\geq \sum_{b_i} \P[B_i = b_i] \max_{k \in S_i} \{ b_{ik} + f_k \} = f_i,
+\end{align*}
+which completes the proof.
 
-\paragraph{Computing the Fulkerson numbers}
-\label{para.fulkerson_computing}
+\paragraph{Example}
+\label{para.fulkerson_example}
 
-To compute each of the $f_i$ using \eqref{eq.f_fulkerson} we need to do an awful lot of work: suppose $t_i$ has $K$ children, then for any one of them $t_k$ we need to do $O(|\tilde{L}_{ik}|)$ operations, i.e., $O(|\tilde{L}_{ik}|^K)$ in total. In general, $|\tilde{L}_{ik}|$ can be $O(p^2)$ and $K$ can be $O(n^2)$ so computing the $f_i$ in this manner is not always practical. Fortunately, a more efficient method was given by Clingen \cite{cling64} in the context of extending Fulkerson's method to the case where edge weights are modeled as continuous random variables, although here we follow the slightly more compact notation of Elmaghraby \cite{elmaghraby67}. 
-
-It is well-known that the cumulative probability mass function of the maximum of a finite set of discrete RVs is equal to the product of the individual cumulative pmfs of the RVs. Let $M_{ik}$ be the cumulative pmf along edge $(t_i, t_k)$, so that $M_{ik}(x) = \P[\tilde{w}_{ik} \leq x]$. Define the related function $M_{ik}^{*}(x) = \P[\tilde{w}_{ik} < x]$. Let $Z_i$ be the set of all possible values of $f_k + \tilde{w}_{ik}$, for $k \in S_i$, and let $z$ run over all elements of $Z_i$. For $i = 1, \dots, n$, define 
-\begin{align}
-\alpha_i &= \max_{k \in S_i}(f_k + \min(\tilde{L}_{ik})).
-\end{align}
-Then, with the cost independence assumptions we have already made, we can rewrite equation \eqref{eq.f_fulkerson} as 
-\begin{align}
-f_i &= \sum_{z \geq \alpha_i} z \bigg( \prod_{k \in S_i} M_{ik}(z - f_k) - \prod_{k \in S_i} M_{ik}^{*}(z - f_k) \bigg). \label{eq.f_clingen}
-\end{align}
-A complete description of a practical procedure for computing the Fulkerson numbers $f_i$ is given in Algorithm \ref{alg.fulkerson}. At first blush this may not appear to be any simpler than before but, crucially, the number of  operations required to compute each of the $f_i$ is now $O(|\tilde{L}_{ik}| \cdot K)$, where $K$ is the number of child tasks, rather than the first term being exponential in the second as before. Of course, it should also be noted that this procedure is still more expensive than computing the $u_i$ sequence. 
+Detailed breakdown of the procedure for the simple example DAG.
 
 Once all of the $f_i$ have been computed, they can be taken as alternative task ranks in HEFT (or indeed any other listing heuristic). In Table \ref{tb.fulk_example} we compare the $f_i$ values to the standard $u_i$ for the small DAG from Figure \ref{plot.simple_example}; also included is {\em MC1000}, the critical path estimates based on 1000 Monte Carlo realizations (see Section \ref{subsubsect.monte_carlo}), as a reference for the true critical path of the stochastic graph. We see that the $f_i$ values do indeed give tighter bounds than the $u_i$ and, more pertinently, if we use the former as task ranks then task 3 is scheduled before task 1 and we obtain the smaller schedule makespan of 20 rather than the standard HEFT makespan of 22. 
 
@@ -408,7 +430,28 @@ Once all of the $f_i$ have been computed, they can be taken as alternative task 
 	\end{center}	
 \end{table} 
 
-Again, this is a single example, deliberately chosen for this behavior: although the $f_i$ give tighter bounds on the critical path lengths of the stochastic DAG $G_s$ there is absolutely no guarantee that this will lead to superior performance in general. After all, $G_s$ itself is only a model of how we expect the processor selection phase to proceed---one that we know is inaccurate since, for example, it implicitly assumes that all task and edge weights are independent. Indeed, without this independence assumption it is well-known that the relation $u_i \leq f_i$ does not necessarily hold even for $G_s$; Fulkerson himself presented examples \cite{fulk62}. Still, we think this is a reasonable enough basis for an alternative ranking method in HEFT, so we investigate its performance compared to the usual $u_i$ ranks via numerical simulation in Section \ref{sect.experimental_rankings}.   
+Again, this is a single example, deliberately chosen for this behavior: although the $f_i$ give tighter bounds on the critical path lengths of the stochastic DAG $G_s$ there is absolutely no guarantee that this will lead to superior performance in general. After all, $G_s$ itself is only a model of how we expect the processor selection phase to proceed---one that we know is inaccurate since, for example, it implicitly assumes that all task and edge weights are independent. Indeed, without this independence assumption it is well-known that the relation $u_i \leq f_i$ does not necessarily hold even for $G_s$; Fulkerson himself presented examples \cite{fulk62}. Still, we think this is a reasonable enough basis for an alternative ranking method in HEFT, so we investigate its performance compared to the usual $u_i$ ranks via numerical simulation in Section \ref{sect.experimental_rankings}.
+
+
+\paragraph{Efficiently computing the Fulkerson numbers}
+\label{para.fulkerson_computing}
+
+To compute each of the $f_i$ using \eqref{eq.f_fulkerson} we need to do an awful lot of work: suppose $t_i$ has $K$ children, then for any one of them $t_k$ we need to do $O(|\tilde{L}_{ik}|)$ operations, i.e., $O(|\tilde{L}_{ik}|^K)$ in total. In general, $|\tilde{L}_{ik}|$ can be $O(p^2)$ and $K$ can be $O(n^2)$ so computing the $f_i$ in this manner is not always practical. Fortunately, a more efficient method was given by Clingen \cite{cling64} in the context of extending Fulkerson's method to the case where edge weights are modeled as continuous random variables, although here we follow the slightly more compact notation of Elmaghraby \cite{elmaghraby67}. 
+
+% With the independence assumptions we have...
+It is well-known that the cumulative probability mass function of the maximum of a finite set of discrete RVs is equal to the product of the individual cumulative pmfs of the RVs. Let $M_{ik}$ be the cumulative pmf along edge $(t_i, t_k)$, so that $M_{ik}(x) = \P[\tilde{w}_{ik} \leq x]$. Define the related function $M_{ik}^{*}(x) = \P[\tilde{w}_{ik} < x]$. Let $Z_i$ be the set of all possible values of $f_k + \tilde{w}_{ik}$, for $k \in S_i$, and let $z$ run over all elements of $Z_i$. For $i = 1, \dots, n$, define 
+\begin{align}
+\alpha_i &= \max_{k \in S_i}(f_k + \min(\tilde{L}_{ik})).
+\end{align}
+Then, with the cost independence assumptions we have already made, we can rewrite equation \eqref{eq.f_fulkerson} as 
+\begin{align}
+f_i &= \sum_{z \geq \alpha_i} z \bigg( \prod_{k \in S_i} M_{ik}(z - f_k) - \prod_{k \in S_i} M_{ik}^{*}(z - f_k) \bigg). \label{eq.f_clingen}
+\end{align}
+A complete description of a practical procedure for computing the Fulkerson numbers $f_i$ is given in Algorithm \ref{alg.fulkerson}. At first blush this may not appear to be any simpler than before but, crucially, the number of  operations required to compute each of the $f_i$ is now $O(|\tilde{L}_{ik}| \cdot K)$, where $K$ is the number of child tasks, rather than the first term being exponential in the second as before. Of course, it should also be noted that this procedure is still more expensive than computing the $u_i$ sequence. 
+ 
+
+\paragraph{Extensions}
+\label{para.fulkerson_extensions}
 
 Two refinements of Fulkerson's method were proposed by Elmaghraby \cite{elmaghraby67}. The first involves computing each of the $f_i$ numbers in the aforementioned manner and then reversing the direction of the remaining subgraph in order to calculate an intermediate result which can be used to improve the quality of the bound. The second is a more general approach based on using two or more {\em point estimates} of $e_i$, rather than just $f_i$, a method that was later generalized by Robillard and Trahan \cite{robillard76}. In both cases Elmagharaby proved that the new number sequences achieve tighter bounds on $e_i$ than the Fulkerson numbers $f_i$. However, small-scale experimentation suggested that the improvement of Elmaghraby's new bounds over Fulkerson's were typically minor compared to the improvement of the latter over the standard HEFT $u_i$ sequence so we chose to only evaluate here whether tightening the bounds at all is useful.
 
