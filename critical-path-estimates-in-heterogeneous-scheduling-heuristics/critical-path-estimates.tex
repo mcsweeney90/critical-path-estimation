@@ -180,7 +180,7 @@ u_0 &= 5.5 + \max\{ 2.5 + u_3, \; 3 + u_1 \} \\
 &= 5.5 + \max\{ 18.25, \; 19.25 \} \\
 &= 24.75.
 \end{align*}
-These ranks give a scheduling priority list of $\{0, 1, 3, 4, 5, 2, 6\}$. The resulting schedule length obtained by HEFT with these priorities is 22, as shown in Figure \ref{plot.heft_schedule_example}. Interestingly, we see that $u_0$, the rank of the single entry task, is greater than the schedule makespan---and therefore obviously not a lower bound on it. The question then is, what quantity do the $u_i$ values actually represent? Now, because of the averaging of the costs, perhaps the most intuitive interpretation is that the $u_i$ are in turn estimates of the average critical path lengths, taken over the set of all possible critical paths ---but there is no robust mathematical justification for believing that this definition of the critical path is more useful than other possibilities.
+These ranks give a scheduling priority list of $\{t_0, t_1, t_3, t_4, t_5, t_2, t_6\}$. The resulting schedule length obtained by HEFT with these priorities is 22, as shown in Figure \ref{plot.heft_schedule_example}. Interestingly, we see that $u_0$, the rank of the single entry task, is greater than the schedule makespan---and therefore obviously not a lower bound on it. The question then is, what quantity do the $u_i$ values actually represent? Now, because of the averaging of the costs, perhaps the most intuitive interpretation is that the $u_i$ are in turn estimates of the average critical path lengths, taken over the set of all possible critical paths ---but there is no robust mathematical justification for believing that this definition of the critical path is more useful than other possibilities.
 
 \begin{figure}
 	\centering	
@@ -216,7 +216,7 @@ for all other tasks. Then, for each $i = 1, \dots, n$,
 \end{align}
 gives a true lower bound on the remaining cost of any schedule once the execution of task $t_i$ begins. These $\ell_i$ values could be useful as alternative task priorities in HEFT, especially since the cost of computing all of the $\ell_i^a$ in this manner is only $O((m + n)q) \approx O(n^2q)$ so in particular is the same order as the usual HEFT prioritization phase. 
 
-For example, for the simple DAG shown in Figure \ref{plot.simple_example}, we find that the $\ell_i$ values are as given in Table \ref{tb.opt_example} (with the $u_i$ included for comparison). Interestingly, we see that tasks 1 and 3 have the same lower bound (8 units) and the performance of the alternative ranks relative to the standard $u_i$ sequence in HEFT depends on which is chosen to be scheduled first: if task 1, the priority list does not change so the schedule makespan is 22 units, but if task 3 is selected instead, the final schedule makespan is 20 units---i.e., smaller than the original---as illustrated in Figure \ref{plot.heft_schedule_example_LB}. Of course, this is only one example: there is no mathematically valid reason to suppose that using the $\ell_i$ sequence instead of $u_i$ as the task ranks in HEFT will actually lead to superior performance in general. Still, it seems worthwhile to investigate this empirically, which we do in Section \ref{sect.experimental_rankings}.
+For example, for the simple DAG shown in Figure \ref{plot.simple_example}, we find that the $\ell_i$ values are as given in Table \ref{tb.opt_example} (with the $u_i$ included for comparison). Interestingly, we see that tasks $t_1$ and $t_3$ have the same lower bound (8 units) and the performance of the alternative ranks relative to the standard $u_i$ sequence in HEFT depends on which is chosen to be scheduled first: if $t-1$, the priority list does not change so the schedule makespan is 22 units, but if $t_3$ is selected instead, the final schedule makespan is 20 units---i.e., smaller than the original---as illustrated in Figure \ref{plot.heft_schedule_example_LB}. Of course, this is only one example: there is no mathematically valid reason to suppose that using the $\ell_i$ sequence instead of $u_i$ as the task ranks in HEFT will actually lead to superior performance in general. Still, it seems worthwhile to investigate this empirically, which we do in Section \ref{sect.experimental_rankings}.
 
 \begin{table}
 	\caption{Upward ranks $u_i$ and lower bounds $\ell_i$ for the DAG in Figure \ref{plot.simple_example}.} 
@@ -289,29 +289,7 @@ Unfortunately, computing the moments of the critical path length of a graph whos
 
 Monte Carlo (MC) methods have a long history as a means of approximating the critical path distribution for PERT networks, dating back to at least the early 1960s \cite{van1963letter}. The idea is to simulate the realization of all RVs (according to their pmfs) and then evaluate the critical path of the resulting deterministic graph. This is done repeatedly, giving a set of critical path instances whose empirical distribution function is guaranteed to converge to the true distribution by the Glivenko-Cantelli Theorem \cite{canon2016correlation}. Furthermore, analytical results allow us to quantify the approximation error for any given the number of realizations---and therefore the number of realizations needed to reach a desired accuracy.  
 
-Table \ref{tb.mc_example} illustrates how our estimates of the expected critical path lengths evolve as the number of realizations increases for the stochastic graph corresponding to that in Figure \ref{plot.simple_example}. The relevant $u_i$ numbers are also included to show that they do indeed appear to be a lower bound on the values the Monte Carlo method appears to be converging toward. Note that the critical path length estimate for task 3 eventually exceeds that of task 1 so it has a higher priority if these estimates are taken as task ranks in HEFT; as noted in the previous section, interchanging these two tasks---and keeping the same ordering for all others---leads to a smaller schedule makespan (20 units) compared to the standard ranking (22 units). Of course, this is only one example, but it does serve to illustrate that in some cases a tighter bound on the critical path of $G_s$ can be useful.  
-
-\begin{table} %TODO.
-	\caption{Monte Carlo estimates of critical path lengths for example graph.} 
-	\begin{center}	
-		\begin{tabular}{c c c c c c}
-			\cmidrule{1-6}
-			Task & $u_i$ & $MC1$ & $MC10$ & $MC100$ & $MC1000$\\
-			\cmidrule{1-6}
-			$0$ & $24.75$ & $29$ & $26.8$ & $29.9$ & $28.9$\\
-			$1$ & $16.25$ & $22$ & $17.0$ & $17.4$ & $17.0$\\
-			$2$ & $5.75$ & $3$ & $5.4$ & $6.0$ & $5.8$\\
-			$3$ & $16$ & $20$ & $18.9$ & $19.0$ & $18.6$\\
-			$4$ & $7.75$ & $14$ & $7.2$ & $7.9$ & $7.8$\\
-			$5$ & $7$ & $6$ & $5.3$ & $7.1$ & $7.0$\\
-			$6$ & $2.5$ & $1$ & $1.9$ & $2.5$ & $2.5$\\
-			\bottomrule
-		\end{tabular}
-		\label{tb.mc_example}
-	\end{center}	
-\end{table} 
-
-The downside of Monte Carlo sampling is its cost. While modern architectures are well-suited to this approach because of their parallelism, it still may be impractical in the context of a scheduling heuristic, especially when the DAG is large; we often found this to be the case for the examples discussed in Section \ref{sect.experimental_rankings}. Hence in this report we typically only use the Monte Carlo method as a means of obtaining a reference solution; see, for example, the following section. 
+The downside of Monte Carlo sampling is its cost. While modern architectures are well-suited to this approach because of their parallelism, it still may be impractical in the context of a scheduling heuristic, especially when the DAG is large; we often found this to be the case for the examples discussed in Section \ref{sect.experimental_rankings}. Hence in this report we typically only use the Monte Carlo method as a means of obtaining a reference solution when estimating the critical path of $G_s$; see, for example, the following section. 
 
 \subsubsection{Fulkerson's bound}
 \label{subsubsect.fulkerson}
@@ -406,37 +384,51 @@ which completes the proof.
 \paragraph{Example}
 \label{para.fulkerson_example}
 
-Detailed breakdown of the procedure for the simple example DAG.
-
-Once all of the $f_i$ have been computed, they can be taken as alternative task ranks in HEFT (or indeed any other listing heuristic). In Table \ref{tb.fulk_example} we compare the $f_i$ values to the standard $u_i$ for the small DAG from Figure \ref{plot.simple_example}; also included is {\em MC1000}, the critical path estimates based on 1000 Monte Carlo realizations (see Section \ref{subsubsect.monte_carlo}), as a reference for the true critical path of the stochastic graph. We see that the $f_i$ values do indeed give tighter bounds than the $u_i$ and, more pertinently, if we use the former as task ranks then task 3 is scheduled before task 1 and we obtain the smaller schedule makespan of 20 rather than the standard HEFT makespan of 22. 
+As a demonstration of how the Fulkerson numbers $f_i$ are calculated, we consider the small DAG from Figure \ref{plot.example_edge_only}. The procedure is greatly simplified in this case because the edge pmfs $m_{ik}$ are all constant and therefore all realizations any given weight RV are equally likely. Since there are $q^2 = 4$ realizations of each edge weight, we have $|R(B_i)| = 4^{|S_i|}$ for all $i$. Therefore, for any task $t_i$ and any realization $b_i \in B_i$,  
+\begin{align*}
+\P[B_i = b_i] = \frac{1}{|R(B_i)|} = \frac{1}{4^{|S_i|}}. 
+\end{align*}   
+We begin by setting $f_6 = 0$ and then working our way up the DAG. The Fulkerson numbers corresponding to tasks $t_5$, $t_4$ and $t_2$ are straightforward since in each case their only child task is $t_6$:
+\begin{align*}
+f_5 &= \frac{1}{4}(f_6 + 5) + \frac{1}{4}(f_6 + 10) + \frac{1}{4}(f_6 + 10) + \frac{1}{4}(f_6 + 3) \\
+&= \frac{5 + 10 + 10 + 3}{4} = 7, \\
+f_4 &= \frac{5 + 10 + 10 + 6}{4} = 7.75, \\
+f_2 &= \frac{6 + 6 + 9 + 2}{4} = 5.75.
+\end{align*}    
+Things are more interesting for $f_1$, $f_3$ and $f_0$ since they each have two children. The calculations are quite long-winded because $|R(B_0)| = |R(B_1)| = |R(B_3)| = 4^2 = 16$, so we only include all of the details for $f_1$, which is computed as follows, 
+{\footnotesize
+\begin{align*} 
+f_1 &= \frac{1}{16} [ \max(f_2 + 3, f_4 + 3) + \max(f_2 + 3, f_4 + 8) + \max(f_2 + 3, f_4 + 15) + \max(f_2 + 3, f_4 + 8)  \\
+&+ \max(f_2 + 5, f_4 + 3) + \max(f_2 + 5, f_4 + 8) + \max(f_2 + 5, f_4 + 15) + \max(f_2 + 5, f_4 + 8) \\
+&+ \max(f_2 + 11, f_4 + 3) + \max(f_2 + 11, f_4 + 8) + \max(f_2 + 11, f_4 + 15) + \max(f_2 + 11, f_4 + 8) \\
+&+ \max(f_2 + 8, f_4 + 3) + \max(f_2 + 8, f_4 + 8) + \max(f_2 + 8, f_4 + 15) + \max(f_2 + 8, f_4 + 8) ].
+\end{align*} 
+}% 
+Subbing in the values of $f_2$ and $f_4$, we find that $f_1 = \frac{271}{16} \approx 16.9$. In a similar manner, we compute $f_3 = \frac{1159}{64} \approx 18.1$ and finally $f_0 = \frac{28899}{1024} \approx 28.2$. Table \ref{tb.fulk_example} compares the $f_i$ and $u_i$ values for this example with $e_i$, the actual expected critical path length, which was estimated using the Monte Carlo method with 1000 realizations (see Section \ref{subsubsect.monte_carlo}). We see that the $f_i$ do indeed give tighter bounds than the $u_i$. Furthermore, if we were to rank the tasks according to the former, we would get a task priority list of $\{t_0, t_3, t_1, t_4, t_5, t_2, t_6\}$---i.e., tasks $t_1$ and $t_3$ are interchanged compared to the standard HEFT ranking. As seen in Section \ref{sect.optimistic}, this leads to a schedule with a smaller makespan (20 units) than the schedule obtained using the $u_i$ numbers as ranks (22 units). Again, this is only one example, but it does support the idea that taking the $f_i$ as task ranks rather than the $u_i$ may be useful, a proposition that we investigate more thoroughly in Section \ref{sect.experimental_rankings}.     
 
 \begin{table}
-	\caption{Fulkerson numbers for example graph.} 
+	\caption{Fulkerson numbers $f_i$ for the DAG in Figure \ref{plot.example_edge_only}.} 
 	\begin{center}	
-		\begin{tabular}{c c c c}
-			\cmidrule{1-4}
-			Task & $u_i$ & $f_i$ & $MC1000$\\
-			\cmidrule{1-4}
-			$0$ & $24.75$ & $28.2$ & \\
-			$1$ & $16.25$ & $16.9$ & \\
-			$2$ & $5.75$ & $5.75$ &\\
-			$3$ & $16$ & $18.1$ &\\
-			$4$ & $7.75$ & $7.75$ &\\
-			$5$ & $7$ & $7$ &\\
-			$6$ & $2.5$ & $0$ &\\
+		\begin{tabular}{c c c c c c c c}
+			\cmidrule{1-8}
+			Task: & $0$ & $1$ & $2$ & $3$ & $4$ & $5$ & $6$\\
+			\cmidrule{1-8}
+			$u_i$ & $24.75$ & $16.25$ & $5.75$ & $16$ & $7.75$ & $7$ & $0$\\
+			$f_i$ & $28.2$ & $16.9$ & $5.75$ & $18.1$ & $7.75$ & $7$ & $0$ \\
+			$e_i$ & $28.2$ & $16.9$ & $5.75$ & $18.1$ & $7.75$ & $7$ & $0$ \\
 			\bottomrule
 		\end{tabular}
 		\label{tb.fulk_example}
 	\end{center}	
-\end{table} 
+\end{table}
 
-Again, this is a single example, deliberately chosen for this behavior: although the $f_i$ give tighter bounds on the critical path lengths of the stochastic DAG $G_s$ there is absolutely no guarantee that this will lead to superior performance in general. After all, $G_s$ itself is only a model of how we expect the processor selection phase to proceed---one that we know is inaccurate since, for example, it implicitly assumes that all task and edge weights are independent. Indeed, without this independence assumption it is well-known that the relation $u_i \leq f_i$ does not necessarily hold even for $G_s$; Fulkerson himself presented examples \cite{fulk62}. Still, we think this is a reasonable enough basis for an alternative ranking method in HEFT, so we investigate its performance compared to the usual $u_i$ ranks via numerical simulation in Section \ref{sect.experimental_rankings}.
-
-
-\paragraph{Efficiently computing the Fulkerson numbers}
+\paragraph{Complexity}
 \label{para.fulkerson_computing}
 
-To compute each of the $f_i$ using \eqref{eq.f_fulkerson} we need to do an awful lot of work: suppose $t_i$ has $K$ children, then for any one of them $t_k$ we need to do $O(|\tilde{L}_{ik}|)$ operations, i.e., $O(|\tilde{L}_{ik}|^K)$ in total. In general, $|\tilde{L}_{ik}|$ can be $O(p^2)$ and $K$ can be $O(n^2)$ so computing the $f_i$ in this manner is not always practical. Fortunately, a more efficient method was given by Clingen \cite{cling64} in the context of extending Fulkerson's method to the case where edge weights are modeled as continuous random variables, although here we follow the slightly more compact notation of Elmaghraby \cite{elmaghraby67}. 
+To compute each of the $f_i$ using \eqref{eq.f_fulkerson} we need to do an awful lot of work, as suggested by the (deliberately) tedious breakdown of the calculations for $f_1$ in the example above. The problem is that the computation scales with the size of $R(B_i)$, which is exponential in the number of child tasks $|S_i|$. There are up to $q^2$ distinct costs for each edge so we may have $|R(B_i)| = q^{2^{|S_i|}}$. In the worst case, a task may have $n - 1$ children, which would lead to an impractical time complexity for even relatively small values of $n$ and $q$. Even in the more general case, this can be problematic...  
+
+
+Fortunately, a more efficient method was given by Clingen \cite{cling64} in the context of extending Fulkerson's method to the case where edge weights are modeled as continuous random variables, although here we follow the slightly more compact notation of Elmaghraby \cite{elmaghraby67}. The idea is to try and count the number of times that each $f + weight$ sum will actually be maximal... 
 
 % With the independence assumptions we have...
 It is well-known that the cumulative probability mass function of the maximum of a finite set of discrete RVs is equal to the product of the individual cumulative pmfs of the RVs. Let $M_{ik}$ be the cumulative pmf along edge $(t_i, t_k)$, so that $M_{ik}(x) = \P[\tilde{w}_{ik} \leq x]$. Define the related function $M_{ik}^{*}(x) = \P[\tilde{w}_{ik} < x]$. Let $Z_i$ be the set of all possible values of $f_k + \tilde{w}_{ik}$, for $k \in S_i$, and let $z$ run over all elements of $Z_i$. For $i = 1, \dots, n$, define 
@@ -448,6 +440,8 @@ Then, with the cost independence assumptions we have already made, we can rewrit
 f_i &= \sum_{z \geq \alpha_i} z \bigg( \prod_{k \in S_i} M_{ik}(z - f_k) - \prod_{k \in S_i} M_{ik}^{*}(z - f_k) \bigg). \label{eq.f_clingen}
 \end{align}
 A complete description of a practical procedure for computing the Fulkerson numbers $f_i$ is given in Algorithm \ref{alg.fulkerson}. At first blush this may not appear to be any simpler than before but, crucially, the number of  operations required to compute each of the $f_i$ is now $O(|\tilde{L}_{ik}| \cdot K)$, where $K$ is the number of child tasks, rather than the first term being exponential in the second as before. Of course, it should also be noted that this procedure is still more expensive than computing the $u_i$ sequence. 
+
+% Can be simplified e.g., for CPU and GPU.
  
 
 \paragraph{Extensions}
@@ -540,6 +534,8 @@ Two refinements of Fulkerson's method were proposed by Elmaghraby \cite{elmaghra
 %where $z_i^k$ contains the realizations of the RVs in $W_k$.
 
 % We know this model is inaccurate, for example because of the independence assumptions, the question is, is it useful?
+
+%Again, this is a single example, deliberately chosen for this behavior: although the $f_i$ give tighter bounds on the critical path lengths of the stochastic DAG $G_s$ there is absolutely no guarantee that this will lead to superior performance in general. After all, $G_s$ itself is only a model of how we expect the processor selection phase to proceed---one that we know is inaccurate since, for example, it implicitly assumes that all task and edge weights are independent. Indeed, without this independence assumption it is well-known that the relation $u_i \leq f_i$ does not necessarily hold even for $G_s$; Fulkerson himself presented examples \cite{fulk62}. Still, we think this is a reasonable enough basis for an alternative ranking method in HEFT, so we investigate its performance compared to the usual $u_i$ ranks via numerical simulation in Section \ref{sect.experimental_rankings}.
 
 
 
