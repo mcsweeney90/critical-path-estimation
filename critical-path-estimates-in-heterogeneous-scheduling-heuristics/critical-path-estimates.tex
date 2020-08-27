@@ -257,7 +257,7 @@ and
 m_{ik}(W_{ik}^{ab}) &= m_i(W_i^a) \cdot m_k(W_k^b) \\
 &= \frac{1}{q^2}, \quad \forall a, b.
 \end{align*}
-It is important to note here that the model defined by these pmfs is clearly not accurate. In particular, all of the node and edge weight variables are independent of one another. This is induced by the averaging but does not reflect, for example, the fact that edge weights are fully determined once the node weights are realized. Still, as the saying goes, all models are wrong, some are just more useful than others; we attempt to establish exactly how useful this one is later in this chapter.     
+It is important to note here that the model defined by these pmfs is clearly not accurate. In particular, all of the node and edge weight variables are independent of one another. This is induced by the averaging but does not reflect, for example, the fact that edge weights are fully determined once the node weights are realized. Still, as the saying goes, all models are wrong, some are just more useful than others; we attempt to establish exactly how useful this one is through extensive numerical simulations in Section \ref{sect.experimental_rankings}.     
 
 Note also that the expected values of the node and edge weight variables are given by
 \begin{align}
@@ -401,10 +401,13 @@ Things are more interesting for $f_1$, $f_3$ and $f_0$ since they each have two 
 f_1 &= \frac{1}{16} [ \max(f_2 + 3, f_4 + 3) + \max(f_2 + 3, f_4 + 8) + \max(f_2 + 3, f_4 + 15) + \max(f_2 + 3, f_4 + 8)  \\
 &+ \max(f_2 + 5, f_4 + 3) + \max(f_2 + 5, f_4 + 8) + \max(f_2 + 5, f_4 + 15) + \max(f_2 + 5, f_4 + 8) \\
 &+ \max(f_2 + 11, f_4 + 3) + \max(f_2 + 11, f_4 + 8) + \max(f_2 + 11, f_4 + 15) + \max(f_2 + 11, f_4 + 8) \\
-&+ \max(f_2 + 8, f_4 + 3) + \max(f_2 + 8, f_4 + 8) + \max(f_2 + 8, f_4 + 15) + \max(f_2 + 8, f_4 + 8) ].
+&+ \max(f_2 + 8, f_4 + 3) + \max(f_2 + 8, f_4 + 8) + \max(f_2 + 8, f_4 + 15) + \max(f_2 + 8, f_4 + 8) ] \\
+&= \frac{1}{16} [10.75 + 15.75 + 22.75 + 15.75 + 10.75 + 15.75 + 22.75 + 15.75 \\
+&+ 16.75 + 16.75 + 22.75 + 16.75 + 13.75 + 15.75 + 22.75 + 15.75 ] \\
+&= \frac{271}{16} \approx 16.9.
 \end{align*} 
 }% 
-Subbing in the values of $f_2$ and $f_4$, we find that $f_1 = \frac{271}{16} \approx 16.9$. In a similar manner, we compute $f_3 = \frac{1159}{64} \approx 18.1$ and finally $f_0 = \frac{28899}{1024} \approx 28.2$. Table \ref{tb.fulk_example} compares the $f_i$ and $u_i$ values for this example with $e_i$, the actual expected critical path length, which was estimated using the Monte Carlo method with 1000 realizations (see Section \ref{subsubsect.monte_carlo}). We see that the $f_i$ do indeed give tighter bounds than the $u_i$. Furthermore, if we were to rank the tasks according to the former, we would get a task priority list of $\{t_0, t_3, t_1, t_4, t_5, t_2, t_6\}$---i.e., tasks $t_1$ and $t_3$ are interchanged compared to the standard HEFT ranking. As seen in Section \ref{sect.optimistic}, this leads to a schedule with a smaller makespan (20 units) than the schedule obtained using the $u_i$ numbers as ranks (22 units). Again, this is only one example, but it does support the idea that taking the $f_i$ as task ranks rather than the $u_i$ may be useful, a proposition that we investigate more thoroughly in Section \ref{sect.experimental_rankings}.     
+In a similar manner, we compute $f_3 = \frac{1159}{64} \approx 18.1$ and finally $f_0 = \frac{28899}{1024} \approx 28.2$. Table \ref{tb.fulk_example} compares the $f_i$ and $u_i$ values for this example with $e_i$, the actual expected critical path length, which was estimated using the Monte Carlo method with 1000 realizations (see Section \ref{subsubsect.monte_carlo}). We see that the $f_i$ do indeed give tighter bounds than the $u_i$. Furthermore, if we were to rank the tasks according to the former, we would get a task priority list of $\{t_0, t_3, t_1, t_4, t_5, t_2, t_6\}$---i.e., tasks $t_1$ and $t_3$ are interchanged compared to the standard HEFT ranking. As seen in Section \ref{sect.optimistic}, this leads to a schedule with a smaller makespan (20 units) than the schedule obtained using the $u_i$ numbers as ranks (22 units). Again, this is only one example, but it does support the idea that taking the $f_i$ as task ranks rather than the $u_i$ may be useful, a proposition that we investigate more thoroughly in Section \ref{sect.experimental_rankings}.     
 
 \begin{table}
 	\caption{Fulkerson numbers $f_i$ for the DAG in Figure \ref{plot.example_edge_only}.} 
@@ -425,69 +428,93 @@ Subbing in the values of $f_2$ and $f_4$, we find that $f_1 = \frac{271}{16} \ap
 \paragraph{Complexity}
 \label{para.fulkerson_computing}
 
-To compute each of the $f_i$ using \eqref{eq.f_fulkerson} we need to do an awful lot of work, as suggested by the (deliberately) tedious breakdown of the calculations for $f_1$ in the example above. The problem is that the computation scales with the size of $R(B_i)$, which is exponential in the number of child tasks $|S_i|$. There are up to $q^2$ distinct costs for each edge so we may have $|R(B_i)| = q^{2^{|S_i|}}$. In the worst case, a task may have $n - 1$ children, which would lead to an impractical time complexity for even relatively small values of $n$ and $q$. Even in the more general case, this can be problematic...  
+To compute each of the $f_i$ using \eqref{eq.f_fulkerson} we need to do a lot of work, as suggested by the (deliberately) tedious breakdown of the calculations for $f_1$ in the example above. The problem is that the computation scales with the size of $R(B_i)$, which is exponential in the number of child tasks $|S_i|$. There are up to $q^2$ distinct costs for each edge so we may have $|R(B_i)| = q^{2^{|S_i|}}$. In the worst case, a task may have $n - 1$ children, which can easily lead to an impractical time complexity for even relatively small values of $n$ and $q$. 
 
+Fortunately, we can compute the $f_i$ numbers more efficiently using an idea first proposed by Clingen \cite{cling64} in the context of extending Fulkerson's method to the case where edge weights are modeled as continuous random variables. The key is to exploit the structure of the computations as illustrated by the example for $f_1$ above. In particular, we can see that certain values repeatedly arise from the maximizations---for example, in the computations above, $f_4 + 15$ is larger than the sum of $f_2$ and any weight realization along the edge $(t_1, t_2)$, so it is the result of all the maximizations in which it occurs. This suggests that perhaps we can improve efficiency by calculating how frequently each term will appear in the summation, rather than working sequentially through the set of realizations $R(B_i)$. This is the intuitive basis for Clingen's method, which is as follows. 
 
-Fortunately, a more efficient method was given by Clingen \cite{cling64} in the context of extending Fulkerson's method to the case where edge weights are modeled as continuous random variables, although here we follow the slightly more compact notation of Elmaghraby \cite{elmaghraby67}. The idea is to try and count the number of times that each $f + weight$ sum will actually be maximal... 
-
-% With the independence assumptions we have...
-It is well-known that the cumulative probability mass function of the maximum of a finite set of discrete RVs is equal to the product of the individual cumulative pmfs of the RVs. Let $M_{ik}$ be the cumulative pmf along edge $(t_i, t_k)$, so that $M_{ik}(x) = \P[\tilde{w}_{ik} \leq x]$. Define the related function $M_{ik}^{*}(x) = \P[\tilde{w}_{ik} < x]$. Let $Z_i$ be the set of all possible values of $f_k + \tilde{w}_{ik}$, for $k \in S_i$, and let $z$ run over all elements of $Z_i$. For $i = 1, \dots, n$, define 
+For all $i = 1, \dots, n$ and $k \in S_i$, let $R(\tilde{w}_{ik})$ be the set of all possible realizations of the edge weight RV $\tilde{w}_{ik}$. Further, let $V_i$ be the set of all unique values of $f_k + \tilde{w}_{ik}$ 
+%\begin{align}
+%V_i &= \cup_{k \in S_i} \{ f_k + r \}_{r \in R(\tilde{w}_{ik})}
+%\end{align}
+and define 
+\begin{align*}
+\alpha_i &= \max_{k \in S_i}(f_k + \min(R(\tilde{w}_{ik}))).
+\end{align*}
+Let $M_{ik}$ be the cumulative pmf along edge $(t_i, t_k)$, so that $M_{ik}(x) = \P[\tilde{w}_{ik} \leq x]$, and define the related function $M_{ik}^{*}(x) = \P[\tilde{w}_{ik} < x]$.
+Then, if we let $v$ run over the elements of $V_i$, we can rewrite equation \eqref{eq.f_fulkerson} as 
 \begin{align}
-\alpha_i &= \max_{k \in S_i}(f_k + \min(\tilde{L}_{ik})).
+f_i &= \sum_{v \geq \alpha_i} v \bigg( \prod_{k \in S_i} M_{ik}(v - f_k) - \prod_{k \in S_i} M_{ik}^{*}(v - f_k) \bigg). \label{eq.f_clingen}
 \end{align}
-Then, with the cost independence assumptions we have already made, we can rewrite equation \eqref{eq.f_fulkerson} as 
-\begin{align}
-f_i &= \sum_{z \geq \alpha_i} z \bigg( \prod_{k \in S_i} M_{ik}(z - f_k) - \prod_{k \in S_i} M_{ik}^{*}(z - f_k) \bigg). \label{eq.f_clingen}
-\end{align}
-A complete description of a practical procedure for computing the Fulkerson numbers $f_i$ is given in Algorithm \ref{alg.fulkerson}. At first blush this may not appear to be any simpler than before but, crucially, the number of  operations required to compute each of the $f_i$ is now $O(|\tilde{L}_{ik}| \cdot K)$, where $K$ is the number of child tasks, rather than the first term being exponential in the second as before. Of course, it should also be noted that this procedure is still more expensive than computing the $u_i$ sequence. 
+Formally, this approach is based on the well-known fact that the cumulative probability mass function of the maximum of a finite set of (independent) RVs is equal to the product of the individual cumulative pmfs of the RVs. More intuitively, the idea is just that described above, to in some sense ``count" the number of times each $v$ is the output of a maximization: all $v < \alpha_i$ are disregarded because they can never be maximal and the modified pmf $M_{ik}^*$ is a kind of correction term to prevent over counting.        
 
-% Can be simplified e.g., for CPU and GPU.
+Using Clingen's method, we can recalculate $f_1$ from the example above as follows, 
+\begin{align*}
+V_1 &= \{ f_4 + 3, f_4 + 8, f_4 + 15, f_2 + 3, f_2 + 11, f_2 + 8 \} \\
+&= \{ 10.75, 15.75, 22.75, 8.75, 16.75, 13.75 \}, \\
+\alpha_1 &= \max \{ f_4 + \min(3, 8, 15), \; f_2 + \min(3, 5, 8, 11)  \} \\
+&= \max \{ 10.75, \; 8.75  \} \\
+&= 10.75, \\
+f_1 &= 10.75[M_{14}(3)M_{12}(5) - M_{14}^*(3)M_{12}^*(5)] \\
+&+ 15.75[M_{14}(8)M_{12}(10) - M_{14}^*(8)M_{12}^*(10)] \\ 
+&+ 22.75[M_{14}(15)M_{12}(17) - M_{14}^*(15)M_{12}^*(17)] \\
+&+ 16.75[M_{14}(9)M_{12}(11) - M_{14}^*(9)M_{12}^*(11)] \\
+&+ 13.75[M_{14}(6)M_{12}(8) - M_{14}^*(6)M_{12}^*(8)] \\
+&= 10.75 \bigg[ \frac{1}{4} \cdot \frac{1}{2} - 0 \cdot \frac{1}{4} \bigg] + 15.75 \bigg[ \frac{3}{4} \cdot \frac{3}{4} - \frac{1}{4} \cdot \frac{3}{4} \bigg] \\
+&+ 22.75 \bigg[ 1 \cdot 1 - \frac{3}{4} \cdot 1 \bigg] + 16.75 \bigg[ \frac{3}{4} \cdot \frac{3}{4} - \frac{3}{4} \cdot \frac{1}{2} \bigg] \\
+&+ 13.75 \bigg[ \frac{1}{4} \cdot \frac{1}{2} - \frac{1}{4} \cdot \frac{1}{4} \bigg] \\
+&= \frac{271}{16} \approx 16.9.
+\end{align*}
+A complete description of a practical procedure for computing the Fulkerson numbers $f_i$ using Clingen's method $f_i$ is given in Algorithm \ref{alg.fulkerson}.
+
+At first blush this method may not appear to be any more efficient than before but the number of operations required to compute each of the $f_i$ is now $O(q^2 |S_i|)$, rather than the first term being exponential in the second. Of course, it should also be noted that this procedure is still more expensive than computing the $u_i$ sequence. Indeed, as we will see in Section \ref{sect.experimental_rankings}, we found that it can still be impractical when the sets of realizations for each edge are large. However, this relationship between efficiency and the number of edge weight realizations can also be exploited: for accelerated platforms which follow the model described in the previous chapter, the number of possible realizations remains small, no matter how many processors are available, so Fulkerson's numbers can still be calculated efficiently for large DAGs and target platforms with many processors.   
+
+
  
 
 \paragraph{Extensions}
 \label{para.fulkerson_extensions}
 
-Two refinements of Fulkerson's method were proposed by Elmaghraby \cite{elmaghraby67}. The first involves computing each of the $f_i$ numbers in the aforementioned manner and then reversing the direction of the remaining subgraph in order to calculate an intermediate result which can be used to improve the quality of the bound. The second is a more general approach based on using two or more {\em point estimates} of $e_i$, rather than just $f_i$, a method that was later generalized by Robillard and Trahan \cite{robillard76}. In both cases Elmagharaby proved that the new number sequences achieve tighter bounds on $e_i$ than the Fulkerson numbers $f_i$. However, small-scale experimentation suggested that the improvement of Elmaghraby's new bounds over Fulkerson's were typically minor compared to the improvement of the latter over the standard HEFT $u_i$ sequence so we chose to only evaluate here whether tightening the bounds at all is useful.
+Elmaghraby \cite{elmaghraby67} proposed two refinements of Fulkerson's method. The first involves computing each of the $f_i$ numbers in the aforementioned manner and then reversing the direction of the remaining subgraph in order to calculate an intermediate result which can be used to improve the quality of the bound. The second is a more general approach based on using two or more {\em point estimates} of $e_i$, rather than just $f_i$, a method that was later generalized by Robillard and Trahan \cite{robillard76}. In both cases Elmagharaby proved that the new number sequences achieve tighter bounds on $e_i$ than the Fulkerson numbers $f_i$. However, small-scale experimentation suggested that the improvement of Elmaghraby's new bounds over Fulkerson's were typically minor compared to the improvement of the latter over the $u_i$ sequence so we chose to only evaluate here whether tightening the bounds at all is useful in HEFT.
 
 \begin{algorithm}	
 	
 	\For{$i = n, \dots, 1$}
 	{	
-		$f_i = 0$, $\alpha_i = 0$, $Z_i = \{\}$
+		$f_i = 0$, $\alpha_i = 0$, $V_i = \{\}$
 		
 		\For{$k \in S_i$}
 		{
-			$\ell_m = \infty$
+			$r_m = \infty$
 			
-			\For{$\ell \in \tilde{L}_{ik}$}
+			\For{$r \in R(\tilde{w}_{ik})$}
 			{
-				$\ell_m \leftarrow \min(\ell_m, \ell)$
+				$r_m \leftarrow \min(r_m, r)$
 				
-				\If{$f_k + \ell \notin Z_i$}{$Z_i \leftarrow Z_i \cup \{f_k + \ell \}$}
+				\If{$f_k + r \notin V_i$}{$V_i \leftarrow V_i \cup \{f_k + r \}$}
 			}
 			
-			$\alpha_i \leftarrow \max(\alpha_i, f_k + \ell_m)$
+			$\alpha_i \leftarrow \max(\alpha_i, f_k + r_m)$
 		}
 		
 		
-		\For{$z \in Z_i$}
+		\For{$v \in V_i$}
 		{
-			\If{$z \geq \alpha_i$}
+			\If{$v \geq \alpha_i$}
 			{
 				$g = 1$, $d = 1$
 				
 				\For{$k \in S_i$}
 				{
-					$g \leftarrow g \times M_{ik}(z - f_k)$
+					$g \leftarrow g \times M_{ik}(v - f_k)$
 					
-					$d \leftarrow d \times M_{ik}^{*}(z - f_k)$
+					$d \leftarrow d \times M_{ik}^{*}(v - f_k)$
 				}
 				
-				$f_i \leftarrow f_i + z \times (g - d)$				
+				$f_i \leftarrow f_i + v \times (g - d)$				
 			}
 		}		
 	}	
-	\caption{Computing the Fulkerson numbers using Clingen's method.}
+	\caption{Computing Fulkerson's numbers by Clingen's method.}
 	\label{alg.fulkerson}
 \end{algorithm} 
 
@@ -542,7 +569,7 @@ Two refinements of Fulkerson's method were proposed by Elmaghraby \cite{elmaghra
 \subsection{Adjusting the pmfs}
 \label{subsect.adjusting}
 
-In some sense, the purpose of the node and edge pmfs $m_i$ and $m_{ik}$ is to simulate the dynamics of the processor selection phase of HEFT---i.e., $m_i(W_i^a)$ should represent the probability that task $t_i$ is scheduled on processor $p_a$, and so on. In HEFT, tasks are assigned to the processor that is estimated to complete their execution at the earliest time and attempting to model this accurately beforehand can quickly get messy and expensive---especially given the interaction between the two phases of the algorithm. However, a sensible idea may be to simply {\em weight} the processor selection probabilities according to their respective task computation costs: if, say, a task is 10 times faster on one processor than another then it seems more likely it will be scheduled on the former than the latter, even once the effect of contention is taken into account. More precisely, for all tasks $t_i$ let 
+We previously argued that in some sense the purpose of the node and edge pmfs $m_i$ and $m_{ik}$ is to simulate the dynamics of the processor selection phase of HEFT so that, for example, $m_i(W_i^a)$ should represent the probability that task $t_i$ is scheduled on processor $p_a$, and so on. In HEFT, tasks are assigned to the processor that is estimated to complete their execution at the earliest time and attempting to model this accurately beforehand can quickly get messy and expensive---especially given the interaction between the two phases of the algorithm. However, a sensible idea may be to simply {\em weight} the processor selection probabilities according to their respective computation costs: if, say, a task is 10 times faster on one processor than another then it seems more likely it will be scheduled on the former than the latter, even once the effect of contention is taken into account. With this in mind, for all tasks $t_i$ let 
 \begin{align*}
 s_i = \sum_{a} \frac{1}{W_i^a}
 \end{align*} 
@@ -557,12 +584,12 @@ and
 \end{align*}
 Note that we take the reciprocal of the costs in order to reflect the idea that processors with smaller costs are more likely to be chosen than larger ones.
 
-These modified pmfs can be used in conjunction with either upward ranking, as defined by equation \eqref{eq.ur_expectation}, Fulkerson's bound, or Monte Carlo methods. For example, in the first instance, the expectations simply become 
+These modified pmfs can be used in conjunction with either upward ranking, as defined by equation \eqref{eq.ur_expectation}, Fulkerson's bound, or even Monte Carlo methods. For example, in the first instance, the expectations simply become 
 \begin{align}
-\E[w_i] &= \sum_{\ell \in L_i} \ell \hat{m}_i(\ell) = \frac{q}{s_i}, \label{eq.expected_node_wm}\\
-\E[w_{ik}] &= \sum_{\ell \in L_{ik}} \ell \hat{m}_{ik}(\ell) = \frac{1}{s_i s_k} \sum_{a, b} \frac{W_{ik}^{ab}}{W_i^a W_k^b} \label{eq.expected_edge_wm},
+\E[w_i] &= \sum_{a = 1}^{q} W_i^a \hat{m}_i(W_i^a) = \frac{q}{s_i}, \label{eq.expected_node_wm}\\
+\E[w_{ik}] &= \sum_{a = 1}^{q} \sum_{b = 1}^{q}  W_{ik}^{ab} \hat{m}_{ik}(W_{ik}^{ab}) = \frac{1}{s_i s_k} \sum_{a, b} \frac{W_{ik}^{ab}}{W_i^a W_k^b} \label{eq.expected_edge_wm},
 \end{align}
-and these can be used with equation \eqref{eq.ur_expectation} to compute an alternative sequence of task ranks $\hat{u}_i$. Of course, this is slightly more computationally expensive than computing the standard $u_i$ ranks but only by a constant factor. Similarly, by using the modified pmfs in conjunction with equation \eqref{eq.f_clingen} we can define alternative Fulkerson numbers $\hat{f}_i$, and by sampling realizations according to $\hat{m}$ rather than $m$ we can incorporate this idea into the Monte Carlo approach for finding longest paths. All three of these possibilities are evaluated as alternative task ranks for HEFT in the following section. Note that since equations \eqref{eq.expected_node_wm} and \eqref{eq.expected_edge_wm} are simply weighted averages we do not believe that computing $\hat{u}_i$ instead of $u_i$ is a new idea: although we could not find any explicit references in the literature, we suspect this has been done before in practice.  
+and these can be used with equation \eqref{eq.ur_expectation} to compute an alternative sequence of task ranks $\hat{u}_i$. Of course, this is slightly more computationally expensive than computing the standard $u_i$ ranks but only by a constant factor. Similarly, by using the modified pmfs in conjunction with equations \eqref{eq.f_fulkerson} or \eqref{eq.f_clingen} we can define alternative Fulkerson numbers $\hat{f}_i$, and by sampling realizations according to $\hat{m}$ rather than $m$ we can incorporate this idea into the Monte Carlo approach for finding longest paths. The first two of these possibilities are evaluated as alternative task ranks for HEFT in the following section. Note that since equations \eqref{eq.expected_node_wm} and \eqref{eq.expected_edge_wm} are simply weighted averages we do not believe that computing $\hat{u}_i$ instead of $u_i$ is a new idea: although we could not find any explicit references in the literature, we suspect this has been done before in practice.  
 
 
 \section{Experimental comparison of rankings}
