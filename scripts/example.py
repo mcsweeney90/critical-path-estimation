@@ -263,78 +263,114 @@ def convert_from_nx_graph(graph, single_root=True, single_exit=True):
 # Compute ranks. 
 # =============================================================================
 
-# nw = 2
-# platform = Platform(nw, name="{}P".format(nw))        
-# # Load DAG.
-# with open('{}/example_dag_with_costs.dill'.format(path), 'rb') as file:
-#     dag = dill.load(file)
+nw = 2
+platform = Platform(nw, name="{}P".format(nw))        
+# Load DAG.
+with open('{}/example_dag_with_costs.dill'.format(path), 'rb') as file:
+    dag = dill.load(file)
 
-# mst = dag.minimal_serial_time()
-# print("MST = {}".format(mst))
-# p_list, ranks = dag.critical_path_priorities(return_ranks=True)
-# print("\nHEFT task ranks: {}".format({k.ID:v for k, v in ranks.items()}))
-# heft_mkspan = HEFT(dag, platform, priority_list=p_list)
-# print("HEFT makespan: {}".format(heft_mkspan))
-# opt_list, ranks = dag.critical_path_priorities(cp_type="optimistic", return_ranks=True)
-# print("\nOpt task ranks: {}".format({k.ID:v for k, v in ranks.items()}))
-# opt_mkspan = HEFT(dag, platform, priority_list=opt_list)
-# print("Opt makespan: {}".format(opt_mkspan))
-# fulk_list, ranks = dag.critical_path_priorities(cp_type="F", return_ranks=True)
-# print("\nFulk task ranks: {}".format({k.ID:v for k, v in ranks.items()}))
-# fulk_mkspan = HEFT(dag, platform, priority_list=fulk_list)
-# print("Fulk makespan: {}".format(fulk_mkspan))
-
-# =============================================================================
-# Monte Carlo ranks. TODO: need to take a look at this...
-# =============================================================================
-
-# nw = 2
-# platform = Platform(nw, name="{}P".format(nw))        
-# # Load DAG.
-# with open('{}/example_dag_with_costs.dill'.format(path), 'rb') as file:
-#     dag = dill.load(file)
-
-# nsamples = [1, 10, 20, 50, 100, 1000]
-
-# for ns in nsamples:
-#     p_list, ranks = dag.critical_path_priorities(cp_type="MC", mc_samples=ns, return_ranks=True)
-#     print("\nMC{} task ranks: {}".format(ns, {k.ID:v for k, v in ranks.items()}))
-#     # mkspan = HEFT(dag, platform, priority_list=p_list)
-#     # print("MC{} makespan: {}".format(ns, mkspan))
-    
+mst = dag.minimal_serial_time()
+print("MST = {}".format(mst))
+p_list, ranks = dag.critical_path_priorities(return_ranks=True)
+print("\nHEFT task ranks: {}".format({k.ID:v for k, v in ranks.items()}))
+heft_mkspan = HEFT(dag, platform, priority_list=p_list)
+print("HEFT makespan: {}".format(heft_mkspan))
+opt_list, ranks = dag.critical_path_priorities(cp_type="optimistic", return_ranks=True)
+print("\nOpt task ranks: {}".format({k.ID:v for k, v in ranks.items()}))
+opt_mkspan = HEFT(dag, platform, priority_list=opt_list)
+print("Opt makespan: {}".format(opt_mkspan))
+fulk_list, ranks = dag.critical_path_priorities(cp_type="F", return_ranks=True)
+print("\nFulk task ranks: {}".format({k.ID:v for k, v in ranks.items()}))
+fulk_mkspan = HEFT(dag, platform, priority_list=fulk_list)
+print("Fulk makespan: {}".format(fulk_mkspan))
+p_list, ranks = dag.critical_path_priorities(cp_type="W", avg_type="WM", return_ranks=True)
+print("\nW task ranks: {}".format({k.ID:v for k, v in ranks.items()}))
+w_mkspan = HEFT(dag, platform, priority_list=p_list)
+print("W makespan: {}".format(w_mkspan))
+wf_list, ranks = dag.critical_path_priorities(cp_type="WF", return_ranks=True)
+print("\nWF task ranks: {}".format({k.ID:v for k, v in ranks.items()}))
+wf_mkspan = HEFT(dag, platform, priority_list=wf_list)
+print("WF makespan: {}".format(wf_mkspan))
     
 # =============================================================================
 # Draw edge-weight only version of graph.
 # =============================================================================
     
-nw = 2
-platform = Platform(nw, name="{}P".format(nw))        
-# Load DAG.
-with open('{}/example_dag_with_costs.dill'.format(path), 'rb') as file:
-    dag = dill.load(file)     
+# nw = 2
+# platform = Platform(nw, name="{}P".format(nw))        
+# # Load DAG.
+# with open('{}/example_dag_with_costs.dill'.format(path), 'rb') as file:
+#     dag = dill.load(file)     
 
-info, edge_weights = {}, {}
-for t in dag.top_sort:
-    info[t.ID] = list(s.ID for s in dag.graph.successors(t))
-    for s in dag.graph.successors(t):        
-        costs = []
-        for w in platform.workers:
-            for v in platform.workers:
-                d = t.comp_costs[w.ID] + s.comp_costs[v.ID] if s.exit else t.comp_costs[w.ID]
-                costs.append(d + t.comm_costs[s.ID][(w.ID, v.ID)])
-        edge_weights[(t.ID, s.ID)] = tuple(costs)
-D = nx.DiGraph()
-for n, kids in info.items():
-    for c in kids:
-        D.add_edge(n, c)
-plt.clf()
-pos = graphviz_layout(D, prog='dot')    
-nx.draw_networkx_nodes(D, pos, node_color='#E5E5E5', node_size=500, alpha=1.0)
-nx.draw_networkx_edges(D, pos, width=1.0, snap=True)
-nx.draw_networkx_labels(D, pos, font_size=12, font_color='#348ABD', font_weight='bold')
-nx.draw_networkx_edge_labels(D, pos, font_size=7, edge_labels=edge_weights, font_color='#E24A33', font_weight='bold')
-plt.axis("off")     
-plt.savefig('{}/simple_graph_edge_only.png'.format(path), bbox_inches='tight') 
+# info, edge_weights = {}, {}
+# for t in dag.top_sort:
+#     info[t.ID] = list(s.ID for s in dag.graph.successors(t))
+#     for s in dag.graph.successors(t):        
+#         costs = []
+#         for w in platform.workers:
+#             for v in platform.workers:
+#                 d = t.comp_costs[w.ID] + s.comp_costs[v.ID] if s.exit else t.comp_costs[w.ID]
+#                 costs.append(d + t.comm_costs[s.ID][(w.ID, v.ID)])
+#         edge_weights[(t.ID, s.ID)] = tuple(costs)
+# D = nx.DiGraph()
+# for n, kids in info.items():
+#     for c in kids:
+#         D.add_edge(n, c)
+# plt.clf()
+# pos = graphviz_layout(D, prog='dot')    
+# nx.draw_networkx_nodes(D, pos, node_color='#E5E5E5', node_size=500, alpha=1.0)
+# nx.draw_networkx_edges(D, pos, width=1.0, snap=True)
+# nx.draw_networkx_labels(D, pos, font_size=12, font_color='#348ABD', font_weight='bold')
+# nx.draw_networkx_edge_labels(D, pos, font_size=7, edge_labels=edge_weights, font_color='#E24A33', font_weight='bold')
+# plt.axis("off")     
+# plt.savefig('{}/simple_graph_edge_only.png'.format(path), bbox_inches='tight') 
+
+# =============================================================================
+# Use Monte Carlo method to estimate expected critical path.
+# =============================================================================
+
+# nw = 2
+# platform = Platform(nw, name="{}P".format(nw))        
+# # Load DAG.
+# with open('{}/example_dag_with_costs.dill'.format(path), 'rb') as file:
+#     dag = dill.load(file)
+    
+# edge_weights = {}
+# for t in dag.top_sort:
+#     for s in dag.graph.successors(t):        
+#         costs = []
+#         for w in platform.workers:
+#             for v in platform.workers:
+#                 d = t.comp_costs[w.ID] + s.comp_costs[v.ID] if s.exit else t.comp_costs[w.ID]
+#                 costs.append(d + t.comm_costs[s.ID][(w.ID, v.ID)])
+#         edge_weights[(t.ID, s.ID)] = list(costs)
+
+# nsamples = 1000
+# cp_lengths = {}
+# for ns in range(nsamples):
+#     # Compute an assignment.
+#     assignment = {}
+#     for t in dag.top_sort:
+#         for s in dag.graph.successors(t): 
+#             assignment[(t.ID, s.ID)] = np.random.choice(edge_weights[(t.ID, s.ID)])    
+#     # Compute the critical path lengths for the assignment.
+#     fixed_lengths = {}
+#     backward_traversal = list(reversed(dag.top_sort)) 
+#     for t in backward_traversal:
+#         fixed_lengths[t.ID] = 0.0
+#         try:
+#             fixed_lengths[t.ID] += max(assignment[(t.ID, s.ID)] + fixed_lengths[s.ID] for s in dag.graph.successors(t))
+#         except ValueError:
+#             pass
+#         try:
+#             cp_lengths[t.ID] += fixed_lengths[t.ID]
+#         except KeyError:
+#             cp_lengths[t.ID] = fixed_lengths[t.ID]
+    
+# for t in dag.top_sort:
+#     cp_lengths[t.ID] /= nsamples    
+    
+# print(cp_lengths)
     
 # =============================================================================
 # PEFT.
