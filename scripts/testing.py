@@ -14,7 +14,7 @@ from copy import deepcopy
 from networkx.drawing.nx_agraph import graphviz_layout
 import sys
 sys.path.append('../') 
-from Simulator import Task, DAG, Platform, HEFT, PEFT, CPOP
+from Simulator import Task, DAG, Platform, HEFT, PEFT, CPOP, HSM
 
 ####################################################################################################
 
@@ -39,20 +39,22 @@ plt.ioff() # Don't show plots.
 
 ####################################################################################################
 
-nb = 128
-nt = 35
-adt = "perfect_adt"
-with open('nb{}/{}/{}tasks.dill'.format(nb, adt, nt), 'rb') as file:
-    dag = dill.load(file)
-dag.print_info()
-
-# nw, ccr, h, m = 4, 10, 1.0, "UR"
-# platform = Platform(nw, name="{}P".format(nw)) 
-# with open('{}/rand0085.dill'.format(dag_path), 'rb') as file:
-#     dag = dill.load(file)    
+sz = 1000
+dag_path = '../graphs/STG/{}'.format(sz)
+nw, ccr, h, m = 8, 10, 1.0, "UR"
+platform = Platform(nw, name="{}P".format(nw)) 
+with open('{}/rand0085.dill'.format(dag_path), 'rb') as file:
+    dag = dill.load(file)  
     
-# for _ in range(100):    
-#     dag.set_costs(platform, target_ccr=ccr, method=m, het_factor=h)
-#     mkspan = HEFT(dag, platform, cp_type="WF") 
-#     print("\nHEFT-WF makespan: {}".format(mkspan))
+start = timer() 
+dag.set_costs(platform, target_ccr=ccr, method=m, het_factor=h)
+elapsed = timer() - start
+print("Setting costs took {} minutes".format(elapsed / 60))
+    
+start = timer()    
+for _ in range(1):    
+    # dag.set_costs(platform, target_ccr=ccr, method=m, het_factor=h)
+    mkspan = HSM(dag, platform, cp_type="WM", rank_avg="WM") 
+elapsed = timer() - start
+print("HEFT runs took {} minutes".format(elapsed / 60))
 

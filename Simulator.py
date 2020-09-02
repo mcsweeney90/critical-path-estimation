@@ -667,8 +667,9 @@ class DAG:
                             action_values = [CCP[child.ID][v] + task.comm_costs[child.ID][(w, v)] + child.comp_costs[v] for v in workers]
                         else:
                             action_values = [CCP[child.ID][v] + task.comm_costs[child.ID][(w, v)] for v in workers]
+                            
                         if cp_type == "optimistic" or cp_type == "LB":
-                            child_values.append(min(action_values))
+                            child_values.append(min(action_values))                            
                         elif cp_type == "pessimistic":
                             child_values.append(max(action_values))
                         elif cp_type == "M":

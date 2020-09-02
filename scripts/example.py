@@ -291,6 +291,7 @@ wf_list, ranks = dag.critical_path_priorities(cp_type="WF", return_ranks=True)
 print("\nWF task ranks: {}".format({k.ID:v for k, v in ranks.items()}))
 wf_mkspan = HEFT(dag, platform, priority_list=wf_list)
 print("WF makespan: {}".format(wf_mkspan))
+       
     
 # =============================================================================
 # Draw edge-weight only version of graph.
