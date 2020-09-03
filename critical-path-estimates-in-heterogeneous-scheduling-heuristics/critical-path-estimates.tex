@@ -84,7 +84,7 @@
 % Set up lemma environment and its numbering.
 \newtheorem{lemma}{Lemma}[section]
 
-\def\proof{\par{\bf Proof}. \ignorespaces}
+\def\proof{{\bf Proof}. \ignorespaces}
 \def\qedsymbol{\vbox{\hrule\hbox{%
 			\vrule height1.3ex\hskip0.8ex\vrule}\hrule}}
 \def\endproof{\qquad\qedsymbol\medskip\par}
@@ -152,7 +152,7 @@
 
 The {\em critical path} of a project is defined as the longest sequence of constituent tasks that must be done in order to complete it \cite{kel59,kel61}. If we express the project in the form of a task graph, then the critical path is simply the longest---i.e., costliest---path through it. This is useful because the time it takes to execute the tasks on the critical path of the graph is therefore a lower bound on the makespan of any possible schedule for the project, no matter how many processors are available. In the context of a listing heuristic for scheduling the task graph on a set of parallel processors, a natural choice then is to prioritize all tasks according to the length of the critical path from that task to the end, the idea being that tasks with the greatest downward path length contribute most heavily to the makespan and should therefore be processed as soon as possible. This approach has a long and successful history in scheduling for homogeneous processors, and is in fact provably optimal for two-processor systems \cite{cof72}. 
 
-Now, in the homogeneous case, all tasks have the same cost on all processors, so that there is only one possible cost each task may take. In particular this means that the node weights in the task graph are {\em fixed} so, disregarding the edge weights for the moment, the longest path through the DAG is also fixed, no matter what schedule we ultimately follow. Therefore, when we refer to the critical path of the task graph it is clear what is meant. Unfortunately, the concept of the critical path is not so clearly defined for heterogeneous processing environments. The problem is, there are now multiple possible costs that each task may take---depending on the schedule---and likewise many different communication costs that may be incurred. In particular this means that the weights of the task DAG are not fixed and we cannot  simply compute a longest path. Consider for example the simple DAG shown in Figure \ref{plot.simple_example}, where the labels represent all the possible weights each task/edge may take on a two-processor heterogeneous target platform; the red labels near the nodes represent the computation costs on processors $P1$ and $P2$ in the form $(W_i^1, W_i^2)$, while the edge labels represent the possible communication costs in the form $(W_{ik}^{11} = W_{ik}^{22} = 0, W_{ik}^{12}, W_{ik}^{21})$. How should the longest path through a graph like that in Figure \ref{plot.simple_example} be defined?
+Now, for homogeneous processors, all tasks have the same cost on all processors, so that there is only one possible cost each task may take. In particular this means that the node weights in the task graph are {\em fixed} so, disregarding the edge weights for the moment, the longest path through the DAG is also fixed, no matter what schedule we ultimately follow. Therefore, when we refer to the critical path of the task graph it is clear what is meant. Unfortunately, the concept of the critical path is not so clearly defined for heterogeneous processing environments. The problem is, there are now multiple possible costs that each task may take---depending on the schedule---and likewise many different communication costs that may be incurred. In particular this means that the weights of the task DAG are not fixed and we cannot  simply compute a longest path. Consider for example the simple DAG shown in Figure \ref{plot.simple_example}, where the labels represent all the possible weights each task/edge may take on a two-processor heterogeneous target platform; the red labels near the nodes represent the computation costs on processors $P1$ and $P2$ in the form $(W_i^1, W_i^2)$, while the edge labels represent the possible communication costs in the form $(W_{ik}^{11} = W_{ik}^{22} = 0, W_{ik}^{12}, W_{ik}^{21})$. How should the longest path through a graph like that in Figure \ref{plot.simple_example} be defined?
 
 \begin{figure}
 	\centering	
@@ -198,7 +198,7 @@ These ranks give a scheduling priority list of $\{t_0, t_1, t_3, t_4, t_5, t_2, 
 
 Given this ambiguity, alternative ways to define the critical path for the ranking phase in HEFT have been considered before, most notably by Zhao and Sakellariou \cite{zhao03}, who empirically compared the performance of HEFT when averages other than the mean (e.g., median, maximum, minimum) are used to compute upward (or downward) ranks. Their conclusions were that using the mean is not clearly superior to other averages, although none of the other options they considered were consistently better. Indeed, perhaps the biggest takeaway from their investigation was that HEFT is very sensitive to how priorities are computed, with significant variation being seen for different graphs and target platforms. In this chapter we undertake a similar investigation with the aim of establishing if there are choices which do consistently outperform the standard upward ranking in HEFT. In addition, we consider how critical path estimates can be used to determine processor selection, as well as task prioritization, following the approach of the {\em Predict Earliest Finish Time} (PEFT) heuristic \cite{arabnejad14}, and attempt to ascertain which definition leads to the best practical performance.        
 
-This will be an empirically-driven study, as is common in this area. To facilitate this investigation we created a software package that simulates heterogeneous scheduling problems, much like that described in the previous chapter, although not restricted to accelerated target platforms. As before, the ({\tt Python}) source code for this simulator can be found on Github\footnote{\href{https://github.com/mcsweeney90/critical-path-estimation}{{\tt \small https://github.com/mcsweeney90/critical-path-estimation}}} and all of the results presented here can be re-run from scripts contained therein. 
+This will be a largely empirical study, as is common in this area, although mathematical results which underlie heuristic methods are also described. To facilitate this investigation we created a software package that simulates heterogeneous scheduling problems, much like that described in the previous chapter, although not restricted to accelerated target platforms. As before, the ({\tt Python}) source code for this simulator can be found on Github\footnote{\href{https://github.com/mcsweeney90/critical-path-estimation}{{\tt \small https://github.com/mcsweeney90/critical-path-estimation}}} and all of the results presented here can be re-run from scripts contained therein. 
 
 % TODO: mention that only giving equations etc for u_i but can analagously define d_i.
 % it seems safest to say that critical path here represents some estimate of future schedule costs (which schedule you may ask?)
@@ -217,6 +217,7 @@ for all other tasks. Then, for each $i = 1, \dots, n$,
 gives a true lower bound on the remaining cost of any schedule once the execution of task $t_i$ begins. These $\ell_i$ values could be useful as alternative task priorities in HEFT, especially since the cost of computing all of the $\ell_i^a$ in this manner is only $O((m + n)q) \approx O(n^2q)$ so in particular is the same order as the usual HEFT prioritization phase. 
 
 For example, for the simple DAG shown in Figure \ref{plot.simple_example}, we find that the $\ell_i$ values are as given in Table \ref{tb.opt_example} (with the $u_i$ included for comparison). Interestingly, we see that tasks $t_1$ and $t_3$ have the same lower bound (8 units) and the performance of the alternative ranks relative to the standard $u_i$ sequence in HEFT depends on which is chosen to be scheduled first: if $t-1$, the priority list does not change so the schedule makespan is 22 units, but if $t_3$ is selected instead, the final schedule makespan is 20 units---i.e., smaller than the original---as illustrated in Figure \ref{plot.heft_schedule_example_LB}. Of course, this is only one example: there is no mathematically valid reason to suppose that using the $\ell_i$ sequence instead of $u_i$ as the task ranks in HEFT will actually lead to superior performance in general. Still, it seems worthwhile to investigate this empirically, which we do in Section \ref{sect.results}.
+% finding that...
 
 \begin{table}
 	\caption{Upward ranks $u_i$ and lower bounds $\ell_i$ for the DAG in Figure \ref{plot.simple_example}.} 
@@ -257,7 +258,7 @@ and
 m_{ik}(W_{ik}^{ab}) &= m_i(W_i^a) \cdot m_k(W_k^b) \\
 &= \frac{1}{q^2}, \quad \forall a, b.
 \end{align*}
-It is important to note here that the model defined by these pmfs is clearly not accurate. In particular, all of the node and edge weight variables are independent of one another. This is induced by the averaging but does not reflect, for example, the fact that edge weights are fully determined once the node weights are realized. Still, as the saying goes, all models are wrong, some are just more useful than others; we attempt to establish exactly how useful this one is through extensive numerical simulations in Section \ref{sect.results}.     
+It is important to note here that the model defined by these pmfs is clearly not accurate. In particular, all of the node and edge weight variables are independent of one another. This is induced by the averaging but does not reflect, for example, the fact that edge weights are fully determined once the node weights are realized. Still, we attempt to establish exactly how useful the model is through extensive numerical simulations in Section \ref{sect.results}.     
 
 Note also that the expected values of the node and edge weight variables are given by
 \begin{align}
@@ -280,7 +281,7 @@ In the following two sections, we propose modifications of both steps so as to o
 \subsection{The critical path of $G_s$}
 \label{subsect.sharper_bounds}
 
-Now, since all of its weights are RVs, the critical path of the stochastic graph $G_s$ is clearly itself a random variable. But a natural question arises from the interpretation outlined in the previous section: what is the relationship between the sequence of numbers $u_i$ as defined by \eqref{eq.ur_expectation} and the critical path of $G_s$? In fact, it has long been known in the context of {\em Program Evaluation and Review Technique} (PERT) network analysis that the numbers $u_i$ are {\em lower bounds on the expected value} of the critical path lengths of the stochastic DAG. This result dates back at least as far as Fulkerson \cite{fulk62}, who referred to it as already being widely-known and gave a simple proof. This prompts another question: does using the actual expected values lead to superior performance in HEFT?
+Now, since all of its weights are RVs, the critical path of the stochastic graph $G_s$ is clearly itself an RV. But a natural question arises from the interpretation outlined in the previous section: what is the relationship between the sequence of numbers $u_i$ as defined by \eqref{eq.ur_expectation} and the critical path of $G_s$? In fact, it has long been known in the context of {\em Program Evaluation and Review Technique} (PERT) network analysis that the numbers $u_i$ are {\em lower bounds on the expected value} of the critical path lengths of the stochastic DAG. This result dates back at least as far as Fulkerson \cite{fulk62}, who referred to it as already being widely-known and gave a simple proof. This prompts another question: does using the actual expected values lead to superior performance in HEFT?
 
 Unfortunately, computing the moments of the critical path length of a graph whose weights are discrete RVs was shown to be a $\#P$-complete problem by Hagstrom \cite{hagstrom88}. This means that it is generally impractical to compute the true expected values. However, efficient methods which yield better approximations than the $u_i$ numbers are known; we discuss examples in the following two sections.  
 
@@ -322,64 +323,67 @@ Let $B_i$ be the set of all the weight RVs corresponding to edges which connect 
 \begin{align}
 f_i &= \sum_{b_i \in R(B_i)} \P[B_i = b_i] \max_{k \in S_i} \{ f_k + b_{ik} \} \label{eq.f_fulkerson}
 \end{align}
-for all other tasks, where $b_{ik}$ is the realization of the edge weight RV $\tilde{w}_{ik}$ under the set of realizations $b_i$. Then Fulkerson showed that $u_i \leq f_i \leq e_i$ holds for all $i$---i.e, the $f_i$ give a tighter bound on the expected values of the critical path lengths than the $u_i$.
+for all other tasks, where $b_{ik}$ is the realization of the edge weight RV $\tilde{w}_{ik}$ under the set of realizations $b_i$. Then Fulkerson showed that the following proposition holds. 
 
-\paragraph{Proof of inequalities}
-\label{para.fulkerson_proof}
-
-The proof proceeds by induction. Without loss of generality, we assume that the DAG has single entry and exit tasks (artificial zero-cost tasks can be added if necessary) so that in particular $n$ is the index of the exit task. Clearly, since $u_n = f_n = e_n = 0$ by definition, the inequality holds in that case. Now for a generic task $t_i$ we assume that the inequalities $u_k \leq f_k \leq e_k$ hold for all $k \in S_i$ (i.e., all of $t_i$'s child tasks) and show that the inequality $u_i \leq f_i \leq e_i$ therefore holds as well. 
-
-First, we prove the left-hand inequality. By bringing the probability into the maximization we can rewrite \eqref{eq.f_fulkerson} as    
-\begin{align*}
-f_i &= \sum_{b_i \in R(B_i)} \max_{k \in S_i} \{ \P[B_i = b_i] (f_k + b_{ik} ) \}.
-\end{align*}
-Interchanging the summation and maximization, we get the inequality
-\begin{align*}
-f_i \geq \max_{k \in S_i} \bigg\{ \sum_{b_i \in R(B_i)} \P[B_i = b_i] (f_k + b_{ik} ) \bigg\}.
-\end{align*}
-By expanding out the term in the maximization and making use of the facts that the $f_k$ are independent of $b_i$ and the weight RVs corresponding to distinct edges are also independent, we see that
-\begin{align*}
-\sum_{b_i \in R(B_i)} \P[B_i = b_i] (f_k + b_{ik} ) &=  \sum_{b_i \in R(B_i)} \P[B_i = b_i]f_k + \sum_{b_i \in R(B_i)} \P[B_i = b_i] b_{ik} \\
-&= f_k \sum_{b_i} \P[B_i = b_i] + \sum_{b_i} \P[B_i = b_i] b_{ik} \\
-&= f_k + \sum_{b_i} \P[B_i = b_i] b_{ik} \\
-&= f_k + \E[\tilde{w}_{ik}].
-\end{align*}
-By the induction hypothesis, $f_k \geq u_k$ for all $k \in S_i$, so we have
-\begin{align*}
-f_i &\geq \max_{k \in S_i} \{ f_k + \E[\tilde{w}_{ik}] \} \\
-&\geq \max_{k \in S_i} \{ u_k + \E[\tilde{w}_{ik}] \} = u_i,
-\end{align*}
-as required to establish the first part of the inequality. 
-
-Now we prove the second part. First, note that we can rewrite equation \eqref{eq.ei} as 
-\begin{align*}
-e_i &= \sum_{z_i \in R(Z_i)} \P[Z_i = z_i] \max_{k \in S_i} \{ \ell(z_{k}) + z_{ik} \},
-\end{align*}
-where $z_{ik}$ is the realization of the edge weight RV $\tilde{w}_{ik}$ under the set of realizations $z_i$. The key now is to divide into two disjoint subsets, $Z_i = B_i \cup Y_i$, where the former is defined as before and the latter contains all of the other elements of the set (i.e., RVs corresponding to edges beyond $t_i's$ child tasks). By the independence of the edge weights, we have
-\begin{align*}
-\P[Z_i = z_i] = \P[B_i = b_i] \P[Y_i = y_i],
-\end{align*}
-where $y_i$ runs over all the possible realizations of the set $Y_i$. This means that 
-\begin{align*}
-e_i &= \sum_{z_i \in R(Z_i)} \P[Z_i = z_i] \max_{k \in S_i} \{ \ell(z_{k}) + z_{ik} \} \\
-&= \sum_{b_i} \P[B_i = b_i] \sum_{y_i} \P[Y_i = y_i]\max_{k \in S_i} \{ (\ell(z_{k}) + b_{ik}) \},
-\end{align*}
-where we change the $z_{ik}$ to $b_{ik}$ to acknowledge that it is now set according to the realization $b_i$. 
-Interchanging the rightmost sum and its inner maximization we get the inequality
-\begin{align*}
-e_i &\geq \sum_{b_i} \P[B_i = b_i] \max_{k \in S_i}  \bigg \{ \sum_{y_i} \P[Y_i = y_i] (\ell(z_{k}) + b_{ik} ) \bigg \} \\
-&= \sum_{b_i} \P[B_i = b_i] \max_{k \in S_i} \bigg \{ b_{ik} + \sum_{y_i} \P[Y_i = y_i] \ell(z_{k}) \bigg \},
-\end{align*}
-since the $b_{ik}$ do not depend on $y_i$. By the independence assumption, for all $k \in S_i$, we have $\P[Y_i = y_i] = \P[Z_k = z_k]$. Therefore 
-\begin{align*}
-e_i &\geq \sum_{b_i} \P[B_i = b_i] \max_{k \in S_i} \bigg \{ b_{ik} + \sum_{z_k} \P[Z_k = z_k] \ell(z_{k}) \bigg \} \\
-&= \sum_{b_i} \P[B_i = b_i] \max_{k \in S_i} \{ b_{ik} + e_k \}.
-\end{align*}
-By the induction assumption, $e_k \geq f_k$ for all $k \in S_i$, so finally we have
-\begin{align*}
-e_i &\geq \sum_{b_i} \P[B_i = b_i] \max_{k \in S_i} \{ b_{ik} + f_k \} = f_i,
-\end{align*}
-which completes the proof.
+\begin{prop}
+	\label{prop.fulkerson}
+	For all $i = 1, \dots, n$, we have $u_i \leq f_i \leq e_i$, so that in particular the $f_i$ give a tighter bound on the expected values of the critical path lengths.
+\end{prop}
+\begin{proof}
+	The proof proceeds by induction. Without loss of generality, we assume that the DAG has single entry and exit tasks (artificial zero-cost tasks can be added if necessary) so that in particular $n$ is the index of the exit task. Clearly, since $u_n = f_n = e_n = 0$ by definition, the inequality holds in that case. Now for a generic task $t_i$ we assume that the inequalities $u_k \leq f_k \leq e_k$ hold for all $k \in S_i$ (i.e., all of $t_i$'s child tasks) and show that the inequality $u_i \leq f_i \leq e_i$ therefore holds as well. 
+	
+	First, we prove the left-hand inequality. By bringing the probability into the maximization we can rewrite \eqref{eq.f_fulkerson} as    
+	\begin{align*}
+	f_i &= \sum_{b_i \in R(B_i)} \max_{k \in S_i} \{ \P[B_i = b_i] (f_k + b_{ik} ) \}.
+	\end{align*}
+	Interchanging the summation and maximization, we get the inequality
+	\begin{align*}
+	f_i \geq \max_{k \in S_i} \bigg\{ \sum_{b_i \in R(B_i)} \P[B_i = b_i] (f_k + b_{ik} ) \bigg\}.
+	\end{align*}
+	By expanding out the term in the maximization and making use of the facts that the $f_k$ are independent of $b_i$ and the weight RVs corresponding to distinct edges are also independent, we see that
+	\begin{align*}
+	\sum_{b_i \in R(B_i)} \P[B_i = b_i] (f_k + b_{ik} ) &=  \sum_{b_i \in R(B_i)} \P[B_i = b_i]f_k + \sum_{b_i \in R(B_i)} \P[B_i = b_i] b_{ik} \\
+	&= f_k \sum_{b_i} \P[B_i = b_i] + \sum_{b_i} \P[B_i = b_i] b_{ik} \\
+	&= f_k + \sum_{b_i} \P[B_i = b_i] b_{ik} \\
+	&= f_k + \E[\tilde{w}_{ik}].
+	\end{align*}
+	By the induction hypothesis, $f_k \geq u_k$ for all $k \in S_i$, so we have
+	\begin{align*}
+	f_i &\geq \max_{k \in S_i} \{ f_k + \E[\tilde{w}_{ik}] \} \\
+	&\geq \max_{k \in S_i} \{ u_k + \E[\tilde{w}_{ik}] \} = u_i,
+	\end{align*}
+	as required to establish the first part of the inequality. 
+	
+	Now we prove the second part. First, note that we can rewrite equation \eqref{eq.ei} as 
+	\begin{align*}
+	e_i &= \sum_{z_i \in R(Z_i)} \P[Z_i = z_i] \max_{k \in S_i} \{ \ell(z_{k}) + z_{ik} \},
+	\end{align*}
+	where $z_{ik}$ is the realization of the edge weight RV $\tilde{w}_{ik}$ under the set of realizations $z_i$. The key now is to divide into two disjoint subsets, $Z_i = B_i \cup Y_i$, where the former is defined as before and the latter contains all of the other elements of the set (i.e., RVs corresponding to edges beyond $t_i's$ child tasks). By the independence of the edge weights, we have
+	\begin{align*}
+	\P[Z_i = z_i] = \P[B_i = b_i] \P[Y_i = y_i],
+	\end{align*}
+	where $y_i$ runs over all the possible realizations of the set $Y_i$. This means that 
+	\begin{align*}
+	e_i &= \sum_{z_i \in R(Z_i)} \P[Z_i = z_i] \max_{k \in S_i} \{ \ell(z_{k}) + z_{ik} \} \\
+	&= \sum_{b_i} \P[B_i = b_i] \sum_{y_i} \P[Y_i = y_i]\max_{k \in S_i} \{ (\ell(z_{k}) + b_{ik}) \},
+	\end{align*}
+	where we change the $z_{ik}$ to $b_{ik}$ to acknowledge that it is now set according to the realization $b_i$. 
+	Interchanging the rightmost sum and its inner maximization we get the inequality
+	\begin{align*}
+	e_i &\geq \sum_{b_i} \P[B_i = b_i] \max_{k \in S_i}  \bigg \{ \sum_{y_i} \P[Y_i = y_i] (\ell(z_{k}) + b_{ik} ) \bigg \} \\
+	&= \sum_{b_i} \P[B_i = b_i] \max_{k \in S_i} \bigg \{ b_{ik} + \sum_{y_i} \P[Y_i = y_i] \ell(z_{k}) \bigg \},
+	\end{align*}
+	since the $b_{ik}$ do not depend on $y_i$. By the independence assumption, for all $k \in S_i$, we have $\P[Y_i = y_i] = \P[Z_k = z_k]$. Therefore 
+	\begin{align*}
+	e_i &\geq \sum_{b_i} \P[B_i = b_i] \max_{k \in S_i} \bigg \{ b_{ik} + \sum_{z_k} \P[Z_k = z_k] \ell(z_{k}) \bigg \} \\
+	&= \sum_{b_i} \P[B_i = b_i] \max_{k \in S_i} \{ b_{ik} + e_k \}.
+	\end{align*}
+	By the induction assumption, $e_k \geq f_k$ for all $k \in S_i$, so finally we have
+	\begin{align*}
+	e_i &\geq \sum_{b_i} \P[B_i = b_i] \max_{k \in S_i} \{ b_{ik} + f_k \} = f_i,
+	\end{align*}
+	which completes the proof.
+\end{proof}
 
 \paragraph{Example}
 \label{para.fulkerson_example}
@@ -564,7 +568,6 @@ Elmaghraby \cite{elmaghraby67} proposed two refinements of Fulkerson's method. T
 %Again, this is a single example, deliberately chosen for this behavior: although the $f_i$ give tighter bounds on the critical path lengths of the stochastic DAG $G_s$ there is absolutely no guarantee that this will lead to superior performance in general. After all, $G_s$ itself is only a model of how we expect the processor selection phase to proceed---one that we know is inaccurate since, for example, it implicitly assumes that all task and edge weights are independent. Indeed, without this independence assumption it is well-known that the relation $u_i \leq f_i$ does not necessarily hold even for $G_s$; Fulkerson himself presented examples \cite{fulk62}. Still, we think this is a reasonable enough basis for an alternative ranking method in HEFT, so we investigate its performance compared to the usual $u_i$ ranks via numerical simulation in Section \ref{sect.results}.
 
 
-
 \subsection{Adjusting the pmfs}
 \label{subsect.adjusting}
 
@@ -617,7 +620,7 @@ C_i^a &= \max_{k \in S_i} \bigg( \min_{b = 1, \dots, q} \big( \delta_{ab}\overli
 \end{align} 
 for all other tasks, where $\delta_{ab} = 1$ if $a = b$ and $0$ otherwise. The $C_i^a$ values are referred to in PEFT as optimistic costs but can be interpreted as {\em conditional critical paths} in that they represent some estimate of future schedule costs given a processor selection. When scheduling, say, task $t_i$, in PEFT we choose the processor $p_{opt}$ defined by
 \begin{align*}
-p_{opt} \coloneqq \min_{a} \big( F_i^a + C_i^a \big)
+p_{opt} \coloneqq \min_{a} \big( F_i^a + C_i^a \big),
 \end{align*}        
 where, as in previous chapters, $F_i^a$ is the estimated schedule makespan when $t_i$ is completed by $p_a$. This is a nice extension of the dynamic programming principles underlying HEFT: rather than optimizing the schedule makespan up to the current task (i.e., $F_i^a$), we extend the horizon and optimize an estimate of the complete schedule makespan. Now, computing the full optimistic cost table is only $O(n^2q)$---i.e., the same as HEFT---but since the values within are similar in nature to the upward ranks $u_i$ it is sensible (and more efficient) to make use of them for prioritizing tasks, rather than going to the effort of computing the upward ranks as well. Hence PEFT defines task priorities $C_i$ through
 \begin{align}
