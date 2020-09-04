@@ -338,7 +338,7 @@ class DAG:
             return max(t.FT for t in self.graph if t.FT is not None)  
         return max(t.FT for t in self.graph if t.exit) 
     
-    def set_costs(self, platform, target_ccr=1.0, method="HEFT", het_factor=1.0):
+    def set_costs(self, platform, target_ccr=1.0, method="R", het_factor=1.0):
         """
         Sets computation and communication costs for randomly generated DAGs (e.g., from the STG).
         Notes:
@@ -748,9 +748,8 @@ class DAG:
             except ValueError:
                 pass    
         # Sort task ranks into priority list.
-        priority_list = list(sorted(task_ranks, key=task_ranks.get, reverse=True))            
-            
-            
+        priority_list = list(sorted(task_ranks, key=task_ranks.get, reverse=True)) 
+        
         if return_ranks:
             return priority_list, task_ranks
         return priority_list 

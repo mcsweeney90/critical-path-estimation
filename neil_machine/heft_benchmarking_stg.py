@@ -80,7 +80,7 @@ with open("{}/execution_info.txt".format(results_path), "w") as dest:
             p_elapsed = timer() - p_start
             print("{} workers took {} minutes".format(nw, p_elapsed/60), file=dest)
     elapsed = timer() - start
-    print("\nTOTAL TIME: {} minutes".format(elapsed / 60))                                           
+    print("\nTOTAL TIME: {} minutes".format(elapsed / 60), file=dest)                                           
                 
 # Save the info.
 with open('{}/info.dill'.format(results_path), 'wb') as handle:

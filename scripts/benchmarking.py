@@ -156,7 +156,6 @@ ccrs = [0.1, 1, 10]
 het_factors = [1.0, 2.0]
 methods = ["R", "UR"]
 
-
 length, width = 3, 0.16
 x = np.arange(length)
 xlabels = [0.1, 1.0, 10]
