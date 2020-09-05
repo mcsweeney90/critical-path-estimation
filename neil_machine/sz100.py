@@ -45,10 +45,7 @@ for name in os.listdir('{}'.format(dag_path)):
                 for ps in pss:
                     info[ns][nw][ccr][h]["PEFT-" + ps] = []
                     info[ns][nw][ccr][h]["PEFT-" + ps + "-NPS"] = []
-
-# Compute.
-                    
-                    
+# Compute.         
 with open("{}/sz100_timing.txt".format(results_path), "w") as dest:
     start = timer()
     for name in os.listdir('{}'.format(dag_path)):
