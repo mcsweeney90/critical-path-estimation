@@ -302,10 +302,10 @@ Before introducing the alternative bounds on the critical path lengths proposed 
 where $\delta_k = 1$ if $t_k$ is an exit task and zero otherwise. Figure \ref{plot.example_edge_only} illustrates how the graph in Figure \ref{plot.simple_example} would be transformed in this manner, where the edge labels are in the form $(\tilde{W}_{ik}^{11}, \tilde{W}_{ik}^{12}, \tilde{W}_{ik}^{22}, \tilde{W}_{ik}^{21})$.
 
 \begin{figure}
-	\centering	
-	\includegraphics[scale=0.8]{simple_graph_edge_only.png}
-	\caption{Edge weight-only equivalent of task DAG from Figure \ref{plot.simple_example}.}	
-	\label{plot.example_edge_only}
+  \centering	
+  \includegraphics[scale=0.8]{simple_graph_edge_only.png}
+  \caption{Edge weight-only equivalent of task DAG from Figure \ref{plot.simple_example}.}	
+  \label{plot.example_edge_only}
 \end{figure} 
 
 
@@ -332,32 +332,33 @@ for all other tasks, where $b_{ik}$ is the realization of the edge weight RV $\t
 \begin{proof}
 	The proof proceeds by induction. Without loss of generality, we assume that the DAG has single entry and exit tasks (artificial zero-cost tasks can be added if necessary) so that in particular $n$ is the index of the exit task. Clearly, since $u_n = f_n = e_n = 0$ by definition, the inequality holds in that case. Now for a generic task $t_i$ we assume that the inequalities $u_k \leq f_k \leq e_k$ hold for all $k \in S_i$ (i.e., all of $t_i$'s child tasks) and show that the inequality $u_i \leq f_i \leq e_i$ therefore holds as well. 
 	
-	First, we prove the left-hand inequality. By bringing the probability into the maximization we can rewrite \eqref{eq.f_fulkerson} as    
-	\begin{align*}
-	f_i &= \sum_{b_i \in R(B_i)} \max_{k \in S_i} \{ \P[B_i = b_i] (f_k + b_{ik} ) \}.
-	\end{align*}
-	Interchanging the summation and maximization, we get the inequality
-	\begin{align*}
-	f_i \geq \max_{k \in S_i} \bigg\{ \sum_{b_i \in R(B_i)} \P[B_i = b_i] (f_k + b_{ik} ) \bigg\}.
-	\end{align*}
-	By expanding out the term in the maximization and making use of the facts that the $f_k$ are independent of $b_i$ and the weight RVs corresponding to distinct edges are also independent, we see that
-	\begin{align*}
-	\sum_{b_i \in R(B_i)} \P[B_i = b_i] (f_k + b_{ik} ) &=  \sum_{b_i \in R(B_i)} \P[B_i = b_i]f_k + \sum_{b_i \in R(B_i)} \P[B_i = b_i] b_{ik} \\
-	&= f_k \sum_{b_i} \P[B_i = b_i] + \sum_{b_i} \P[B_i = b_i] b_{ik} \\
-	&= f_k + \sum_{b_i} \P[B_i = b_i] b_{ik} \\
-	&= f_k + \E[\tilde{w}_{ik}].
-	\end{align*}
-	By the induction hypothesis, $f_k \geq u_k$ for all $k \in S_i$, so we have
-	\begin{align*}
-	f_i &\geq \max_{k \in S_i} \{ f_k + \E[\tilde{w}_{ik}] \} \\
-	&\geq \max_{k \in S_i} \{ u_k + \E[\tilde{w}_{ik}] \} = u_i,
-	\end{align*}
-	as required to establish the first part of the inequality. 
-	
-	Now we prove the second part. First, note that we can rewrite equation \eqref{eq.ei} as 
-	\begin{align*}
-	e_i &= \sum_{z_i \in R(Z_i)} \P[Z_i = z_i] \max_{k \in S_i} \{ \ell(z_{k}) + z_{ik} \},
-	\end{align*}
+First, we prove the left-hand inequality. By bringing the probability into the maximization we can rewrite \eqref{eq.f_fulkerson} as    
+\begin{align*}
+f_i &= \sum_{b_i \in R(B_i)} \max_{k \in S_i} \{ \P[B_i = b_i] (f_k + b_{ik} ) \}.
+\end{align*}
+Interchanging the summation and maximization, we get the inequality
+\begin{align*}
+f_i \geq \max_{k \in S_i} \bigg\{ \sum_{b_i \in R(B_i)} \P[B_i = b_i] (f_k + b_{ik} ) \bigg\}.
+\end{align*}
+By expanding out the term in the maximization and m
+aking use of the facts that the $f_k$ are independent of $b_i$ and the weight RVs corresponding to distinct edges are also independent, we see that
+\begin{align*}
+\sum_{b_i \in R(B_i)} \P[B_i = b_i] (f_k + b_{ik} ) &=  \sum_{b_i \in R(B_i)} \P[B_i = b_i]f_k + \sum_{b_i \in R(B_i)} \P[B_i = b_i] b_{ik} \\
+&= f_k \sum_{b_i} \P[B_i = b_i] + \sum_{b_i} \P[B_i = b_i] b_{ik} \\
+&= f_k + \sum_{b_i} \P[B_i = b_i] b_{ik} \\
+&= f_k + \E[\tilde{w}_{ik}].
+\end{align*}
+By the induction hypothesis, $f_k \geq u_k$ for all $k \in S_i$, so we have
+\begin{align*}
+f_i &\geq \max_{k \in S_i} \{ f_k + \E[\tilde{w}_{ik}] \} \\
+&\geq \max_{k \in S_i} \{ u_k + \E[\tilde{w}_{ik}] \} = u_i,
+\end{align*}
+as required to establish the first part of the inequality. 
+
+Now we prove the second part. First, note that we can rewrite equation \eqref{eq.ei} as 
+\begin{align*}
+e_i &= \sum_{z_i \in R(Z_i)} \P[Z_i = z_i] \max_{k \in S_i} \{ \ell(z_{k}) + z_{ik} \},
+\end{align*}
 	where $z_{ik}$ is the realization of the edge weight RV $\tilde{w}_{ik}$ under the set of realizations $z_i$. The key now is to divide into two disjoint subsets, $Z_i = B_i \cup Y_i$, where the former is defined as before and the latter contains all of the other elements of the set (i.e., RVs corresponding to edges beyond $t_i's$ child tasks). By the independence of the edge weights, we have
 	\begin{align*}
 	\P[Z_i = z_i] = \P[B_i = b_i] \P[Y_i = y_i],
@@ -671,41 +672,35 @@ where the maximization is taken to be zero if $S_i$ is empty (i.e., for exit tas
 \section{Results}
 \label{sect.results}
 
-In this section we use our software simulator to evaluate the alternative task prioritization phases in HEFT described in Sections \ref{sect.optimistic} and \ref{sect.alt_rankings}, as well as the PEFT variants outlined in Section \ref{sect.processor_selection}. All of the data from the experiments described here, and the code used to generate it, can be found in the Github repository associated with this chapter in the {\tt scripts}\footnote{\href{https://github.com/mcsweeney90/critical-path-estimation}{{\tt \small critical-path-estimation/scripts}}} folder. 
+In this section we use our software simulator to evaluate the alternative task prioritization phases in HEFT described in Sections \ref{sect.optimistic} and \ref{sect.alt_rankings}, as well as the PEFT variants outlined in Section \ref{sect.processor_selection}. All of the data from the experiments described here, and the code used to generate it, can be found in the Github repository associated with this chapter in the {\tt scripts}\footnote{\href{https://github.com/mcsweeney90/critical-path-estimation}{{\tt \small critical-path-estimation/scripts}}} folder. All experiments here were run on a machine...
+% maybe elaborate further (depending on what I eventually decide to include).
 
-\subsection{Testing environment}
+\subsection{Graphs}
 \label{subsect.graphs}
 
-In order to compare two or more different heuristics, we need a suitably large and diverse set of graphs. We decided to use the same two types as in the previous chapter: a set of Cholesky graphs, with real costs based on timings from an accelerated machine that we have access to, and several sets of randomly-generated graphs based on topologies provided by the STG \cite{tob02}.
+In order to compare different heuristics, we need a suitably large and diverse collection of graphs to test them on. As in the previous chapter, we decided to use the Standard Task Graph (STG) \cite{tob02} set for the topologies of these DAGs, as these are generated using several standard methods. The STG set comprises multiple subsets with differing numbers of tasks $n$, each of which in turn contains $180$ DAGs. Here we use only those subsets with $n \in \{ 100, 1000 \}$ in the hope that the order of magnitude increase will allow us to clearly observe the effect of DAG size. (More accurately, since DAGs from the STG all have single entry and exit tasks, we actually have, e.g., $n = 102$ rather than $n = 100$, but we refer to the rounder value throughout for the sake of clarity.)
 
-Since we are now interested in more general heterogeneous platforms we consider multiple sets of graphs based on randomly-generated graph topologies from the STG which differ from those in the previous chapter. In particular, a set is defined by the following parameters:
+For each of these $180 \times 2 = 360$ different DAG topologies, we create multiple copies with different computation and communication costs. These costs are generated according to the following three parameters.
 \begin{itemize}
-	\item $n \in \{ 100, 1000 \}$, the number of non-entry/exit tasks in each of the graphs. Each graph also has a single entry and exit task so that altogether it has e.g., $102$ tasks rather than $100$. Once this parameter has been specified, we use the topologies of the corresponding set of that size from the STG. 
-	\item $q \in \{2, 4, 8\}$, the number of processors in the target platform. 
-	\item $\beta \in \{0.1, 1, 10\}$, the computation-to-communication ratio (CCR). Defined as before, although the manner used to generate costs that give the target CCR differs (see below).
-	\item $h \in \{1.0, 2.0\}$, the {\em heterogeneity factor} of the processors. This basically determines how similar costs on different processors are to one another (again, see below for more detail).  
-	\item $m \in \{\text{R}, \text{UR} \}$, the method used to generate the costs.
+\item $q \in \{2, 4, 8, 16 \}$, the number of processors in the target platform (and therefore the number of possible computation costs for each task, and so on). 
+\item $\beta \in \{0.1, 1, 10\}$, the computation-to-communication ratio (CCR), defined as in the previous chapter.
+\item $h \in \{1.0, 2.0\}$, the {\em heterogeneity factor} of the processors, which is defined below.  
 \end{itemize}
-Once all of the other parameters are chosen, if $m = \text{UR}$ (for {\em unrelated}), then we use the same method as in the original HEFT paper \cite{topcuoglu2002performance} or \cite{arabnejad14} to determine all of the task computation costs on each of the processors. To wit, first an average computation cost for the entire graph $\overline{w_G}$ is chosen randomly (in our case an integer in the interval $[1, 100]$). Then, for all $i = 1, \dots, n$, the average computation cost $\overline{w_i}$ of task $t_i$, is chosen uniformly at random from the interval $[0, \overline{w_G}]$. Finally, for all $a = 1, \dots, q$, $W_i^a$ is also chosen uniformly at random but from the interval  
-\begin{align*}
-\big[ \overline{w_i} \times (1 - h/2), \enspace \overline{w_i} \times (1 + h/2)     \big].
-\end{align*}
-This method is perhaps somewhat unrealistic since task costs are generated independently of whichever processor they represent; typically costs are determined at least in part by the relative processor {\em powers}. With this in mind, if $m = \text{R}$ (for {\em related}), then the method proceeds by first selecting an average power $\overline{p}$ across the set of processors uniformly at random from the interval $[1, 100]$. Then for each processor $p_a$, $a = 1, \dots, q$, its power $r_a$ is in turn chosen uniformly at random from the interval
-\begin{align*}
-\big[ \overline{p} \times (1 - h/2), \enspace \overline{p} \times (1 + h/2)     \big].
-\end{align*}  
-Now an average task cost $\overline{t}$ is also chosen uniformly at random from the interval $[1, 100]$. For each task $t_i$, $i = 1, \dots, n$, choose $x_i \in [0, 2\overline{t}]$ uniformly at random and for all $a = 1, \dots, q$, realize $g_a \sim \Gamma(1, r_a)$ (i.e., choose $g_a$ from a Gamma distribution with mean and variance $r_a$). This is done to ensure that the computation costs are not entirely determined by the power; a Gamma distribution was chosen because it is always positive and heavy-tailed, so has roughly the shape we're after.  Finally, let $W_i^a = x_i g_a$ be the computation cost of task $t_i$ on processor $p_a$. 
+Once all of the parameters are specified for a graph, we proceed as follows. First, we select a value $\overline{p}$ uniformly at random from the interval $[1, 100]$ and then for each processor $p_a$, $a = 1, \dots, q$, we realize a parameter $r_a$ that we call the {\em power} from a uniform distribution over the interval $\big[ \overline{p} (1 - h/2), \; \overline{p} (1 + h/2)   \big]$. Here, the power of a processor roughly corresponds to its processing speed, with the parameter $h$ controlling how similar powers---and therefore task computation costs on different processors---are to one another. By construction, $h \in [0, 2]$, so we consider $h = 1.0$ and $h = 2.0$ in our experiments in order to capture the extremes (disregarding the case $h = 0$). In practice, task computation costs are rarely determined entirely by processor speed, so we actually generate them according to the power as follows. First, an average task cost for the DAG $\overline{t}$ is selected at random from $[1, 100]$ and then for each task $t_i$, $i = 1, \dots, n$, we choose a value $x_i$ from $[0, 2\overline{t}]$. Next, for all $a = 1, \dots, q$, we realize $g_a \sim \Gamma(1, r_a)$ (i.e., choose $g_a$ from a Gamma distribution with mean and variance $r_a$). A Gamma distribution was chosen because it is always positive and fairly heavy-tailed, but of course other choices are possible.  Finally, we let $W_i^a = x_i g_a$ be the computation cost of task $t_i$ on processor $p_a$.
 
-Communication costs are generated in the same manner for both choices of $m$. First, an average edge cost $\overline{e}$ is computed such that the specified CCR is (approximately) achieved. Then for all edges $(t_i, t_k)$, we choose $\overline{w_{ik}}$ uniformly at random from the interval $[0, 2\overline{e}]$. Then specific communication costs between the tasks on all possible pairs of distinct processors are chosen uniformly at random from the interval    
-\begin{align*}
-\big[ \overline{w_{ik}} \times (1 - h/2), \enspace \overline{w_{ik}} \times (1 + h/2)   \big].
-\end{align*} 
-(Recall that costs are assumed to be zero when both tasks are scheduled on the same processor.) Note that the randomness here means that sometimes the target CCR is not precisely achieved, although it is usually acceptably close.
+This approach differs from that used in the original HEFT \cite{topcuoglu2002performance} and PEFT \cite{arabnejad14} papers, where task computation costs were always generated independently of the processor they represent. That may be unrealistic in many applications since the cost of a task on two or more processors typically depends to some extent on their relative processing speed, although that is not to say that the method used here is necessarily more realistic in general. At any rate, most of the experiments described in this section were also repeated for the alternative method, with substantially similar results.
 
-%The gamma distribution is often used to model the claim size, because gamma random variables are continuous, non-negative and skewed to the right, with the possibility of large values in the upper tail.
+Communication costs however are generated independently of both processor power and the computation costs. After all of the latter have been determined, we compute an average edge cost $\overline{e}$ such that the specified CCR would be achieved. Then for all edges $(t_i, t_k)$, we realize $\overline{w_{ik}}$ from a $U[0, 2\overline{e}]$ distribution. Specific communication costs between the tasks on all possible pairs of distinct processors are in turn selected uniformly at random from the interval $\big[ \overline{w_{ik}} (1 - h/2), \; \overline{w_{ik}} (1 + h/2)   \big]$.
+(Recall that communication costs are assumed to be zero when both tasks are scheduled on the same processor.) Note that the randomness here means that sometimes the target CCR is not precisely achieved, although it is usually acceptably close. We consider the three cases $\beta = 0.1$, $\beta = 1$ and $\beta = 10$ here because these are order of magnitude variations that correspond to graphs for which communication predominates, computation and communication are roughly equal, and communication is low.   
+
+For each DAG and each combination of the three parameters $q$, $\beta$ and $h$, we make five copies of the graph and generate a different set of costs for each. There are $4 \times 3 \times 2 = 24$ possible combinations and $360$ distinct DAG topologies, so altogether our DAG test set therefore contains $5 \times 24 \times 360 = 43,200$ graphs. 
+
+% The gamma distribution is often used to model the claim size, because gamma random variables are continuous, non-negative and skewed to the right, with the possibility of large values in the upper tail.
 
 \subsection{Benchmarking}
 \label{subsect.benchmarking}
+
+% We want to establish how effective HEFT and PEFT actually are...
 
 First we want to establish how effective the HEFT task prioritization phase actually is for the graphs we consider here. More so than the speedup and schedule length ratio, which were defined and used in the previous chapter, the metric that we perhaps really want to use here is how well the task list computed by HEFT compares to other {\em topological sorts}---orderings which respects precedence constraints---of the tasks. Now, the {\tt Networkx} function {\tt topological\_sort} returns a topologically sorted list of nodes in an input graph. Furthermore, the algorithm which this implements does not consider any objective other than meeting the precedence constraints, so we can in some sense regard this as a random sample from the set of all possible topological orderings for the graph. Hence to gauge the effectiveness of the HEFT task prioritization phase, we compare the makespan obtained with the standard ranking with that which would be obtained when using the task priority list returned by {\tt topological\_sort} instead. Figure \ref{plot.benchmark_reductions_100} shows the average makespan reduction, as a percentage, for all of the subsets of DAGs from the STG with 100 tasks.
 
@@ -745,41 +740,7 @@ Of course, the figure does not tell the whole story: what about the relative mag
 	\includegraphics[scale=0.8]{100tasks_differential.png}
 	\caption{Percentage of instances for which the alternative rankings are better than the default, minus the percentage for which they were worse.}	
 	\label{plot.rankings_diff_100}
-\end{figure}
-
-%\begin{table} % TODO: looks rubbish, remove and just summarize...
-%	\caption{Average schedule makespan reduction for HEFT with alternative ranking phases for randomized DAG sets from the STG.} 
-%	\begin{center}	
-%		\begin{tabular}{c c c c }
-%			\toprule
-%			Ranking & {$\beta = 0.1$} & {$\beta = 1$} & {$\beta = 10$}\\
-%			\cmidrule{1-4}
-%			\multicolumn{4}{c}{2 processors} \\
-%			\cmidrule{1-4}
-%			LB & $-3.9$ & $0.3$ & $-0.1$  \\
-%			W & $0.3$ & $0.2$ & $0.1$  \\
-%			F & $0.2$ & $-0.1$ & $0.0$  \\
-%			WF & $0.9$ & $0.4$ & $0.1$  \\
-%			\cmidrule{1-4}
-%			\multicolumn{4}{c}{4 processors} \\
-%			\cmidrule{1-4}
-%			LB & $-10.0$ & $-0.3$ & $0.0$  \\
-%			W & $-10.2$ & $0.9$ & $0.9$  \\
-%			F & $0.0$ & $-0.5$ & $-0.3$  \\
-%			WF & $-3.9$ & $0.9$ & $0.9$  \\
-%			\cmidrule{1-4}
-%			\multicolumn{4}{c}{8 processors} \\
-%			\cmidrule{1-4}
-%			LB & $-2.1$ & $-0.5$ & $0.9$  \\
-%			W & $-0.7$ & $0.7$ & $1.9$  \\
-%			F & $0.0$ & $-0.4$ & $-0.3$  \\
-%			WF & $0.0$ & $0.5$ & $1.8$  \\ 
-%			\bottomrule			
-%		\end{tabular}
-%		\label{tb.fulkerson_stg}
-%	\end{center}	
-%\end{table}
-
+      \end{figure}
 
 Results so far seem to suggest that the Fulkerson ranking in particular does not seem to be an improvement on the standard ranking. Given how much more expensive it can be, this is a big problem: only large makespan reductions can really justify the extra cost. Indeed, although the weighted Fulkerson ranking WF did much better, both compared to F and the standard ranking, it was not a significant improvement over the W ranking. This suggests that there is little advantage if any to obtaining a tighter bound on the associated stochastic graph (see Section \ref{subsect.sharper_bounds}). To confirm this, we repeated the experiments described above when the Monte Carlo approach (with a sufficient number of samples) is used to compute even tighter bounds on the critical path lengths (which are then used as ranks in HEFT). We used both the original pmfs $m$ and the weighted pmfs $\hat{m}_i$ for this. Our results can be found in full at the Github repository but overall they supported our conclusions from the example above: tightening the bound alone led to no consistent performance gains, whereas weighting the pmfs was more promising, with a roughly $2\%$ average makespan reduction across all of the graphs we considered.       
 
@@ -844,3 +805,8 @@ To summarize, our main conclusions from all of the experiments described in this
 \bibliography{references,strings}
 
 \end{document}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:
