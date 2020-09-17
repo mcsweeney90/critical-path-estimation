@@ -52,33 +52,68 @@ ccrs = [0.1, 1, 10]
 het_factors = [1.0, 2.0]
 
 # =============================================================================
-# Print a human-readable summary of all the information.
+# First an investigation...
 # =============================================================================
 
+# dag_names = list(d for d, _ in info[100].items()) 
+# peft_mkspans = []
+# ids = []
+# for n in sizes:        
+#         for q in n_workers:
+#             for b in ccrs:
+#                 for h in het_factors:
+#                     for d in dag_names:
+#                         if any(m is None for m in info[n][d][q][b][h]["PEFT"]):
+#                             print("\nn = {}, q = {}, CCR = {}, h = {}, d = {}".format(n, q, b, h, d))
+#                             print(info[n][d][q][b][h]["PEFT"])
+#                             ids.append((n, q, b, h, "{}.dill".format(d)))
+#                         peft_mkspans += info[n][d][q][b][h]["PEFT"]
+# # Count how many...
+# count = 0
+# for p in peft_mkspans:
+#     if p is None:
+#         count += 1
+# print("\nNumber of PEFT runs returning None: {}/{}".format(count, len(peft_mkspans)))
+
+"""
+Ran 1000 new runs with these DAGs and parameter combinations and couldn't reproduce the error. The PEFT function returns mkspan, which is computed
+by the DAG makespan method. This uses Python's builtin max function which shouldn't ever return None, so cannot see where the problem is. Am going to 
+have to chalk this up to some unexplained bug either in the initial save or from dill. I'm satisfied that the PEFT function works in other cases and 
+since only happened for very few (3) examples out of 43,200 think it best to just disregard these cases for the moment.  
+"""  
+
+# =============================================================================
+# Print human-readable(ish) summaries of all the information.
+# =============================================================================
+
+# First a complete breakdown for all of the 2 x 4 x 3 x2 = 48 subsets.
+# This isn't particularly human-readable but useful as a reference.
 with open("{}/complete.txt".format(summary_path), "w") as dest:
-    print("HUMAN-READABLE HEFT AND PEFT BENCHMARKING SUMMARY.", file=dest)
+    print("COMPLETE BREAKDOWN OF HEFT AND PEFT BENCHMARKING FOR ALL SUBSETS (OF 5 x 180 = 900 DAGs) DEFINED BY PARAMETERS (n, q, CCR, h).", file=dest)
+    print("INTENDED AS A REFERENCE.", file=dest)
     
-    dag_names = list(d for d, _ in info[100].items())
-    
-    for q in n_workers:
-        print("\n----------------", file=dest)
-        print("{} PROCESSORS".format(q), file=dest)
-        print("----------------", file=dest)
-        
-        # First for each combination...        
-        for n in sizes:
+    dag_names = list(d for d, _ in info[100].items())    
+    for n in sizes:        
+        for q in n_workers:
             for b in ccrs:
                 for h in het_factors:
-                    print("\nn = {}, CCR = {}, h = {}".format(n, b, h), file=dest)
-                    cps, msts, heft_mkspans, peft_mkspans = [], [], [], []
+                    print("\nn = {}, q = {}, CCR = {}, h = {}".format(n, q, b, h), file=dest)
+                    subset_info = {}
                     for d in dag_names:
-                        cps += info[n][d][q][b][h]["CP"]
-                        msts += info[n][d][q][b][h]["MST"]
-                        heft_mkspans += info[n][d][q][b][h]["HEFT"]
-                        peft_mkspans += info[n][d][q][b][h]["PEFT"]
-                    # Now compute the SLRs.
-                    heft_slrs = list(m/c for m, c in zip(heft_mkspans, cps))
-                    print("HEFT SLRs (avg, best, worst) : ({}, {}, {})".format(np.mean(heft_slrs), min(heft_slrs), max(heft_slrs)), file=dest)
+                        for attr in ["CP", "MST", "HEFT", "PEFT"]:
+                            try:
+                                subset_info[attr] += info[n][d][q][b][h][attr]
+                            except KeyError:
+                                subset_info[attr] = info[n][d][q][b][h][attr]
+                    # Info we want: SLRs, speedups, APDs for HEFT and PEFT. Reduction for PEFT vs HEFT. Number of failures for each. Percentage of times better...
+                    for hr in ["HEFT", "PEFT"]:
+                        print("HEURISTIC: {}".format(hr), file=dest)
+                        slrs = []
+                        for m, c in zip(subset_info[hr], subset_info["CP"]):
+                            if m is None:
+                                continue
+                            slrs.append(m/c)
+                        print("SLRs (avg, best, worst) : ({}, {}, {})".format(np.mean(slrs), min(slrs), max(slrs)), file=dest)
         
 
 
