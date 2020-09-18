@@ -102,16 +102,31 @@ dag_path = '../graphs/STG/{}'.format(sz)
 #     dill.dump(info, handle)                
                     
                 
-q, b, h = 8, 10, 1.0
-d = "rand0118.dill"   
-with open('{}/{}'.format(dag_path, d), 'rb') as file:
-    dag = dill.load(file)    
-platform = Platform(q, name="{}P".format(q))
-
-for _ in range(100):
-    dag.set_costs(platform, target_ccr=b, method="R", het_factor=h)
-    m = PEFT(dag, platform)
-    print(m)
+# q, b, h = 4, 10, 1.0
+# d = "rand0118.dill"   
+# with open('{}/{}'.format(dag_path, d), 'rb') as file:
+#     dag = dill.load(file)    
+# platform = Platform(q, name="{}P".format(q))
+# for _ in range(100):
+#     dag.set_costs(platform, target_ccr=b, method="R", het_factor=h)
+#     m = PEFT(dag, platform)
+#     print(m)
+    
+# q, b, h = 4, 10, 2.0  
+# platform = Platform(q, name="{}P".format(q))
+# count = 0
+# for d in os.listdir('{}'.format(dag_path)):
+#     print("DAG {}".format(d))
+#     with open('{}/{}'.format(dag_path, d), 'rb') as file:
+#         dag = dill.load(file) 
+#     dag.set_costs(platform, target_ccr=b, method="UR", het_factor=h)
+#     mst = dag.minimal_serial_time()
+#     mkspan = HEFT(dag, platform)
+#     speedup = mst / mkspan
+#     if speedup > q:
+#         count += 1
+# print("\nNumber of superlinear speedups: {}".format(count))
+    
         
             
         
