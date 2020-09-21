@@ -84,14 +84,15 @@ Ran 1000 new runs with these DAGs and parameter combinations and couldn't reprod
 computed by the DAG makespan method. This uses Python's builtin max function which shouldn't ever return None, so cannot see where the problem is. Am going
 to have to chalk this up to some unexplained bug either in the initial save or from dill. I'm satisfied that the PEFT function works in other cases and 
 since only happened for very few (3) examples out of 43,200 think it best to just disregard these cases.  
-"""  
-
+""" 
 # =============================================================================
-# Human-readable(ish) summaries of the data.
-# =============================================================================
+# ============================================================================= 
 
 def get_subset_info(info, ns, qs, bs, hs):
-    """TODO: weird bug here, had to use defaultdict to avoid..."""
+    """
+    TODO: weird bug here, had to use defaultdict to avoid.
+    Problem was that I was using a try statement to create keys and I had another variable outside with a similar name...    
+    """
     set_info = defaultdict(list)
     param_combinations = list(it.product(*[ns, qs, bs, hs]))
     for n, q, b, h in param_combinations:
@@ -130,8 +131,13 @@ def summarize(data, dest):
         better = sum(1 for r in reductions if r > 0)
         same = sum(1 for r in reductions if abs(r) < 1e-6)
         worse = sum(1 for r in reductions if r < 0)
-        print("Comparison vs HEFT (%better, %same, %worse): ({}, {}, {})".format((better/valid)*100, (same/valid)*100, (worse/valid)*100), file=dest)    
-       
+        print("Comparison vs HEFT (%better, %same, %worse): ({}, {}, {})".format((better/valid)*100, (same/valid)*100, (worse/valid)*100), file=dest) 
+ 
+    
+
+# =============================================================================
+# Human-readable(ish) summaries of the data.
+# =============================================================================       
 
 # # Individual summaries for all 2 x 4 x 3 x 2 = 48 subsets (intended mostly as a reference since not easy to parse.)
 # with open("{}/all_subsets.txt".format(summary_path), "w") as dest:
@@ -220,30 +226,30 @@ def summarize(data, dest):
 # plt.close(fig) 
 
 # Speedup.
-speedup_by_worker = {"HEFT":[], "PEFT":[]}
-for q in n_workers:
-    subset_info = get_subset_info(info, ns=sizes, qs=[q], bs=ccrs, hs=het_factors)
-    for hr in ["HEFT", "PEFT"]:
-        speedups = []
-        for m, mst in zip(subset_info[hr], subset_info["MST"]):
-            if m is None:
-                continue
-            speedups.append(mst/m)
-        speedup_by_worker[hr].append(np.mean(speedups))
+# speedup_by_worker = {"HEFT":[], "PEFT":[]}
+# for q in n_workers:
+#     subset_info = get_subset_info(info, ns=sizes, qs=[q], bs=ccrs, hs=het_factors)
+#     for hr in ["HEFT", "PEFT"]:
+#         speedups = []
+#         for m, mst in zip(subset_info[hr], subset_info["MST"]):
+#             if m is None:
+#                 continue
+#             speedups.append(mst/m)
+#         speedup_by_worker[hr].append(np.mean(speedups))
 
-length, width = len(n_workers), 0.45
-x = np.arange(length)
-xlabels = n_workers
+# length, width = len(n_workers), 0.45
+# x = np.arange(length)
+# xlabels = n_workers
 
-fig = plt.figure(dpi=400)
-ax1 = fig.add_subplot(111)
-ax1.bar(x, speedup_by_worker["HEFT"], width, color='#E24A33', edgecolor='white', label="HEFT")
-ax1.bar(x + width, speedup_by_worker["PEFT"], width, color='#348ABD', edgecolor='white', label="PEFT")             
-ax1.set_xticks(x + (1/2) * width)
-ax1.set_xticklabels(xlabels) 
-ax1.set_xlabel("NUMBER OF PROCESSORS", labelpad=5)
-ax1.set_ylabel("SPEEDUP", labelpad=5)
-# ax1.legend(handlelength=3, handletextpad=0.4, ncol=2, loc='best', fancybox=True, facecolor='white') 
-plt.savefig('{}/speedup_by_q'.format(plot_path), bbox_inches='tight') 
-plt.close(fig) 
+# fig = plt.figure(dpi=400)
+# ax1 = fig.add_subplot(111)
+# ax1.bar(x, speedup_by_worker["HEFT"], width, color='#E24A33', edgecolor='white', label="HEFT")
+# ax1.bar(x + width, speedup_by_worker["PEFT"], width, color='#348ABD', edgecolor='white', label="PEFT")             
+# ax1.set_xticks(x + (1/2) * width)
+# ax1.set_xticklabels(xlabels) 
+# ax1.set_xlabel("NUMBER OF PROCESSORS", labelpad=5)
+# ax1.set_ylabel("SPEEDUP", labelpad=5)
+# # ax1.legend(handlelength=3, handletextpad=0.4, ncol=2, loc='best', fancybox=True, facecolor='white') 
+# plt.savefig('{}/speedup_by_q'.format(plot_path), bbox_inches='tight') 
+# plt.close(fig) 
 

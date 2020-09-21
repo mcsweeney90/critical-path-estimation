@@ -4,7 +4,7 @@
    (TeX-add-to-alist 'LaTeX-provided-class-options
                      '(("article" "12pt")))
    (TeX-add-to-alist 'LaTeX-provided-package-options
-                     '(("hyperref" "colorlinks" "urlcolor=blue" "linkcolor=blue" "citecolor=hotpink") ("babel" "british") ("algorithm2e" "linesnumbered" "ruled") ("tcolorbox" "most" "minted")))
+                     '(("hyperref" "colorlinks" "urlcolor=blue" "linkcolor=blue" "citecolor=hotpink") ("babel" "american") ("algorithm2e" "linesnumbered" "ruled") ("tcolorbox" "most" "minted")))
    (add-to-list 'LaTeX-verbatim-macros-with-braces-local "href")
    (add-to-list 'LaTeX-verbatim-macros-with-braces-local "hyperref")
    (add-to-list 'LaTeX-verbatim-macros-with-braces-local "hyperimage")
@@ -105,7 +105,9 @@
     "plot.bench_slr"
     "plot.bench_speedup"
     "plot.bench_slr_speedup"
+    "tb.bench_failures"
     "subsect.evaluation"
+    "subsubsect.f_and_wf"
     "plot.rankings_diff_100"
     "plot.fulk_cholesky_single"
     "plot.fulk_cholesky_multiple"
