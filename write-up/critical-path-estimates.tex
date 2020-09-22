@@ -667,7 +667,7 @@ C_i = \frac{q}{\hat{s}_i} + \max_{k \in S_i} C_k, \label{eq.alt_prios}
 \end{align}  
 where the maximization is taken to be zero if $S_i$ is empty (i.e., for exit tasks) and $\hat{s}$ is as defined in \eqref{eq.s_hat}. By adding the maximization term we ensure that the $C_i$ give a complete valid priority list of tasks, although we could select tasks from the current set of ready tasks according to the first term as in the default PEFT algorithm instead; it makes no difference conceptually, but we use the version given here for the experiments in the following section because it is slightly more efficient in our implementation.
 
-\section{Results}
+\section{Experimental results}
 \label{sect.results}
 
 In this section we use our software simulator to evaluate the alternative task prioritization phases in HEFT described in Sections \ref{sect.optimistic} and \ref{sect.alt_rankings}, as well as the PEFT variants outlined in Section \ref{sect.processor_selection}. All of the data from the experiments described here, and the code used to generate it, can be found in the Github repository associated with this chapter in the {\tt scripts}\footnote{\href{https://github.com/mcsweeney90/critical-path-estimation}{{\tt \small critical-path-estimation/scripts}}} folder. All experiments here were run on a machine...
@@ -708,7 +708,7 @@ Before evaluating the variants we have proposed here, we want to establish how e
 	\label{plot.bench_slr_speedup} 
       \end{figure}
 
-The figure shows roughly what we would hope: both HEFT and PEFT seem to do very well on average, as far as we can discern from these metrics alone: for example, the average speedup for both in all cases is superlinear\footnote{As explained in the previous chapter, it is entirely possible that speedup exceed the number of processors $q$ in heterogeneous DAG scheduling problems, especially when we are considering the idealized static problem as here.}. With regards to their comparative performance, we see that the margins are very tight, at least on average, in terms of both metrics. Recalling that, put simply, larger numbers are good for speedup and bad for SLR, across the entire DAG set, PEFT obtains an average SLR of $3.2$, compared to $3.6$ for HEFT, whereas HEFT marginally shades PEFT with regard to average speedup at $10$ against $9.9$. Of course, these average values obscure significant variation: from the figure alone we can see that, for example, the SLR difference between PEFT and HEFT increases with $q$, which is in line with what has been reported elsewhere \cite{arabnejad14}. Overall, if we compare the schedules computed by the two heuristics directly, PEFT obtained an average makespan reduction of about $0.7\%$ compared to HEFT, which is fairly small but may be worthwhile in some situations, depending on the relative cost of the two heuristics themselves.  
+The figure shows roughly what we would hope: both HEFT and PEFT seem to do very well on average, as far as we can discern from these metrics alone: for example, the average speedup for both in all cases is superlinear\footnote{As explained in the previous chapter, it is entirely possible that speedup exceed the number of processors $q$ in heterogeneous DAG scheduling problems, especially when we are considering the idealized static problem as here.}. With regards to their comparative performance, we see that the margins are very tight, at least on average, in terms of both metrics. Recalling that, put simply, larger values are good for speedup and bad for SLR, across the entire DAG set, PEFT obtains an average SLR of $3.2$, compared to $3.6$ for HEFT, whereas HEFT marginally shades PEFT with regard to average speedup at $10$ against $9.9$. Of course, these average values obscure significant variation: from the figure alone we can see that, for example, the SLR difference between PEFT and HEFT increases with $q$, which is in line with what has been reported elsewhere \cite{arabnejad14}. Overall, if we compare the schedules computed by the two heuristics directly, PEFT obtained an average makespan reduction of about $0.7\%$ compared to HEFT, which is fairly small but may be worthwhile in some situations, depending on the relative cost of the two heuristics themselves.  
 
 In fact, PEFT was bettered by HEFT $54\%$ of the time, across the set as a whole, and was only likely to be superior for a few parameter choices---in particular, when $\beta = 0.1$, $n = 100$ or $q = 16$. In all such cases, this was largely down to the phenomenon remarked upon in the previous chapter, where HEFT fails altogether---i.e., returns a schedule makespan greater than the minimal serial time---due to difficulty managing communication costs because of its greedy processor selection phase. Table \ref{tb.bench_failures} summarizes the failure probabilities for HEFT and PEFT as the CCR  varies. The failure rate for PEFT is always smaller than HEFT, as we may well expect given that one interpretation of its processor selection phase is as a kind of correction preventing locally greedy actions which may be detrimental in the long run. However it still may be unacceptably high, so one of the aims of our investigation is to establish whether any of the variants proposed in Section \ref{sect.processor_selection} reduce the failure rate further.  
 
@@ -727,10 +727,10 @@ In fact, PEFT was bettered by HEFT $54\%$ of the time, across the set as a whole
 	\end{center}	
 \end{table}
 
-While we largely avoid discussion of comparative runtimes here because our code is not optimized, we should note that our implementation of PEFT could be significantly more expensive than HEFT, especially for larger values of $q$. For example,...
+While we largely avoid discussion of comparative runtimes here because our code is not optimized, we should note that our implementation of PEFT could be significantly more expensive than HEFT, especially for larger values of $n$ and $q$. 
 % Add something to end.
 
-Given what we have observed in these benchmarking experiments, we decided to investigate the proposed alternative HEFT task ranking phases and PEFT variants separately, which we do in the following two sections, respectively. We then make direct comparisons and draw overall conclusions in Section \ref{sect.conclusions}.
+Given what we have observed in these benchmarking experiments, we decided to investigate the proposed alternative HEFT task ranking phases and PEFT variants separately, which we do in the following two sections, respectively. We then make direct comparisons and draw overall conclusions in Section \ref{subsect.conclusions}.
 % TODO: should this be a conclusions subsection?
 
 
@@ -741,9 +741,9 @@ Given what we have observed in these benchmarking experiments, we decided to inv
 \subsection{Ranking phases in HEFT}
 \label{subsect.evaluation}
 
-In this section we compare the performance of HEFT with the following task prioritization phases:
+We compare the performance of HEFT with all of the following task prioritization phases:
 \begin{itemize}
-	\item the standard upward ranks $u_i$,
+	\item U, the standard upward ranks $u_i$,
 	\item LB, the optimistic ranks $\ell_i$ as defined by \eqref{eq.opt_ui},
 	\item F, the Fulkerson ranks $f_i$ as defined by \eqref{eq.f_clingen},
 	\item W, the weighted mean ranks $\hat{u}_i$ as defined in Section \ref{subsect.adjusting},
@@ -752,71 +752,80 @@ In this section we compare the performance of HEFT with the following task prior
         \end{itemize}
         What we really want to know when evaluating a given task ranking scheme in HEFT is how good the task priority list is compared to other {\em topological sorts}---orderings which respects precedence constraints. Now, the {\tt Networkx} function {\tt topological\_sort} returns a topologically sorted list of nodes in an input graph. Furthermore, the algorithm which this implements does not consider any objective other than meeting the precedence constraints, so we can in some sense regard this as a random sample from the set of all possible topological sorts of the tasks. Hence we refer to the ranking phase defined by using the task ordering returned by {\tt topological\_sort} as R, and we include it in this comparison as a baseline to gauge the effectiveness of the other task prioritization phases.
 
-        \subsubsection{F and WF}
-        \label{subsubsect.f_and_wf}
+        \subsubsection{Small-scale testing}
+        \label{subsubsect.small_scale}
 
-Unfortunately, excessively long runtimes meant that we were only able to consider the F and WF ranking phases for DAGs with $n \neq 1000$ and $q \neq 16$. Therefore the results in this section only represent a subset of the test graph set, comprising $16200$ DAGs in all. Now, since we want to directly compare the different ranking phases, the main metric we use here is the {\em percentage degradation} as defined in the previous chapter. Figure X shows the APD for all six of the ranking phases, broken down by number of processors... Again, these are average values; fundamentally we also want to know how likely a given ranking is to improve on another, so Table Y compares the percentage of better, worse and equal instances for all of the rankings...       
-        
-First, we consider the sets of DAGs based on the STG with 100 tasks as an exploratory example. Ultimately, when deciding whether to use an alternative ranking we want to know whether it's more likely to help rather than harm performance, so Figure \ref{plot.rankings_diff_100} shows the difference between the percentage of DAGs for which each of the alternative rankings obtained a schedule makespan better than the standard $u_i$ ranks and the percentage for which they were worse. Note that we combine all four of the subsets ($h = 1.0$ or $2.0$, $m = \text{R}$ or UR) for each CCR and processor number combination, so that each of the bars represents a percentage over $4 \times 180 = 720$ DAGs.
+        Our implementations of the F and WF ranking phases are somewhat slow for DAGs with $n = 1000$ and $q = 16$, so before investing considerable computational time we decided to compare the six task prioritization phases on a smaller-scale using only the subset of DAGs with $n = 100$ and $q < 16$, which comprised $16200$ DAGs in total. Since we want to directly compare the different rankings, the two main metrics we use here are the {\em average percentage degradation} (APD), as defined in the previous chapter, and the percentage of instances for which a given ranking achieved the best schedule for the DAGs.
 
-Of course, the figure does not tell the whole story: what about the relative magnitudes of the makespan reductions and increases? In general, both tended to be fairly small, with makespan changes greater than $5\%$ either way being rare. Overall, across the entire set, the F and WF rankings obtained an average reduction of around $1\%$, while the LB and F rankings on average did no better than the standard ranking. Of course, a $1\%$ reduction might not seem significant, but in certain situations---such as when the same application has to be executed repeatedly---this may be worthwhile. Bear in mind also that this is an average value: more significant reductions can be seen, for example, as the number of processors increases. Note that while large negative average reductions can be seen for some of the rankings on certain graph sets with $\beta = 0.1$ (i.e., high communication), this is in fact down to only a handful of graphs. The issue is related to the previously-discussed problem of HEFT failing altogether in some cases. Typically, all of the rankings tend to fail for the same instances, but sometimes one or more of the rankings fails spectacularly whereas the HEFT ranking doesn't fail at all; this leads to a very large percentage difference in makespan which somewhat distorts the average. These cases are clearly important so should still be taken into account but they were very infrequent; overall, the number of failures was similar for all of the rankings.   
+        Figure \ref{plot.apd_by_ccr} shows the APD for all six of the ranking phases, broken down according to the CCR (so that each of the bars represents an average over $16200 / 3 = 5400$ DAGs). We have chosen to present the data in this way because it illustrates the fact that none of the new rankings were able to significantly reduce the failure rate compared to the default: when $\beta = 0.1$, the failure rates were all high so the other 5 rankings did not significantly outperform the R ranking phase, whereas they clearly did for the higher CCR values, when their failure rates were much lower. As to the comparative performance of the rankings, W and WF were the two best overall and did almost exactly as well as each other. LB's performance relative to U was mixed, while F was worse than U for all three CCR values.       
 
 \begin{figure}
 	\centering	
-	\includegraphics[scale=0.8]{100tasks_differential.png}
-	\caption{Percentage of instances for which the alternative rankings are better than the default, minus the percentage for which they were worse.}	
-	\label{plot.rankings_diff_100}
+	\includegraphics[scale=1.0]{apd_by_ccr.png}
+	\caption{Average percentage degradation for the 6 ranking phases by CCR.}	
+	\label{plot.apd_by_ccr}
       \end{figure}
 
-Results so far seem to suggest that the Fulkerson ranking in particular does not seem to be an improvement on the standard ranking. Given how much more expensive it can be, this is a big problem: only large makespan reductions can really justify the extra cost. Indeed, although the weighted Fulkerson ranking WF did much better, both compared to F and the standard ranking, it was not a significant improvement over the W ranking. This suggests that there is little advantage if any to obtaining a tighter bound on the associated stochastic graph (see Section \ref{subsect.sharper_bounds}). To confirm this, we repeated the experiments described above when the Monte Carlo approach (with a sufficient number of samples) is used to compute even tighter bounds on the critical path lengths (which are then used as ranks in HEFT). We used both the original pmfs $m$ and the weighted pmfs $\hat{m}_i$ for this. Our results can be found in full at the Github repository but overall they supported our conclusions from the example above: tightening the bound alone led to no consistent performance gains, whereas weighting the pmfs was more promising, with a roughly $2\%$ average makespan reduction across all of the graphs we considered.       
+      Of course, the APD is only an average value; we also want to know how likely a given ranking is to achieve the best schedule for a given DAG, and, for the alternative rankings, whether they are likely to improve on the standard upward ranking prioritization phase. Hence in Table \ref{tb.small_rankings_bests} we present the percentage of the $16200$ DAGs for which each of the rankings (including U) achieved the best schedule and the percentage of cases for which each of the alternative rankings produced a schedule better than U. We see again that the W and WF rankings are the best overall, although no single ranking dominated all others. 
 
-Despite this, there are situations for which the Fulkerson ranking is competitive with the standard ranking in terms of both cost and performance. In particular, for accelerated environments, such as in the previous chapter, the set of possible values each weight may take is much smaller, which significantly improves efficiency. Furthermore, the Fulkerson ranking appears to perform well for certain real application task graphs. For example, Figure \ref{plot.fulk_cholesky} shows the makespan reductions of the three rankings W, F and WF compared to the default for the set of Cholesky graphs and (accelerated) target platforms defined in the previous chapter. Although there is significant variation, we see that the Fulkerson ranking is superior to the standard ranking phase overall---typically only slightly but occasionally more significantly.   
+      \begin{table}
+	\caption{Number of best instances and improvements vs default for alternative ranking phases.} 
+	\begin{center}	
+		\begin{tabular}{c c c c c c c}
+			\cmidrule{1-7}
+			RANKING: & U & R & LB & W & F & WF\\
+			\cmidrule{1-7}
+			\% BEST & $19.5$ & $3.5$ & $22.7$ & $27.6$ & $18.0$ & $27.6$\\
+			\% $<$ U & - & $10.2$ & $48.7$ & $56.1$ & $39.8$ & $55.8$\\
+			\bottomrule
+		\end{tabular}
+		\label{tb.small_rankings_bests}
+	\end{center}	
+\end{table}
 
-\begin{figure}
-	\centering
-	\hspace*{-6em}	
-	\subfloat[1 GPU, 7 CPU.]{\label{plot.fulk_cholesky_single}\includegraphics[scale=0.7]{fulk_Single_GPU_reductions.png}}
-	\subfloat[4 GPU, 28 CPU.]{\label{plot.fulk_cholesky_multiple}\includegraphics[scale=0.7]{fulk_Multiple_GPU_reductions.png}}
-	\caption{Schedule makespan reduction of HEFT with alternative ranking phases for Cholesky DAGs.}	
-	\label{plot.fulk_cholesky} 
-\end{figure}   
+The results of our small-scale testing indicate that the Fulkerson ranking F in particular does not seem to be an improvement on the standard prioritization phase. Given that it is likely to be much more expensive---considerably so in our implementation---this is a big problem: only large makespan reductions can really justify the extra cost. Indeed, although the weighted Fulkerson ranking WF did much better, both compared to F and the standard U, it was not a significant improvement over the much cheaper W ranking. Ultimately we conclude that there is little advantage in obtaining tighter bounds on the critical path lengths of the stochastic graph $G_s$ (see Section \ref{subsect.sharper_bounds}) but simply weighting the averages appears to be beneficial. Therefore, in the following section, we extend the comparison to the full test DAG set but no longer consider the F and WF rankings.
 
-While it may be worthwhile to investigate in future if the performance of the F and WF rankings improves for larger DAGs, given that the results so far suggest they offer no advantage compared to much cheaper alternatives, we decided to omit those two rankings when we repeated our comparison for sets of larger DAGs ($n = 1000$) from the STG. The metric we choose to use now is the average percentage degradation (APD), as defined in the previous chapter. Figure \ref{plot.rankings_apd_1000} shows the APDs for the standard HEFT ranking and the alternative LB and W rankings. We see roughly the same pattern as for the smaller DAGs: the W ranking consistently outperforms the other two, although the margins are even smaller this time than before. 
+Despite this, it should be noted that there may be circumstances in which these rankings based on the Fulkerson numbers are competitive with the standard ranking in terms of both cost and performance. In particular, for accelerated environments, such as those considered in the previous chapter, the set of possible values each weight may take is much smaller, which significantly improves efficiency. A more detailed investigation of the performance of F and WF for these environments may therefore be useful in the future.    
 
+      
+\subsubsection{The full set}
+\label{subsubsect.full_set}
+
+We repeated the comparison described in the previous section for the U, LB and W rankings on the full set of $43200$ DAGs. In addition to F and WF, we also omitted the R ranking, as it is only useful for gauging the effect of failures and we have already established that all of the rankings fail at about the same rate. Figure \ref{plot.apd_by_q} shows the APD for the three rankings, broken down by the number of processors $q$. We see that the W ranking dominates the others, being the best for all four values of $q$, whereas the LB ranking is worse than U for all but the largest processor number. Furthermore, the W ranking achieved the best schedule $47\%$ of the time and was outright superior to U for $60\%$ of DAGs, while the corresponding figures for LB were $32\%$ and $51\%$, respectively.  
+  
 \begin{figure}
 	\centering	
-	\includegraphics[scale=0.8]{1000tasks_apd.png}
-	\caption{Average percentage degradation for select task prioritization phases in HEFT, size 1000 DAGS from the STG.}	
-	\label{plot.rankings_apd_1000}
-\end{figure}
+	\includegraphics[scale=1.0]{apd_by_q.png}
+	\caption{Average percentage degradation for U, LB and W rankings across the entire test DAG set, displayed by number of processors $q$.}	
+	\label{plot.apd_by_q}
+      \end{figure}
+
+      Taking the results of this section and the previous one as a whole, it appears that the W ranking is likely to lead to a smaller schedule than the standard ranking U, although there is a lot of variation depending on the parameter values, whereas the LB ranking was typically competitive with U but no more likely to achieve a superior schedule.  
 
 \subsection{Processor selection}
 \label{subsect.results_selection}
 
-Given the superior performance of the W ranking in the previous section, here we consider the following three variants of the PEFT framework, defined by how they compute the conditional critical paths since all use the task prioritization given by \eqref{eq.alt_prios}.
+Given the superior performance of the W ranking in the previous section, the three PEFT variants we consider here all use the task prioritization given by \eqref{eq.alt_prios} and are therefore defined by how they compute the conditional critical paths:
 \begin{itemize}
-	\item LB, using \eqref{eq.cia_min}.
-	\item M, using \eqref{eq.cia_mean}.
-	\item WM, using \eqref{eq.cia_weighted}.
-\end{itemize}
-Figure \ref{plot.selection_apd_100} shows the average percentage degradation of these three PEFT variants, as well as the default and HEFT, for the set of DAGs based on topologies from the STG with 100 tasks (plus single entry and exit tasks). As before, we combine all four of the subsets ($h = 1.0$ or $2.0$, $m = \text{R}$ or UR) so that each CCR and processor number combination represents a larger subset comprising $720$ DAGs. The most immediate takeaway from the figure is that, with the exception of the subsets with the smallest CCR, standard PEFT actually does relatively poorly compared to both HEFT and the new variants. On the surface, this might seem to contradict results published elsewhere, but it should be noted that those experiments were typically for much larger and more diverse graph sets, so some local variation is to be expected. Note that when communication predominates (i.e., $\beta = 0.1$), PEFT and LB are superior to the others for both 4 and 8 processors. This is again related to the problem of listing heuristics failing altogether for DAGs with high communication: PEFT and LB recorded only around half as many failures as the others for these sets.  
+	\item PEFT-LB, using \eqref{eq.cia_min}.
+	\item PEFT-M, using \eqref{eq.cia_mean}.
+	\item PEFT-WM, using \eqref{eq.cia_weighted}.
+        \end{itemize}
+        There are really two questions we want to answer here: are any of these alternatives superior to PEFT, and is using the conditional critical path lengths in the processor selection phase actually useful at all?
 
-\begin{figure}
-	\centering	
-	\includegraphics[scale=0.8]{100tasks_apd.png}
-	\caption{Average percentage degradation for PEFT variants and HEFT, size 100 DAGS from the STG.}	
-	\label{plot.selection_apd_100}
-\end{figure}
+        With regards to the former, Figure X illustrates the percentage of instances across the DAG test set for which each of the three variants achieved a superior schedule to the standard PEFT algorithm, broken down by processor number $q$. Overall PEFT-LB is most likely to improve on the default, obtaining a better schedule $55\%$ of the time across the entire set, with PEFT-WM second at $53\%$. One of the questions prompted by the benchmarking experiments in Section \ref{subsect.benchmarking} was whether any of these variants could reduce the number of failures, but in fact all of them had a higher failure rate. PEFT-LB's was only slightly higher but the M and WM variants both recorded almost double the number of failures---this equates to about $5\%$ of the entire DAG set, concentrated in the same parameter regimes identified earlier. Furthermore, when they failed, they could do so almost arbitrarily badly, which is why we chose to display the percentage of better instances in the figure rather than the APD: sometimes the makespan could be literally thousands of times worse, leading to a distorted APD value...   
+        
+% Figure \ref{plot.selection_apd_100} shows the average percentage degradation of these three PEFT variants, as well as the default and HEFT, for the set of DAGs based on topologies from the STG with 100 tasks (plus single entry and exit tasks). As before, we combine all four of the subsets ($h = 1.0$ or $2.0$, $m = \text{R}$ or UR) so that each CCR and processor number combination represents a larger subset comprising $720$ DAGs. The most immediate takeaway from the figure is that, with the exception of the subsets with the smallest CCR, standard PEFT actually does relatively poorly compared to both HEFT and the new variants. On the surface, this might seem to contradict results published elsewhere, but it should be noted that those experiments were typically for much larger and more diverse graph sets, so some local variation is to be expected. Note that when communication predominates (i.e., $\beta = 0.1$), PEFT and LB are superior to the others for both 4 and 8 processors. This is again related to the problem of listing heuristics failing altogether for DAGs with high communication: PEFT and LB recorded only around half as many failures as the others for these sets.  
 
-One obvious question we have not so far addressed is how useful the PEFT-like processor selection phase actually is compared to the simple HEFT-like earliest finish time alternative. In fact, this was far from clear in our experiments: with a few exceptions, there was usually no statistically significant difference on average between the two. The exceptions were all for the smallest CCR sets, for which the processor selection clearly improved ($\approx 5\%$ average makespan reduction) on the ranking-only version for the LB variant and was even more significantly worse for the M and WM variants ($> 5\%$ average makespan increase).  
+% One obvious question we have not so far addressed is how useful the PEFT-like processor selection phase actually is compared to the simple HEFT-like earliest finish time alternative. In fact, this was far from clear in our experiments: with a few exceptions, there was usually no statistically significant difference on average between the two. The exceptions were all for the smallest CCR sets, for which the processor selection clearly improved ($\approx 5\%$ average makespan reduction) on the ranking-only version for the LB variant and was even more significantly worse for the M and WM variants ($> 5\%$ average makespan increase).  
 
-\section{Conclusions}
-\label{sect.conclusions}
+\subsection{Conclusions}
+\label{subsect.conclusions}
 
-To summarize, our main conclusions from all of the experiments described in this chapter are as follows.
+To summarize, our main conclusions from the experimental comparison of the alternative HEFT task prioritization phases are as follows.
 \begin{itemize}
-	\item Largely supporting previous investigations along these lines \cite{zhao03}, our biggest takeaway is perhaps that how the critical path lengths are estimated seems to make relatively little difference to the schedule makespan overall, with improvements (if any) relative to the default approach typically being fairly minor on average.
-	\item Having said that, the W ranking was consistently more likely to result in a smaller makespan across the majority of the sets considered. The usual caveats about the limitations of our experimental framework hold of course but overall we would softly recommend it be used instead of the default, particularly since it is conceptually simple (just a weighted mean) and not significantly more expensive.
+	\item Largely supporting previous investigations along these lines \cite{zhao03}, perhaps our biggest takeaway is that no method appears to be dominant and it is impossible to say, for a given DAG and target platform, which should be used. 
+	\item Having said that, the W ranking was consistently more likely to result in a smaller makespan across the set of test DAGs as a whole and many of the subsets. The usual caveats about the limitations of our experimental framework hold of course but overall we would softly recommend it be used instead of the default, particularly since it is conceptually simple (just a weighted mean) and not significantly more expensive.
 	\item There is no clear benefit in obtaining tighter bounds on the associated stochastic graph (i.e., Fulkerson's bound). Given the higher time complexity in the general case, this does not therefore seem to be a worthwhile alternative.    
 	\item Similarly, there appears to be little advantage in using the LB ranking, although it also wasn't clearly inferior to the standard ranking in terms of performance or cost.  
         \end{itemize}

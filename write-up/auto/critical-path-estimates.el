@@ -107,15 +107,13 @@
     "plot.bench_slr_speedup"
     "tb.bench_failures"
     "subsect.evaluation"
-    "subsubsect.f_and_wf"
-    "plot.rankings_diff_100"
-    "plot.fulk_cholesky_single"
-    "plot.fulk_cholesky_multiple"
-    "plot.fulk_cholesky"
-    "plot.rankings_apd_1000"
+    "subsubsect.small_scale"
+    "plot.apd_by_ccr"
+    "tb.small_rankings_bests"
+    "subsubsect.full_set"
+    "plot.apd_by_q"
     "subsect.results_selection"
-    "plot.selection_apd_100"
-    "sect.conclusions")
+    "subsect.conclusions")
    (LaTeX-add-environments
     "proof"
     "lemma"
