@@ -2,16 +2,13 @@
 # -*- coding: utf-8 -*-
 """
 Convert STG files to DAG objects and save.
-
-We use the topologies of the graphs from the STG as this is a diverse collection created
-using a suite of standard random graph generation methods.
 """
 
 import os, pathlib, dill, re
 import networkx as nx
 from timeit import default_timer as timer
 import sys
-sys.path.append('../../') # Quick fix to let us import modules from main directory.   
+sys.path.append('../../')   
 from Simulator import Task, DAG
 
 ####################################################################################################

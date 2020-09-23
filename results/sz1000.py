@@ -1,104 +1,105 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Big script for all results.
+Script to run comparison of modified HEFT and PEFT heuristics for size 1000 DAGs from the STG.
 """
 
-import dill, pathlib, os
-import numpy as np
-import networkx as nx
-import itertools as it
+import dill, os
 from timeit import default_timer as timer
 import sys
 sys.path.append('../') 
 from Simulator import Platform, HEFT, PEFT, HSM
 
-sz = 1000
-dag_path = '../graphs/STG/{}'.format(sz)
-results_path = 'results/'
-pathlib.Path(results_path).mkdir(parents=True, exist_ok=True)
+# Location to DAGs - may need to be changed depending on where script is located.
+n = 1000
+dag_path = '../graphs/STG/{}'.format(n)
 
+# Parameters.
 n_workers = [2, 4, 8, 16]
 ccrs = [0.1, 1, 10]
 het_factors = [1.0, 2.0]
 rks = ["LB", "W", "F", "WF"]
 pss = ["LB", "M", "WM"]
 
-# Initialize info dict.
+# Initialize info dict - bit ugly to do it this way but prevents KeyErrors. 
 info = {}
 for name in os.listdir('{}'.format(dag_path)):
     ns = name[:8]
     info[ns] = {}
-    for nw in n_workers:
-        info[ns][nw] = {}
-        for ccr in ccrs:
-            info[ns][nw][ccr] = {}
+    for q in n_workers:
+        info[ns][q] = {}
+        for b in ccrs:
+            info[ns][q][b] = {}
             for h in het_factors:
-                info[ns][nw][ccr][h] = {}
-                info[ns][nw][ccr][h]["MST"] = []
-                info[ns][nw][ccr][h]["CP"] = []
-                info[ns][nw][ccr][h]["HEFT"] = []
-                info[ns][nw][ccr][h]["HEFT-R"] = []
+                info[ns][q][b][h] = {}
+                info[ns][q][b][h]["MST"] = []
+                info[ns][q][b][h]["CP"] = []
+                info[ns][q][b][h]["HEFT"] = []
+                info[ns][q][b][h]["HEFT-R"] = []
                 for rk in rks:
-                    info[ns][nw][ccr][h]["HEFT-" + rk] = []
-                info[ns][nw][ccr][h]["PEFT"] = []
+                    info[ns][q][b][h]["HEFT-" + rk] = []
+                info[ns][q][b][h]["PEFT"] = []
                 for ps in pss:
-                    info[ns][nw][ccr][h]["PEFT-" + ps] = []
-                    info[ns][nw][ccr][h]["PEFT-" + ps + "-NPS"] = []
-# Compute.         
-with open("{}/sz1000_timing.txt".format(results_path), "w") as dest:
-    start = timer()
+                    info[ns][q][b][h]["PEFT-" + ps] = []
+                    info[ns][q][b][h]["PEFT-" + ps + "-NPS"] = []
+                    
+# Run the actual comparison.         
+with open("sz1000_timing.txt", "w") as dest:
+    start = timer()     # Time the entire comparison.
+    # Iterate over DAG directory.
     for name in os.listdir('{}'.format(dag_path)):
         ns = name[:8]
         # Load DAG topology.
         with open('{}/{}'.format(dag_path, name), 'rb') as file:
             dag = dill.load(file)
-        for nw in n_workers:
-            platform = Platform(nw, name="{}P".format(nw))
-            for ccr in ccrs:
+        for q in n_workers:
+            # Create platform.
+            platform = Platform(q, name="{}P".format(q))
+            for b in ccrs:
                 for h in het_factors:
                     for _ in range(5):
                         # Set DAG costs.
-                        dag.set_costs(platform, target_ccr=ccr, method="R", het_factor=h)
+                        dag.set_costs(platform, target_ccr=b, method="R", het_factor=h)
                         # Minimal serial time.
                         mst = dag.minimal_serial_time()
-                        info[ns][nw][ccr][h]["MST"].append(mst)
-                        # Critical path.
+                        info[ns][q][b][h]["MST"].append(mst)
+                        # Optimal critical path/lower bound.
                         OCP = dag.conditional_critical_paths(direction="downward", cp_type="LB")
                         cp = max(min(OCP[task.ID][p] for p in OCP[task.ID]) for task in dag.graph if task.exit)
-                        info[ns][nw][ccr][h]["CP"].append(cp)
+                        info[ns][q][b][h]["CP"].append(cp)
                         # HEFT.
                         mkspan = HEFT(dag, platform)
-                        info[ns][nw][ccr][h]["HEFT"].append(mkspan)
+                        info[ns][q][b][h]["HEFT"].append(mkspan)
                         # HEFT-R.
                         mkspan = HEFT(dag, platform, priority_list=dag.top_sort)
-                        info[ns][nw][ccr][h]["HEFT-R"].append(mkspan)
+                        info[ns][q][b][h]["HEFT-R"].append(mkspan)
                         for rk in rks:
                             if rk == "F" or rk == "WF":
-                                continue
+                                continue        # Results for n = 100 suggest F and WF not worthwhile.
                             avg_type = "WM" if rk == "W" else "HEFT" 
                             try:
                                 mkspan = HEFT(dag, platform, cp_type=rk, avg_type=avg_type)  
-                                info[ns][nw][ccr][h]["HEFT-" + rk].append(mkspan)
-                            except KeyError:
-                                info[ns][nw][ccr][h]["HEFT-" + rk].append(0.0)
+                                info[ns][q][b][h]["HEFT-" + rk].append(mkspan)
+                            except KeyError:    # Catch rare error that sometimes occurs for WF (think due to rounding error).
+                                info[ns][q][b][h]["HEFT-" + rk].append(0.0)
                                 pass 
                         # PEFT.
                         mkspan = PEFT(dag, platform)
-                        info[ns][nw][ccr][h]["PEFT"].append(mkspan)
+                        info[ns][q][b][h]["PEFT"].append(mkspan)
                         # Alternative processor selections.
                         for ps in pss: 
                             CCP = dag.conditional_critical_paths(cp_type=ps, lookahead=True)
                             priority_list = dag.conditional_critical_path_priorities(platform, CCP=CCP, cp_type=ps)
                             mkspan = HSM(dag, platform, cp_type=ps, CCP=CCP, priority_list=priority_list) 
-                            info[ns][nw][ccr][h]["PEFT-" + ps].append(mkspan)
+                            info[ns][q][b][h]["PEFT-" + ps].append(mkspan)
+                            # Without the PEFT-like processor selection phase.
                             mks = HEFT(dag, platform, priority_list=priority_list)
-                            info[ns][nw][ccr][h]["PEFT-" + ps + "-NPS"].append(mks)   
+                            info[ns][q][b][h]["PEFT-" + ps + "-NPS"].append(mks)   
     elapsed = timer() - start
     print("\nTOTAL TIME: {} minutes".format(elapsed / 60), file=dest) 
                 
-# Save the info.
-with open('{}/sz1000_info.dill'.format(results_path), 'wb') as handle:
+# Save the info dict.
+with open('sz1000_info.dill', 'wb') as handle:
     dill.dump(info, handle)                
                     
                 

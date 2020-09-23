@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Simulator module used to generate results. 
+Main module for implementation of simulator for the task scheduling problem.
 """
 
 import numpy as np
@@ -15,7 +15,7 @@ from collections import defaultdict
 
 class Task:
     """
-    Represent static tasks.
+    Represents (static) tasks.
     """         
     def __init__(self, task_type=None):
         """
@@ -41,19 +41,13 @@ class Task:
         True if Task has no successors, False otherwise.
         
         The following 2 attributes are usually set after initialization by functions which
-        take a Node object as a target platform.      
+        take a Platform object as a target platform.      
         
         comp_costs - dict
-        Nested dict {string identifying source and target processor types : {child ID : cost}}
-        e.g., self.comm_costs["CG"][5] = 10 means that the communication cost between the Task
-        and the child task with ID 5 is 10 when Task is scheduled on a CPU Worker and the child 
-        is scheduled on a GPU Worker.         
+        Dict {Processor ID : cost}        
         
         comm_costs - dict
-        Nested dict {string identifying source and target processor types : {child ID : cost}}
-        e.g., self.comm_costs["CG"][5] = 10 means that the communication cost between the Task
-        and the child task with ID 5 is 10 when Task is scheduled on a CPU Worker and the child 
-        is scheduled on a GPU Worker.
+        Nested dict {(source processor ID, target processor ID) : {child ID : cost}}
         
         The following 3 attributes are set once the task has actually been scheduled.
                 
@@ -79,7 +73,7 @@ class Task:
         self.exit = False    
         
         self.comp_costs = {} 
-        self.comm_costs = {}   # Nested dict.    
+        self.comm_costs = {}     
         
         self.FT = None  
         self.scheduled = False  
@@ -108,7 +102,7 @@ class Task:
             - "simple worst", always use largest possible computation cost.
             - "best", always use smallest possible computation cost.
             - "simple best", always use smallest possible computation cost.
-            - "HEFT-WM", compute mean over all processors, weighted by acceleration ratio.
+            - "HEFT-WM", compute mean over all processors, weighted by processing time.
                                          
         Returns
         ------------------------
@@ -152,12 +146,12 @@ class Task:
             - "simple worst", always use largest possible computation cost.
             - "best", always use smallest possible computation cost.
             - "simple best", always use smallest possible computation cost.
-            - "HEFT-WM", compute mean over all processors, weighted by acceleration ratio.
+            - "HEFT-WM", compute mean over all processors, weighted by processing time.
                                          
         Returns
         ------------------------
         float 
-        The average computation cost of the Task. 
+        The average communication cost between the Task and the child. 
         
         Notes
         ------------------------
@@ -194,7 +188,10 @@ class Task:
         
     def aoa_edge_cdf(self, child, weighted=False):
         """
-        Used in Fulkerson.
+        Helper function for computing Fulkerson numbers in the DAG critical_paths method.
+        Basically returns the CDF of the edge from Task to child in an activity-on-arc (AoA)
+        version of the graph.
+        If weighted, weights the pmfs according to computation costs.
         """   
 
         if weighted:
@@ -235,7 +232,10 @@ class DAG:
         The DAG is a collection of Tasks with a topology defined by a Networkx DiGraph object.        
         
         Parameters
-        ------------------------
+        ------------------------        
+        G - DiGraph
+        A Networkx DiGraph with Task nodes giving the topology of the DAG.
+        
         name - string
         The name of the application the DAG represents, e.g., "Cholesky".
         
@@ -244,17 +244,23 @@ class DAG:
         name - string
         Ditto above.
         
-        DAG - DiGraph from Networkx module
+        graph - DiGraph from Networkx module
         Represents the topology of the DAG.
         
         n_tasks - int
         The number of tasks in the DAG.
-        
-        The following attributes summarize topological information and are usually set
-        by compute_topological_info when necessary.
                
-        n_edges - None/int
-        The number of edges in the DAG.              
+        n_edges - int
+        The number of edges in the DAG.    
+
+        top_sort - list of Tasks
+        List of the tasks in a topologically-sorted order. Often useful.
+
+        costs_set - bool
+        True if costs have been set, False otherwise.
+
+        target_platform - string
+        Name of the target platform that costs represent.                  
         """  
         
         self.name = name 
@@ -262,6 +268,7 @@ class DAG:
         self.n_tasks = len(G)  
         self.n_edges = G.number_of_edges()   
         self.top_sort = list(nx.topological_sort(self.graph)) 
+        # Give all tasks an ID in topological order.
         for i, t in enumerate(self.top_sort):
             t.ID = i
             if not list(self.graph.predecessors(t)):
@@ -282,13 +289,13 @@ class DAG:
     
     def ready_to_schedule(self, task):
         """
-        Determine if Task is ready to schedule - i.e., all precedence constraints have been 
+        Determine if task is ready to schedule - i.e., all precedence constraints have been 
         satisfied or it is an entry task.
         
         Parameters
         ------------------------
-        dag - DAG object
-        The DAG to which the Task belongs.                
+        task - Task object
+        Task in the DAG.               
                                          
         Returns
         ------------------------
@@ -345,7 +352,7 @@ class DAG:
             - het_factor in the interval (0, 2).
         """   
         
-        if method == "HEFT" or method == "unrelated" or method == "UR":        
+        if method == "unrelated" or method == "UR":        
             # Set computation costs.
             avg_task_cost = np.random.uniform(1, 100)
             for task in self.top_sort:
@@ -397,20 +404,15 @@ class DAG:
                         for v in platform.workers:
                             c = 0 if u == v else np.random.randint(1, 10)
                             task.comm_costs[child.ID][(u.ID, v.ID)] = c
-                            
+        # Set DAG attributes.                  
         self.costs_set = True
         self.target_platform = platform.name
                   
                 
     def minimal_serial_time(self):
         """
-        Computes the minimum makespan of the DAG on a single Worker of the platform.
+        Computes the minimum makespan of the DAG on a single Worker.
         
-        Parameters
-        ------------------------
-        platform - Platform object.
-        The target platform.        
-
         Returns
         ------------------------                          
         float
@@ -418,19 +420,18 @@ class DAG:
         
         Notes
         ------------------------                          
-        1. Assumes all task computation costs are set.        
+        1. Assumes all task computation costs are set so no need to take Platform object as input.        
         """ 
         
-        workers = list(k for k in self.top_sort[0].comp_costs)    # Assumes all workers can execute all tasks etc...    
+        workers = list(k for k in self.top_sort[0].comp_costs)    # Assumes all workers can execute all tasks...    
         worker_serial_times = list(sum(t.comp_costs[w] for t in self.graph) for w in workers)        
         return min(worker_serial_times)
     
     def CCR(self, avg_type="HEFT"):
         """
-        Compute and set the computation-to-communication ratio (CCR) for the DAG on the 
-        target platform.          
-        """
-        
+        Compute and set the computation-to-communication ratio (CCR) for the DAG.
+        Assumes all costs set.    
+        """        
         exp_comm, exp_comp = 0.0, 0.0
         for task in self.top_sort:
             exp_comp += task.average_cost(avg_type=avg_type)
@@ -475,15 +476,23 @@ class DAG:
         direction - string in ["upward", "downward"]
         Whether to compute critical path length from root to task (downward) or from task to leaves (upward).
         
+        cp_type - string 
+        What method to use for estimating the critical path lengths, e.g., "HEFT", which is to use upward ranks.
+        
         avg_type - string
+        Only used if cp_type == "HEFT".
         How the tasks and edges should be weighted in platform.average_comm_cost and task.average_execution_cost.
         Default is "HEFT" which is mean values over all processors. See referenced methods for more options.
+        
+        mc_samples - string
+        Only used if cp_type == "MC".
+        How many Monte Carlo realizations/samples to use.
              
 
         Returns
         ------------------------                          
         cp_lengths - dict
-        Scheduling list of all Task objects prioritized by upward rank.               
+        Scheduling list of all Task objects.               
         """    
         
         cp_lengths = {}
@@ -638,8 +647,19 @@ class DAG:
     
     def conditional_critical_paths(self, direction="upward", cp_type="optimistic", lookahead=False):
         """
-        Computes critical path estimates, either upward or downward, of all tasks according to 
-        of all tasks assuming they are scheduled on either CPU or GPU.                   
+        Computes critical path estimates, either upward or downward, of all tasks assuming they are 
+        scheduled on a given processor.
+        
+        Parameters
+        ------------------------
+        direction - string
+        What direction we work in.
+        
+        cp_type - string
+        What method to use for estimating the critical path lengths, e.g., "HEFT", which is to use upward ranks.
+        
+        lookahead - bool
+        If True, don't include current task (as when using conditional critical paths for processor selection).
 
         Returns
         ------------------------                          
@@ -648,7 +668,7 @@ class DAG:
         
         Notes
         ------------------------ 
-        1. No target platform is necessary.
+        1. No target platform is necessary since costs assumed to be set.
         """  
         
         workers = list(k for k in self.top_sort[0].comp_costs) 
@@ -697,22 +717,32 @@ class DAG:
     
     def critical_path_priorities(self, direction="upward", cp_type="HEFT", avg_type="HEFT", mc_samples=1000, return_ranks=False):
         """
-        Sorts all tasks in the DAG by decreasing/non-increasing order of upward rank.
+        Sorts all tasks in the DAG according to the estimated critical path lengths upward/downward.
         
         Parameters
         ------------------------
+        direction - string
+        What direction we work in.
+        
+        cp_type - string
+        What method to use for estimating the critical path lengths, e.g., "HEFT", which is to use upward ranks.
         
         avg_type - string
+        Only used if cp_type == "HEFT".
         How the tasks and edges should be weighted in platform.average_comm_cost and task.average_execution_cost.
         Default is "HEFT" which is mean values over all processors. See referenced methods for more options.
         
-        return_rank_values - bool
-        If True, method also returns the upward rank values for all tasks.
+        mc_samples - string
+        Only used if cp_type == "MC".
+        How many Monte Carlo realizations/samples to use.
+        
+        return_ranks - bool
+        If True, method also returns the rank values for all tasks.
         
         Returns
         ------------------------                          
         priority_list - list
-        Scheduling list of all Task objects prioritized by upward rank.
+        Scheduling list of all Task objects.
         
         If return_ranks == True:
         task_ranks - dict
@@ -754,14 +784,9 @@ class DAG:
             return priority_list, task_ranks
         return priority_list 
                      
-    def draw_graph(self, filepath=None):
+    def draw_graph(self):
         """
-        Draws the DAG and saves the image.
-        
-        Parameters
-        ------------------------        
-        filepath - string
-        Destination for image. 
+        Draws the DAG.        
 
         Notes
         ------------------------                           
@@ -803,9 +828,8 @@ class DAG:
         
         Parameters
         ------------------------
-        platforms - None/Node object (see Environment.py module)/list
-        Compute more specific information about the DAG when executed on the platform (if Node)
-        or multiple platforms (if list of Nodes).
+        return_mst_and_cp - bool
+        If True, return the MST and CP/LB (sometimes prevents computing them again.)
         
         detailed - bool
         If True, print information about individual Tasks.
@@ -856,17 +880,14 @@ class DAG:
           
 class Worker:
     """
-    Represents any CPU or GPU processing resource. 
+    Represents a processor. 
     """
     def __init__(self, ID=None):
         """
         Create the Worker object.
         
         Parameters
-        --------------------
-        GPU - bool
-        True if Worker is a GPU. Assumed to be a CPU unless specified otherwise.
-        
+        --------------------        
         ID - Int
         Assigns an integer ID to the task. Often very useful.        
         """        
@@ -881,13 +902,13 @@ class Worker:
         
         Parameters
         ------------------------
-        task - Task object (see Graph.py module)
+        task - Task object 
         Represents a (static) task.
         
-        dag - DAG object (see Graph.py module)
+        dag - DAG object 
         The DAG to which the task belongs.
               
-        platform - Node object
+        platform - Platform object
         The Node object to which the Worker belongs.
         Needed for calculating communication costs.
         
@@ -947,27 +968,13 @@ class Worker:
         dag - DAG object (see Graph.py module)
         The DAG to which the task belongs.
               
-        platform - Node object
-        The Node object to which the Worker belongs. 
-        Needed for calculating communication costs, although this is a bit unconventional.
+        platform - Platform object
+        The Platform object to which the Worker belongs. 
+        Needed for calculating communication costs.
         
         insertion - bool
         If True, use insertion-based scheduling policy - i.e., task can be scheduled 
-        between two already scheduled tasks, if permitted by dependencies.
-        
-        start_time - float
-        If not None, schedules task at this start time. Validity is checked with 
-        valid_start_time which raises ValueError if it fails. Should be used very carefully!
-        
-        finish_time - float
-        If not None, taken to be task's actual finish time. 
-        Should be used with great care (see note below!)
-        
-        Notes
-        ------------------------
-        1. If finish_time, doesn't check that all task predecessors have actually been scheduled.
-           This is so we can do lookahead in e.g., platform.estimate_finish_times and to save repeated
-           calculations in some circumstances but should be used very, very carefully!                 
+        between two already scheduled tasks, if permitted by dependencies.                        
         """         
                         
         # Set task attributes.
@@ -1030,7 +1037,7 @@ class Platform:
     """
     def __init__(self, n_workers, name=None):
         """
-        Initialize the Node by giving the number of CPUs and GPUs.
+        Initialize the Node by giving the number of processors/workers.
         
         Parameters
         ------------------------
@@ -1133,10 +1140,10 @@ def HEFT(dag, platform, priority_list=None, cp_type="HEFT", avg_type="HEFT",
     
     Parameters
     ------------------------    
-    dag - DAG object (see Graph.py module)
+    dag - DAG object 
     Represents the task DAG to be scheduled.
           
-    platform - Node object (see Environment.py module)
+    platform - Platform object 
     Represents the target platform.  
     
     priority_list - None/list
@@ -1145,7 +1152,7 @@ def HEFT(dag, platform, priority_list=None, cp_type="HEFT", avg_type="HEFT",
     avg_type - string
     How the tasks and edges should be weighted in dag.sort_by_upward_rank.
     Default is "HEFT" which is mean values over all processors as in the original paper. 
-    See platform.average_comm_cost and platform.average_execution_cost for other options.
+    See task.average_comm_cost and task.average_cost for other options.
     
     return_schedule - bool
     If True, return the schedule computed by the heuristic.
@@ -1195,6 +1202,7 @@ def HEFT(dag, platform, priority_list=None, cp_type="HEFT", avg_type="HEFT",
     mkspan = dag.makespan() 
     
     # Save schedule illustration if specified.
+    # TODO: some of this stuff needs to be tweaked depending on the DAG/platform, tidy up.
     if schedule_img_dest is not None:
         loads = {}
         for w in platform.workers:
@@ -1256,10 +1264,10 @@ def PEFT(dag, platform, return_schedule=False, schedule_dest=None):
     
     Parameters
     ------------------------    
-    dag - DAG object (see Graph.py module)
+    dag - DAG object.
     Represents the task DAG to be scheduled.
           
-    platform - Node object (see Environment.py module)
+    platform - Platform object.
     Represents the target platform. 
     
     priority_list - None/list
@@ -1327,8 +1335,8 @@ def PEFT(dag, platform, return_schedule=False, schedule_dest=None):
 
 def HSM(dag, platform, cp_type="WM", rank_avg="WM", CCP=None, priority_list=None, return_schedule=False, schedule_dest=None):
     """
-    Work in progress.
-    Could be incorporated into PEFT but easier to use separate function.    
+    Used for modified PEFT heuristics proposed in the write up. 
+    Could be incorporated into PEFT but decided to use separate function for various reasons.    
     """ 
     
     if return_schedule:
@@ -1443,64 +1451,3 @@ def CPOP(dag, platform, return_schedule=False, schedule_dest=None):
     if return_schedule:
         return mkspan, pi    
     return mkspan 
-
-# def EEFT(dag, platform, weighted=False, return_schedule=False, schedule_dest=None):
-#     """
-#     Modification of PEFT that uses HEFT-like critical path estimates in the lookahead.
-#     """ 
-    
-#     if return_schedule or schedule_dest is not None:
-#         pi = {}
-    
-#     U = dag.expected_cost_table(platform, weighted=weighted)    
-#     if weighted:
-#         task_ranks = {t : (platform.n_CPUs * U[t.ID]["C"] + t.acceleration_ratio * platform.n_GPUs * U[t.ID]["G"]) / (platform.n_CPUs + t.acceleration_ratio * platform.n_GPUs) for t in dag.top_sort}
-#     else:
-#         task_ranks = {t : (platform.n_CPUs * U[t.ID]["C"] + platform.n_GPUs * U[t.ID]["G"]) / (platform.n_CPUs + platform.n_GPUs) for t in dag.top_sort}
-        
-#     ready_tasks = list(t for t in dag.top_sort if t.entry)    
-#     while len(ready_tasks):   
-#         # Find ready task with highest priority (ties broken randomly according to max function).
-#         t = max(ready_tasks, key=task_ranks.get) 
-#         # print(t.ID, task_ranks[t])
-#         # Find fastest CPU and GPU workers for t.
-#         worker_finish_times = list(w.earliest_finish_time(t, dag, platform) for w in platform.workers)
-#         min_cpu_val = min(worker_finish_times[:platform.n_CPUs], key=lambda w:w[0]) 
-#         min_cpu = worker_finish_times.index(min_cpu_val)
-#         min_gpu_val = min(worker_finish_times[platform.n_CPUs:], key=lambda w:w[0]) 
-#         min_gpu = worker_finish_times[platform.n_CPUs:].index(min_gpu_val) + platform.n_CPUs 
-#         # Add optimistic critical path length to finish times and compare.
-#         if min_cpu_val[0] + U[t.ID]["C"] < min_gpu_val[0] + U[t.ID]["G"]:
-#             min_worker = min_cpu
-#             ft, idx = min_cpu_val
-#         else:
-#             min_worker = min_gpu
-#             ft, idx = min_gpu_val
-#         # Schedule the task.
-#         platform.workers[min_worker].schedule_task(t, finish_time=ft, load_idx=idx)          
-#         if return_schedule or schedule_dest is not None:
-#             pi[t] = min_worker 
-#         # Update ready tasks.                          
-#         ready_tasks.remove(t)
-#         for c in dag.graph.successors(t):
-#             if dag.ready_to_schedule(c):
-#                 ready_tasks.append(c) 
-        
-#     # If schedule_dest, print the schedule to file.
-#     if schedule_dest is not None: 
-#         print("The tasks were scheduled in the following order:", file=schedule_dest)
-#         for t in pi:
-#             print(t.ID, file=schedule_dest)
-#         print("\n", file=schedule_dest)
-#         platform.print_info(print_schedule=True, filepath=schedule_dest)
-
-#     # Compute makespan.
-#     mkspan = dag.makespan()        
-    
-#     # Reset DAG and platform.
-#     dag.reset()
-#     platform.reset()  
-      
-#     if return_schedule:
-#         return mkspan, pi    
-#     return mkspan 

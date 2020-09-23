@@ -670,8 +670,7 @@ where the maximization is taken to be zero if $S_i$ is empty (i.e., for exit tas
 \section{Experimental results}
 \label{sect.results}
 
-In this section we use our software simulator to evaluate the alternative task prioritization phases in HEFT described in Sections \ref{sect.optimistic} and \ref{sect.alt_rankings}, as well as the PEFT variants outlined in Section \ref{sect.processor_selection}. All of the data from the experiments described here, and the code used to generate it, can be found in the Github repository associated with this chapter in the {\tt scripts}\footnote{\href{https://github.com/mcsweeney90/critical-path-estimation}{{\tt \small critical-path-estimation/scripts}}} folder. All experiments here were run on a machine...
-% maybe elaborate further (depending on what I eventually decide to include).
+In this section we use our software simulator to evaluate the alternative task prioritization phases in HEFT described in Sections \ref{sect.optimistic} and \ref{sect.alt_rankings}, as well as the modification to PEFT outlined in Section \ref{sect.processor_selection}. All of the data from the experiments described here can be found in the Github repository associated with this chapter in the {\tt results}\footnote{\href{https://github.com/mcsweeney90/critical-path-estimation/results}{{\tt \small critical-path-estimation/results}}} directory. Furthermore, the directory also contains the scripts used to generate the data, which were executed on a machine with an Intel i9-9820X @3.30 GHz processor, running Ubuntu 18.04 and {\tt Python 3.6.9}. 
 
 \subsection{Test graphs}
 \label{subsect.graphs}
@@ -732,7 +731,6 @@ While we largely avoid discussion of comparative runtimes here because our code 
 
 Given what we have observed in these benchmarking experiments, we decided to investigate the proposed alternative HEFT task ranking phases and PEFT variants separately, which we do in the following two sections, respectively. We then make direct comparisons and draw overall conclusions in Section \ref{subsect.conclusions}.
 % TODO: should this be a conclusions subsection?
-
 
 % It is not obvious why this should be so but we suspect it is related to the similar phenomenon remarked upon in the previous chapter, where HEFT failed altogether due to difficulty managing communication costs because of its greedy processor selection phase. In fact, both standard HEFT and the random ranking alternative failed altogether in the vast majority of instances for which the former was worse than the latter; the average reduction is much smaller for certain subsets because they are precisely the ones for which HEFT is most likely to struggle in general. Disregarding those instances in which both failed, the percentage of graphs for which the random sort outperformed the standard ranking was roughly $0$--$2\%$ for all subsets (of both sizes). Given this, we conclude that HEFT's task prioritization phase is clearly useful except for those circumstances when the algorithm itself struggles because of its greedy selection phase. 
 % Why does HEFT do badly as #processors increases? Maybe more analysis of when HEFT does badly? Similarly, more analysis of those DAGs for which random sort did better than HEFT.  
@@ -813,22 +811,36 @@ Given the superior performance of the W ranking in the previous section, the thr
         \end{itemize}
         There are really two questions we want to answer here: are any of these alternatives superior to PEFT, and is using the conditional critical path lengths in the processor selection phase actually useful at all?
 
-        With regards to the former, Figure X illustrates the percentage of instances across the DAG test set for which each of the three variants achieved a superior schedule to the standard PEFT algorithm, broken down by processor number $q$. Overall PEFT-LB is most likely to improve on the default, obtaining a better schedule $55\%$ of the time across the entire set, with PEFT-WM second at $53\%$. One of the questions prompted by the benchmarking experiments in Section \ref{subsect.benchmarking} was whether any of these variants could reduce the number of failures, but in fact all of them had a higher failure rate. PEFT-LB's was only slightly higher but the M and WM variants both recorded almost double the number of failures---this equates to about $5\%$ of the entire DAG set, concentrated in the same parameter regimes identified earlier. Furthermore, when they failed, they could do so almost arbitrarily badly, which is why we chose to display the percentage of better instances in the figure rather than the APD: sometimes the makespan could be literally thousands of times worse, leading to a distorted APD value...   
+        With regards to the former, Figure \ref{plot.better_by_q} illustrates the percentage of instances across the DAG test set for which each of the three variants achieved a superior schedule to the standard PEFT algorithm, broken down by processor number $q$. Overall PEFT-LB is most likely to improve on the default, obtaining a better schedule $55\%$ of the time across the entire set, with PEFT-WM second at $53\%$. One of the questions prompted by the benchmarking experiments in Section \ref{subsect.benchmarking} was whether any of these variants could reduce the number of failures, but in fact all of them had a higher failure rate. PEFT-LB's was only slightly higher but the M and WM variants both recorded almost double the number of failures---this equates to about $5\%$ of the entire DAG set, concentrated largely in the same parameter regimes identified earlier (i.e, $\beta = 0.1$ and $h = 2.0$). Furthermore, when they failed, they could do so extremely badly, which is why we chose to display the percentage of better instances in the figure rather than the APD: sometimes the makespan could be literally thousands of times worse, leading to distorted APD values.
+
+        \begin{figure}
+	\centering	
+	\includegraphics[scale=1.0]{better_by_q.png}
+	\caption{Percentage of DAGs for which the three PEFT variants achieved a better schedule than the standard heuristic, by number of processors $q$.}	
+	\label{plot.better_by_q}
+      \end{figure}
+
+      As to whether the processor selection phase was effective, results were mixed. For the M and WM variants, the processor selection phase did not appear to be beneficial compared to just using the task prioritization phase defined by \eqref{eq.alt_prios} with the HEFT processor selection. For both variants, the percentage of DAGs for which the processor selection led to a better schedule was only about $40\%$. Furthermore, while it did not substantially increase the number of failures in either case, the processor selection phase often made the resulting schedule much worse, sometimes by orders of magnitude. Results were much more positive for the LB variant, however: there was a $1.3\%$ reduction in schedule length compared to the ranking-only version and the number of failures was also substantially reduced, suggesting that the processor selection phase was effective.     
+        
         
 % Figure \ref{plot.selection_apd_100} shows the average percentage degradation of these three PEFT variants, as well as the default and HEFT, for the set of DAGs based on topologies from the STG with 100 tasks (plus single entry and exit tasks). As before, we combine all four of the subsets ($h = 1.0$ or $2.0$, $m = \text{R}$ or UR) so that each CCR and processor number combination represents a larger subset comprising $720$ DAGs. The most immediate takeaway from the figure is that, with the exception of the subsets with the smallest CCR, standard PEFT actually does relatively poorly compared to both HEFT and the new variants. On the surface, this might seem to contradict results published elsewhere, but it should be noted that those experiments were typically for much larger and more diverse graph sets, so some local variation is to be expected. Note that when communication predominates (i.e., $\beta = 0.1$), PEFT and LB are superior to the others for both 4 and 8 processors. This is again related to the problem of listing heuristics failing altogether for DAGs with high communication: PEFT and LB recorded only around half as many failures as the others for these sets.  
-
-% One obvious question we have not so far addressed is how useful the PEFT-like processor selection phase actually is compared to the simple HEFT-like earliest finish time alternative. In fact, this was far from clear in our experiments: with a few exceptions, there was usually no statistically significant difference on average between the two. The exceptions were all for the smallest CCR sets, for which the processor selection clearly improved ($\approx 5\%$ average makespan reduction) on the ranking-only version for the LB variant and was even more significantly worse for the M and WM variants ($> 5\%$ average makespan increase).  
+  
 
 \subsection{Conclusions}
 \label{subsect.conclusions}
 
 To summarize, our main conclusions from the experimental comparison of the alternative HEFT task prioritization phases are as follows.
 \begin{itemize}
-	\item Largely supporting previous investigations along these lines \cite{zhao03}, perhaps our biggest takeaway is that no method appears to be dominant and it is impossible to say, for a given DAG and target platform, which should be used. 
+	\item Largely supporting previous investigations along these lines \cite{zhao03}, perhaps our biggest takeaway is that no method appears to be dominant and it is extremely difficult to say, for a given DAG and target platform, which should be used. 
 	\item Having said that, the W ranking was consistently more likely to result in a smaller makespan across the set of test DAGs as a whole and many of the subsets. The usual caveats about the limitations of our experimental framework hold of course but overall we would softly recommend it be used instead of the default, particularly since it is conceptually simple (just a weighted mean) and not significantly more expensive.
 	\item There is no clear benefit in obtaining tighter bounds on the associated stochastic graph (i.e., Fulkerson's bound). Given the higher time complexity in the general case, this does not therefore seem to be a worthwhile alternative.    
 	\item Similarly, there appears to be little advantage in using the LB ranking, although it also wasn't clearly inferior to the standard ranking in terms of performance or cost.  
         \end{itemize}
+        With regards to the modified PEFT heuristics, we make the following conclusions.
+        \begin{itemize}
+        \item PEFT-M and PEFT-WM do not appear to offer any advantage compared to the standard heuristic and indeed can display adverse behavior in some situations, in particular when communication predominates.
+          \item PEFT-LB did however perform well relative to PEFT and both the alternative task prioritization and processor selection phases appeared to be beneficial, at least on average.
+          \end{itemize}
         
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Bibliography.

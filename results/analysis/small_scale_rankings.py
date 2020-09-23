@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Plotting and analysis for the alternative HEFT rankings section. 
+Analysis and plots for the (small-scale) alternative HEFT rankings section. 
 """
 
 import dill, pathlib
 import numpy as np
 import itertools as it
 import matplotlib.pyplot as plt
-from timeit import default_timer as timer
 from collections import defaultdict
 
 ####################################################################################################
@@ -20,7 +19,7 @@ plt.rcParams['font.family'] = 'serif'
 plt.rcParams['font.serif'] = 'Ubuntu'
 plt.rcParams['font.monospace'] = 'Ubuntu Mono'
 plt.rcParams['font.size'] = 10
-plt.rcParams['font.weight'] = 'bold' # Don't know if I always want this...
+plt.rcParams['font.weight'] = 'bold' 
 plt.rcParams['axes.labelsize'] = 10
 plt.rcParams['axes.labelweight'] = 'bold'
 plt.rcParams['axes.titlesize'] = 7
@@ -35,11 +34,13 @@ plt.ioff() # Don't show plots.
 
 ####################################################################################################
 
+# Destinations to save summaries and generated plots.
 summary_path = "../summaries/small_scale_rankings"
 pathlib.Path(summary_path).mkdir(parents=True, exist_ok=True)
 plot_path = "../plots/small_scale_rankings"
 pathlib.Path(plot_path).mkdir(parents=True, exist_ok=True)
 
+# Combine the info dicts for different sizes.
 with open('../sz100_info.dill', 'rb') as file:
     sz100_info = dill.load(file) 
 with open('../sz1000_info.dill', 'rb') as file:
@@ -48,10 +49,13 @@ info = {}
 info[100] = sz100_info
 info[1000] = sz1000_info
 
-sizes = [100]#[100, 1000]
-n_workers = [2, 4, 8] #[2, 4, 8, 16]
+# Parameters.
+sizes = [100]
+n_workers = [2, 4, 8] 
 ccrs = [0.1, 1, 10]
 het_factors = [1.0, 2.0]
+
+# These are useful later. 
 all_param_combinations = list(it.product(*[sizes, n_workers, ccrs, het_factors]))
 dag_names = list(info[100].keys())
 all_attributes = ["MST", "HEFT", "HEFT-R", "HEFT-LB", "HEFT-W", "HEFT-F", "HEFT-WF"]
@@ -61,24 +65,20 @@ all_rks = ["R", "LB", "W", "F", "WF"]
 
 def get_subset_info(info, ns, qs, bs, hs, attrs):
     """
-    TODO: weird bug here, had to use defaultdict to avoid.
-    Problem was that I was using a try statement to create keys and I had another variable outside with a similar name...    
+    Get all of the info for subset of the DAGs defined by n in ns, q in qs, etc.    
     """
     set_info = defaultdict(list)
     param_combinations = list(it.product(*[ns, qs, bs, hs]))
     for n, q, b, h in param_combinations:
         for d in dag_names:
-            for attr in attrs: # TODO. Insert Nones for empty lists?
+            for attr in attrs: 
                 set_info[attr] += info[n][d][q][b][h][attr]
-                # if not info[n][d][q][b][h][attr]:
-                #     set_info[attr] += [None] * 5
-                # else:
-                #     set_info[attr] += info[n][d][q][b][h][attr]
     return set_info  
 
 def summarize(data, dest, rks):
     """Want direct comparison vs HEFT only."""
     
+    # Calculate percentage degradations.
     pds = {rk : [] for rk in rks}
     pds["U"] = []
     bests = {rk: 0 for rk in rks}
@@ -197,45 +197,45 @@ with open("{}/complete.txt".format(summary_path), "w") as dest:
 # =============================================================================
 
 # APD.
-# apd_by_ccr = {rk:[] for rk in all_rks}
-# apd_by_ccr["U"] = []
-# for b in ccrs:
-#     subset_info = get_subset_info(info, ns=sizes, qs=n_workers, bs=[b], hs=het_factors, attrs=all_attributes)
-#     pds = {rk : [] for rk in all_rks}
-#     pds["U"] = []
-#     for i, hm in enumerate(subset_info["HEFT"]):
-#         best, valid = hm, True
-#         for rk in all_rks:
-#             if subset_info["HEFT-" + rk][i] is None or subset_info["HEFT-" + rk][i] == 0.0:
-#                 valid = False
-#                 break
-#             best = min(best, subset_info["HEFT-" + rk][i])
-#         if not valid:
-#             continue
-#         # Now calculate the pds. 
-#         pd = (hm/best)*100 - 100
-#         pds["U"].append(pd)
-#         for rk in all_rks:
-#             m = subset_info["HEFT-" + rk][i]
-#             pd = (m/best)*100 - 100
-#             pds[rk].append(pd) 
-#     for rk in ["U"] + all_rks:
-#         apd_by_ccr[rk].append(np.mean(pds[rk]))
+apd_by_ccr = {rk:[] for rk in all_rks}
+apd_by_ccr["U"] = []
+for b in ccrs:
+    subset_info = get_subset_info(info, ns=sizes, qs=n_workers, bs=[b], hs=het_factors, attrs=all_attributes)
+    pds = {rk : [] for rk in all_rks}
+    pds["U"] = []
+    for i, hm in enumerate(subset_info["HEFT"]):
+        best, valid = hm, True
+        for rk in all_rks:
+            if subset_info["HEFT-" + rk][i] is None or subset_info["HEFT-" + rk][i] == 0.0:
+                valid = False
+                break
+            best = min(best, subset_info["HEFT-" + rk][i])
+        if not valid:
+            continue
+        # Now calculate the pds. 
+        pd = (hm/best)*100 - 100
+        pds["U"].append(pd)
+        for rk in all_rks:
+            m = subset_info["HEFT-" + rk][i]
+            pd = (m/best)*100 - 100
+            pds[rk].append(pd) 
+    for rk in ["U"] + all_rks:
+        apd_by_ccr[rk].append(np.mean(pds[rk]))
 
-# length, width = len(ccrs), 0.15
-# x = np.arange(length)
-# xlabels = ccrs
-# colors = {"U": '#E24A33', "R" : '#348ABD', "LB" : '#988ED5', "W" : '#FBC15E', "F" : '#8EBA42', "WF" : '#FFB5B8'}
+length, width = len(ccrs), 0.15
+x = np.arange(length)
+xlabels = ccrs
+colors = {"U": '#E24A33', "R" : '#348ABD', "LB" : '#988ED5', "W" : '#FBC15E', "F" : '#8EBA42', "WF" : '#FFB5B8'}
 
-# fig = plt.figure(dpi=400)
-# ax1 = fig.add_subplot(111)
+fig = plt.figure(dpi=400)
+ax1 = fig.add_subplot(111)
 
-# for j, rk in enumerate(["U"] + all_rks):
-#     ax1.bar(x + j * width, apd_by_ccr[rk], width, color=colors[rk], edgecolor='white', label=rk)             
-# ax1.set_xticks(x + (5/2) * width)
-# ax1.set_xticklabels(xlabels) 
-# ax1.set_xlabel("COMPUTATION TO COMMUNICATION RATIO (CCR)", labelpad=5)
-# ax1.set_ylabel("AVG. PERCENTAGE DEGRADATION (APD)", labelpad=5)
-# ax1.legend(handlelength=3, handletextpad=0.4, ncol=1, loc='best', fancybox=True, facecolor='white') 
-# plt.savefig('{}/apd_by_ccr'.format(plot_path), bbox_inches='tight') 
-# plt.close(fig) 
+for j, rk in enumerate(["U"] + all_rks):
+    ax1.bar(x + j * width, apd_by_ccr[rk], width, color=colors[rk], edgecolor='white', label=rk)             
+ax1.set_xticks(x + (5/2) * width)
+ax1.set_xticklabels(xlabels) 
+ax1.set_xlabel("COMPUTATION TO COMMUNICATION RATIO (CCR)", labelpad=5)
+ax1.set_ylabel("AVG. PERCENTAGE DEGRADATION (APD)", labelpad=5)
+ax1.legend(handlelength=3, handletextpad=0.4, ncol=1, loc='best', fancybox=True, facecolor='white') 
+plt.savefig('{}/apd_by_ccr'.format(plot_path), bbox_inches='tight') 
+plt.close(fig) 

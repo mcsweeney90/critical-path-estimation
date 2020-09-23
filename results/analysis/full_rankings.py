@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Plotting and analysis for the alternative HEFT rankings section. 
+Analysis and plots for the alternative HEFT rankings section. 
 """
 
 import dill, pathlib
 import numpy as np
 import itertools as it
 import matplotlib.pyplot as plt
-from timeit import default_timer as timer
 from collections import defaultdict
 
 ####################################################################################################
@@ -35,11 +34,13 @@ plt.ioff() # Don't show plots.
 
 ####################################################################################################
 
+# Destinations to save summaries and generated plots.
 summary_path = "../summaries/full_rankings"
 pathlib.Path(summary_path).mkdir(parents=True, exist_ok=True)
 plot_path = "../plots/full_rankings"
 pathlib.Path(plot_path).mkdir(parents=True, exist_ok=True)
 
+# Combine the info dicts for different sizes.
 with open('../sz100_info.dill', 'rb') as file:
     sz100_info = dill.load(file) 
 with open('../sz1000_info.dill', 'rb') as file:
@@ -48,10 +49,13 @@ info = {}
 info[100] = sz100_info
 info[1000] = sz1000_info
 
+# Parameters.
 sizes = [100, 1000]
 n_workers = [2, 4, 8, 16]
 ccrs = [0.1, 1, 10]
 het_factors = [1.0, 2.0]
+
+# These are useful later. 
 all_param_combinations = list(it.product(*[sizes, n_workers, ccrs, het_factors]))
 dag_names = list(info[100].keys())
 all_attributes = ["MST", "HEFT", "HEFT-LB", "HEFT-W"]
@@ -61,24 +65,20 @@ all_rks = ["LB", "W"]
 
 def get_subset_info(info, ns, qs, bs, hs, attrs):
     """
-    TODO: weird bug here, had to use defaultdict to avoid.
-    Problem was that I was using a try statement to create keys and I had another variable outside with a similar name...    
+    Get all of the info for subset of the DAGs defined by n in ns, q in qs, etc.   
     """
     set_info = defaultdict(list)
     param_combinations = list(it.product(*[ns, qs, bs, hs]))
     for n, q, b, h in param_combinations:
         for d in dag_names:
-            for attr in attrs: # TODO. Insert Nones for empty lists?
+            for attr in attrs: 
                 set_info[attr] += info[n][d][q][b][h][attr]
-                # if not info[n][d][q][b][h][attr]:
-                #     set_info[attr] += [None] * 5
-                # else:
-                #     set_info[attr] += info[n][d][q][b][h][attr]
     return set_info  
 
 def summarize(data, dest, rks):
     """Want direct comparison vs HEFT only."""
     
+    # Calculate percentage degradations.
     pds = {rk : [] for rk in rks}
     pds["U"] = []
     bests = {rk: 0 for rk in rks}

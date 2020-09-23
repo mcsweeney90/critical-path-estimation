@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 Create and save Cholesky DAGs.
+Not used anywhere yet, although may do so in the future.
 """
 
 import dill, pathlib
@@ -10,7 +11,7 @@ import networkx as nx
 from timeit import default_timer as timer
 import sys
 sys.path.append('../../') 
-from Simulator import Task, DAG, Platform, HEFT, PEFT, CPOP
+from Simulator import Task, DAG, Platform
 
 def cholesky(n_tiles, draw=False):
     """
